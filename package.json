@@ -1,0 +1,13 @@
+{
+  "name": "cardstack-token",
+  "version": "0.0.1",
+  "description": "Cardstack token",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "author": "",
+  "license": "ISC"
+}
