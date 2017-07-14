@@ -6,8 +6,13 @@
     "test": "test"
   },
   "scripts": {
-    "test": "truffle test"
+    "test": "./node_modules/.bin/truffle test",
+    "testrpc": "./node_modules/.bin/testrpc"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "ethereumjs-testrpc": "^4.0.1",
+    "truffle": "^3.4.4"
+  }
 }
