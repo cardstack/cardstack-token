@@ -1,3 +1,4 @@
+const GAS_PRICE = 20000000000;
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
 contract('CardStackToken', function(accounts) {
@@ -14,7 +15,7 @@ contract('CardStackToken', function(accounts) {
   });
 
   it("should initialize the CST correctly", async function() {
-    let cst = await CardStackToken.new(10000, "CardStack Token", "CST", 1, 0.9);
+    let cst = await CardStackToken.new(10000, "CardStack Token", "CST", 2, 1);
     let balance = await cst.balanceOf(accounts[0]);
     let name = await cst.name();
     let symbol = await cst.symbol();
@@ -28,30 +29,48 @@ contract('CardStackToken', function(accounts) {
     assert.equal(balance.valueOf(), 10000, "10000 wasn't in the first account");
     assert.equal(supply, 10000, "The totalSupply is correct");
     assert.equal(totalInCirculation, 0, "The totalInCirculation is correct");
-    assert.equal(totalInCirculation, 0, "The totalInCirculation is correct");
-    assert.equal(buyPrice, 1, "The buyPrice is correct");
-    assert.equal(sellPrice, 0.9, "The sellPrice is correct");
+    assert.equal(buyPrice, 2, "The buyPrice is correct");
+    assert.equal(sellPrice, 1, "The sellPrice is correct");
   });
 
-  it("should be able to purchase CST", async function() {
+  it.only("should be able to purchase CST", async function() {
     let cst = await CardStackToken.new(10, "CardStack Token", "CST", web3.toWei(1, "ether"), web3.toWei(1, "ether"));
     let buyerAccount = accounts[1];
-    let balanceEth = await web3.eth.getBalance(buyerAccount);
-    let buyPrice = await cst.buyPrice();
     let txnValue = web3.toWei(2, "ether");
-    balanceEth = parseFloat(web3.fromWei(balanceEth.toString(), 'ether'));
-    console.log("Buyers before balance", balanceEth, "eth");
-    console.log("Buy price", buyPrice.toString());
-    console.log("txn value", txnValue.toString());
+    let startBalance = await web3.eth.getBalance(buyerAccount);
 
-    let cstAmount = await cst.buy({
+    startBalance = parseInt(startBalance.toString(), 10);
+
+    let txn = await cst.buy({
       from: buyerAccount,
       value: txnValue
     });
 
-    balanceEth = await web3.eth.getBalance(buyerAccount);
-    balanceEth = parseFloat(web3.fromWei(balanceEth.toString(), 'ether'));
-    console.log("Buyers after balance", balanceEth, "eth");
+    // console.log("TXN", JSON.stringify(txn, null, 2));
+    assert.ok(txn.receipt);
+    assert.ok(txn.logs);
+
+    let { cumulativeGasUsed } = txn.receipt;
+    let endBalance = await web3.eth.getBalance(buyerAccount);
+    let cstBalance = await cst.balanceOf(buyerAccount);
+    let supply = await cst.totalSupply();
+    let totalInCirculation = await cst.totalInCirculation();
+
+    endBalance = parseInt(endBalance.toString(), 10);
+
+    assert.ok(cumulativeGasUsed < 70000, "Less than 70000 gas was used for the txn");
+    assert.ok(startBalance - endBalance - parseInt(txnValue, 10) < 0.005 * parseInt(txnValue, 10), "Buyer's account debited correctly, with gas price not exceeding 0.5% of txn value");
+    assert.equal(cstBalance, 2, "The CST balance is correct");
+    assert.equal(supply, 8, "The CST total supply was updated correctly");
+    assert.equal(totalInCirculation, 2, "The CST total in circulation was updated correctly");
+
+    assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+    let event = txn.logs[0];
+    assert.equal(event.event, "Buy", "The event type is correct");
+    assert.equal(event.args.purchasePrice.toString(), txnValue, "The purchase price is correct");
+    assert.equal(event.args.value.toString(), "2", "The CST balance is correct");
+    assert.equal(event.args.buyer, buyerAccount, "The CST buyer is correct");
   });
 
   it("can not purchase more CST than has been minted", async function() {

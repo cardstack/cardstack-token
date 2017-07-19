@@ -20,7 +20,7 @@ contract CardStackToken is owned {
   event FrozenFunds(address target, bool frozen);
 
   /* This generates a public event on the blockchain that will notify clients */
-  event Transfer(address indexed from, address indexed to, uint value);
+  event Buy(address indexed buyer, uint value, uint purchasePrice);
 
   /* Initializes contract with initial supply tokens to the creator of the contract */
   function CardStackToken(
@@ -49,7 +49,7 @@ contract CardStackToken is owned {
     if (balanceOf[_to] + _value < balanceOf[_to]) throw; // Check for overflows
     balanceOf[msg.sender] -= _value;                     // Subtract from the sender
     balanceOf[_to] += _value;                            // Add the same to the recipient
-    Transfer(msg.sender, _to, _value);                   // Notify anyone listening that this transfer took place
+    // Transfer(msg.sender, _to, _value);                   // Notify anyone listening that this transfer took place
   }
 
 
@@ -57,8 +57,8 @@ contract CardStackToken is owned {
     //TODO: provide the ability to mint coin without depositing in an account
     balanceOf[target] += mintedAmount;
     totalSupply += mintedAmount;
-    Transfer(0, this, mintedAmount);
-    Transfer(this, target, mintedAmount);
+    // Transfer(0, this, mintedAmount);
+    // Transfer(this, target, mintedAmount);
   }
 
   //TODO
@@ -86,7 +86,7 @@ contract CardStackToken is owned {
     balanceOf[msg.sender] += amount;
     totalSupply -= amount;
     totalInCirculation += amount;
-    Transfer(this, msg.sender, amount);
+    Buy(msg.sender, amount, msg.value);
   }
 
   function sell(uint amount) {
@@ -97,7 +97,7 @@ contract CardStackToken is owned {
     if (!msg.sender.send(amount * sellPrice)) {        // sends ether to the seller. It's important
       throw;                                         // to do this last to avoid recursion attacks
     } else {
-      Transfer(msg.sender, this, amount);            // executes an event reflecting on the change
+      // Transfer(msg.sender, this, amount);            // executes an event reflecting on the change
     }
   }
 }
