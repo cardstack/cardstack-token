@@ -1,12 +1,19 @@
 const GAS_PRICE = 20000000000;
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
+// TODO export this from a lib
+function asInt(contractValue) {
+  if (!contractValue) { throw new Error("Cannot convert to int ", JSON.stringify(contractValue)); }
+
+  return parseInt(contractValue.toString(), 10);
+}
+
 contract('CardStackToken', function(accounts) {
   beforeEach(async function() {
     for (let i = 0; i < accounts.length; i++) {
       let account = accounts[i];
       let balanceEth = await web3.eth.getBalance(account);
-      balanceEth = parseFloat(web3.fromWei(balanceEth.toString(), 'ether'));
+      balanceEth = parseInt(web3.fromWei(balanceEth.toString(), 'ether'), 10);
 
       if (balanceEth < 1) {
         throw new Error(`Not enough ether in address ${address} to perform test--restart testrpc to top-off balance`);
@@ -15,7 +22,7 @@ contract('CardStackToken', function(accounts) {
   });
 
   it("should initialize the CST correctly", async function() {
-    let cst = await CardStackToken.new(10000, "CardStack Token", "CST", 2, 1);
+    let cst = await CardStackToken.new(10000, "CardStack Token", "CST", 2, 1, 10000);
     let balance = await cst.balanceOf(accounts[0]);
     let name = await cst.name();
     let symbol = await cst.symbol();
@@ -33,13 +40,13 @@ contract('CardStackToken', function(accounts) {
     assert.equal(sellPrice, 1, "The sellPrice is correct");
   });
 
-  it.only("should be able to purchase CST", async function() {
-    let cst = await CardStackToken.new(10, "CardStack Token", "CST", web3.toWei(1, "ether"), web3.toWei(1, "ether"));
+  it("should be able to purchase CST", async function() {
+    let cst = await CardStackToken.new(10, "CardStack Token", "CST", web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10);
     let buyerAccount = accounts[1];
     let txnValue = web3.toWei(2, "ether");
     let startBalance = await web3.eth.getBalance(buyerAccount);
 
-    startBalance = parseInt(startBalance.toString(), 10);
+    startBalance = asInt(startBalance);
 
     let txn = await cst.buy({
       from: buyerAccount,
@@ -56,10 +63,10 @@ contract('CardStackToken', function(accounts) {
     let supply = await cst.totalSupply();
     let totalInCirculation = await cst.totalInCirculation();
 
-    endBalance = parseInt(endBalance.toString(), 10);
+    endBalance = asInt(endBalance);
 
     assert.ok(cumulativeGasUsed < 70000, "Less than 70000 gas was used for the txn");
-    assert.ok(startBalance - endBalance - parseInt(txnValue, 10) < 0.005 * parseInt(txnValue, 10), "Buyer's account debited correctly, with gas price not exceeding 0.5% of txn value");
+    assert.ok(startBalance - endBalance - asInt(txnValue) < 0.005 * asInt(txnValue), "Buyer's account debited correctly, with gas price not exceeding 0.5% of txn value");
     assert.equal(cstBalance, 2, "The CST balance is correct");
     assert.equal(supply, 8, "The CST total supply was updated correctly");
     assert.equal(totalInCirculation, 2, "The CST total in circulation was updated correctly");
@@ -73,7 +80,49 @@ contract('CardStackToken', function(accounts) {
     assert.equal(event.args.buyer, buyerAccount, "The CST buyer is correct");
   });
 
+  it("can not purchase more CST than the amount of ethers in the buyers wallet", async function() {
+    let cst = await CardStackToken.new(10, "CardStack Token", "CST", web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10);
+    let buyerAccount = accounts[1];
+    let txnValue = web3.toWei(1000, "ether");
+    let startBalance = await web3.eth.getBalance(buyerAccount);
+
+    if (asInt(txnValue) < asInt(startBalance)) {
+      throw new Error(`Buyer account ${buyerAccount} has too much value to be able to conduct this test ${startBalance}`);
+    }
+
+    startBalance = asInt(startBalance);
+
+    let txn;
+    try {
+      txn = await cst.buy({
+        from: buyerAccount,
+        value: txnValue
+      });
+      assert.ok(false, "Transaction should fire exception");
+    } catch(err) {
+      // expect exception to be fired
+    }
+
+    let endBalance = await web3.eth.getBalance(buyerAccount);
+    let cstBalance = await cst.balanceOf(buyerAccount);
+    let supply = await cst.totalSupply();
+    let totalInCirculation = await cst.totalInCirculation();
+
+    endBalance = asInt(endBalance);
+
+    assert.equal(startBalance, endBalance, "The buyer's account was not debited");
+    assert.equal(cstBalance, 0, "The CST balance is correct");
+    assert.equal(asInt(supply), 10, "The CST total supply was not updated");
+    assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
+  });
+
   it("can not purchase more CST than has been minted", async function() {
+  });
+
+  it("can not purchase fractional CST (less than purchase price for a single CST)", async function() {
+  });
+
+  it("can not purchase more CST than the CST sellCap", async function() {
   });
 
 /*

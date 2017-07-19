@@ -4,12 +4,13 @@ import "./owned.sol";
 
 contract CardStackToken is owned {
 
-  uint public sellPrice = 1;
-  uint public buyPrice = 1;
+  uint public sellPrice = 1 ether / 1000;
+  uint public buyPrice = 1 ether / 1000;
   string public name;
   string public symbol;
   uint public totalSupply;
   uint public totalInCirculation;
+  uint public sellCap;
 
   /* This creates an array with all balances */
   mapping (address => uint) public balanceOf;
@@ -28,14 +29,15 @@ contract CardStackToken is owned {
     string tokenName,
     string tokenSymbol,
     uint initialBuyPrice,
-    uint initialSellPrice
+    uint initialSellPrice,
+    uint initialCstSellCap
   ) {
-    balanceOf[msg.sender] = initialSupply;              // Give the creator all initial tokens
     totalSupply = initialSupply;                        // Update total supply
     name = tokenName;                                   // Set the name for display purposes
     symbol = tokenSymbol;                               // Set the symbol for display purposes
     sellPrice = initialSellPrice;
     buyPrice = initialBuyPrice;
+    sellCap = initialCstSellCap;
   }
 
   /* This unnamed function is called whenever someone tries to send ether to it */
@@ -65,6 +67,16 @@ contract CardStackToken is owned {
   function grantTokens() onlyOwner {
   }
 
+  //TODO
+  function recycleTokens(/*address account, uint amount*/) {
+  }
+
+  //TODO
+  // Talk to chris about how we want to release this, iterating over all the
+  // accounts to distribute funds will cost a lot of gas
+  function releaseTokensFromLockBox(/*uint amount*/) onlyOwner {
+  }
+
   function freezeAccount(address target, bool freeze) onlyOwner {
     frozenAccount[target] = freeze;
     FrozenFunds(target, freeze);
@@ -75,12 +87,17 @@ contract CardStackToken is owned {
     buyPrice = newBuyPrice;
   }
 
+  // TODO
+  // require that sell cap cannot be set lower than the total CST in ciruclation
+  function setCstSellCap(/*uint maxCstAmount*/) onlyOwner {
+  }
+
   function buy() payable {
-    require(msg.value > 0);
     require(msg.value >= buyPrice);
     assert(buyPrice > 0);
 
     uint amount = msg.value / buyPrice;
+    assert(totalInCirculation + amount <= sellCap);
     assert(amount <= totalSupply);
 
     balanceOf[msg.sender] += amount;
