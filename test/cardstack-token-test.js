@@ -126,9 +126,8 @@ contract('CardStackToken', function(accounts) {
 
     startBalance = asInt(startBalance);
 
-    let txn;
     try {
-      txn = await cst.buy({
+      await cst.buy({
         from: buyerAccount,
         value: txnValue,
         gas: 0 // cant introspect failed txn's, so set gas to 0 to make assertions easier
@@ -152,6 +151,35 @@ contract('CardStackToken', function(accounts) {
   });
 
   it("can not purchase fractional CST (less than purchase price for a single CST)", async function() {
+    let cst = await CardStackToken.new(10, "CardStack Token", "CST", web3.toWei(1, "ether"), web3.toWei(1, "ether"), 15);
+    let buyerAccount = accounts[1];
+    let txnValue = web3.toWei(0.9, "ether");
+    let startBalance = await web3.eth.getBalance(buyerAccount);
+
+    startBalance = asInt(startBalance);
+
+    try {
+      await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gas: 0 // cant introspect failed txn's, so set gas to 0 to make assertions easier
+      });
+      assert.ok(false, "Transaction should fire exception");
+    } catch(err) {
+      // expect exception to be fired
+    }
+
+    let endBalance = await web3.eth.getBalance(buyerAccount);
+    let cstBalance = await cst.balanceOf(buyerAccount);
+    let supply = await cst.totalSupply();
+    let totalInCirculation = await cst.totalInCirculation();
+
+    endBalance = asInt(endBalance);
+
+    assert.equal(startBalance, endBalance, "The buyer's account was debited for the cost of gas");
+    assert.equal(cstBalance, 0, "The CST balance is correct");
+    assert.equal(asInt(supply), 10, "The CST total supply was not updated");
+    assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
   });
 
   it("can not purchase more CST than the CST sellCap", async function() {
