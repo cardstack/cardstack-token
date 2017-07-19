@@ -92,6 +92,10 @@ contract CardStackToken is owned {
   function setCstSellCap(/*uint maxCstAmount*/) onlyOwner {
   }
 
+  // TODO
+  function cstAvailableToBuy() constant returns(bool) {
+  }
+
   function buy() payable {
     require(msg.value >= buyPrice);
     assert(buyPrice > 0);
