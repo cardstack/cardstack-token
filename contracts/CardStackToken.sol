@@ -3,10 +3,11 @@ pragma solidity ^0.4.2;
 import "./owned.sol";
 import "./freezable.sol";
 
+//TODO add an "upgradable" base contract to provide an upgrade path for the CST contract
 contract CardStackToken is owned, freezable {
 
-  uint public sellPrice = 1 ether / 1000;
-  uint public buyPrice = 1 ether / 1000;
+  uint public sellPrice;
+  uint public buyPrice;
   string public name;
   string public symbol;
   uint public totalSupply;
@@ -70,13 +71,7 @@ contract CardStackToken is owned, freezable {
   }
 
   //TODO
-  function recycleTokens(/*address account, uint amount*/) {
-  }
-
-  //TODO
-  // Talk to chris about how we want to release this, iterating over all the
-  // accounts to distribute funds will cost a lot of gas
-  function releaseTokensFromLockBox(/*uint amount*/) onlyOwner {
+  function addToRewardPool(/*address account, uint amount*/) {
   }
 
   function setPrices(uint newSellPrice, uint newBuyPrice) onlyOwner {

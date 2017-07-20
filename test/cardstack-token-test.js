@@ -33,6 +33,21 @@ contract('CardStackToken', function(accounts) {
     });
   });
 
+  describe("mintTokens()", function() {
+  });
+
+  describe("grantTokens()", function() {
+  });
+
+  describe("setPrices()", function() {
+  });
+
+  describe("cstAvailableToBuy()", function() {
+  });
+
+  describe("setCstSellCap()", function() {
+  });
+
   describe("transfer()", function() {
     let cst;
     let senderAccount = accounts[3];
