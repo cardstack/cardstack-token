@@ -392,4 +392,44 @@ contract('CardStackToken', function(accounts) {
     });
   });
 
+  describe("frozen account", function() {
+    let cst;
+    let frozenAccount = accounts[5];
+
+    beforeEach(async function() {
+      cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+
+      let balanceEth = await web3.eth.getBalance(frozenAccount);
+      balanceEth = parseInt(web3.fromWei(balanceEth.toString(), 'ether'), 10);
+
+      if (balanceEth < 1) {
+        throw new Error(`Not enough ether in address ${frozenAccount} to perform test--restart testrpc to top-off balance`);
+      }
+
+      await cst.buy({
+        from: frozenAccount,
+        value: web3.toWei(1, "ether"),
+        gasPrice: GAS_PRICE
+      });
+    });
+
+    it("cannot sell CST when frozen", async function() {
+    });
+
+    it("cannot buy CST when frozen", async function() {
+    });
+
+    it("cannot send a transfer when frozen", async function() {
+    });
+
+    it("cannot receive a transfer when frozen", async function() {
+    });
+
+    it("can unfreeze an account", async function() {
+    });
+
+    it("TODO: cannot receive CST reward when frozen", async function() {
+    });
+  });
+
 });

@@ -1,8 +1,9 @@
 pragma solidity ^0.4.2;
 
 import "./owned.sol";
+import "./freezable.sol";
 
-contract CardStackToken is owned {
+contract CardStackToken is owned, freezable {
 
   uint public sellPrice = 1 ether / 1000;
   uint public buyPrice = 1 ether / 1000;
@@ -14,10 +15,6 @@ contract CardStackToken is owned {
 
   /* This creates an array with all balances */
   mapping (address => uint) public balanceOf;
-  mapping (address => bool) public frozenAccount;
-
-  /* This generates a public event on the blockchain that will notify clients */
-  event FrozenFunds(address target, bool frozen);
 
   /* This generates a public event on the blockchain that will notify clients */
   event Buy(address indexed buyer, address buyerAccount, uint value, uint purchasePrice);
@@ -50,7 +47,8 @@ contract CardStackToken is owned {
     throw;     // Prevents accidental sending of ether
   }
 
-  function transfer(address recipient, uint amount) {
+  function transfer(address recipient, uint amount) unlessFrozen {
+    require(!frozenAccount[recipient]);
     require(balanceOf[msg.sender] >= amount);
     require(balanceOf[recipient] + amount > balanceOf[recipient]); // check for overflow
 
@@ -81,11 +79,6 @@ contract CardStackToken is owned {
   function releaseTokensFromLockBox(/*uint amount*/) onlyOwner {
   }
 
-  function freezeAccount(address target, bool freeze) onlyOwner {
-    frozenAccount[target] = freeze;
-    FrozenFunds(target, freeze);
-  }
-
   function setPrices(uint newSellPrice, uint newBuyPrice) onlyOwner {
     sellPrice = newSellPrice;
     buyPrice = newBuyPrice;
@@ -100,7 +93,7 @@ contract CardStackToken is owned {
   function cstAvailableToBuy() constant returns(bool) {
   }
 
-  function buy() payable {
+  function buy() payable unlessFrozen {
     require(msg.value >= buyPrice);
     assert(buyPrice > 0);
 
@@ -115,7 +108,7 @@ contract CardStackToken is owned {
     Buy(msg.sender, msg.sender, amount, msg.value);
   }
 
-  function sell(uint amount) {
+  function sell(uint amount) unlessFrozen {
     require(balanceOf[msg.sender] <= amount);
     uint value = amount * sellPrice;
 
