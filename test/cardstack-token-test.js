@@ -32,6 +32,62 @@ contract('CardStackToken', function(accounts) {
     });
   });
 
+  describe("transfer()", function() {
+    let cst;
+    let senderAccount = accounts[3];
+    let recipientAccount = accounts[4];
+
+    beforeEach(async function() {
+      cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+
+      let balanceEth = await web3.eth.getBalance(senderAccount);
+      balanceEth = parseInt(web3.fromWei(balanceEth.toString(), 'ether'), 10);
+
+      if (balanceEth < 1) {
+        throw new Error(`Not enough ether in address ${senderAccount} to perform test--restart testrpc to top-off balance`);
+      }
+
+      await cst.buy({
+        from: senderAccount,
+        value: web3.toWei(1, "ether"),
+        gasPrice: GAS_PRICE
+      });
+    });
+
+    it("should be able to transfer CST to another account", async function() {
+      let transferAmount = 10;
+
+      let txn = await cst.transfer(recipientAccount, transferAmount, {
+        from: senderAccount,
+        gasPrice: GAS_PRICE
+      });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+      assert.ok(txn.receipt);
+      assert.ok(txn.logs);
+
+      let senderBalance = await cst.balanceOf(senderAccount);
+      let recipientBalance = await cst.balanceOf(recipientAccount);
+      let supply = await cst.totalSupply();
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
+      assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
+      assert.equal(asInt(supply), 90, "The CST total supply has not changed");
+      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+
+      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "Transfer", "The event type is correct");
+      assert.equal(event.args.value.toString(), "10", "The CST amount is correct");
+      assert.equal(event.args.sender, senderAccount, "The sender is correct");
+      assert.equal(event.args.senderAccount, senderAccount, "The senderAccount is correct");
+      assert.equal(event.args.recipient, recipientAccount, "The recipient is correct");
+      assert.equal(event.args.recipientAccount, recipientAccount, "The recipientAccount is correct");
+    });
+  });
+
   describe("sell()", function() {
     let cst;
 
@@ -312,59 +368,4 @@ contract('CardStackToken', function(accounts) {
     });
   });
 
-/*
-  it("should call a function that depends on a linked library", function() {
-    let cst;
-    let cstCoinBalance;
-    let cstCoinEthBalance;
-
-    return CardStackToken.deployed().then(function(instance) {
-      cst = instance;
-      return cst.getBalance.call(accounts[0]);
-    }).then(function(outCoinBalance) {
-      cstCoinBalance = outCoinBalance.toNumber();
-      return cst.getBalanceInEth.call(accounts[0]);
-    }).then(function(outCoinBalanceEth) {
-      cstCoinEthBalance = outCoinBalanceEth.toNumber();
-    }).then(function() {
-      assert.equal(cstCoinEthBalance, 2 * cstCoinBalance, "Library function returned unexpected function, linkage may be broken");
-    });
-  });
-
-  it("should send coin correctly", function() {
-    let cst;
-
-    // Get initial balances of first and second account.
-    let account_one = accounts[0];
-    let account_two = accounts[1];
-
-    let account_one_starting_balance;
-    let account_two_starting_balance;
-    let account_one_ending_balance;
-    let account_two_ending_balance;
-
-    let amount = 10;
-
-    return CardStackToken.deployed().then(function(instance) {
-      cst = instance;
-      return cst.getBalance.call(account_one);
-    }).then(function(balance) {
-      account_one_starting_balance = balance.toNumber();
-      return cst.getBalance.call(account_two);
-    }).then(function(balance) {
-      account_two_starting_balance = balance.toNumber();
-      return cst.sendCoin(account_two, amount, {from: account_one});
-    }).then(function() {
-      return cst.getBalance.call(account_one);
-    }).then(function(balance) {
-      account_one_ending_balance = balance.toNumber();
-      return cst.getBalance.call(account_two);
-    }).then(function(balance) {
-      account_two_ending_balance = balance.toNumber();
-
-      assert.equal(account_one_ending_balance, account_one_starting_balance - amount, "Amount wasn't correctly taken from the sender");
-      assert.equal(account_two_ending_balance, account_two_starting_balance + amount, "Amount wasn't correctly sent to the receiver");
-    });
-  });
-  */
 });

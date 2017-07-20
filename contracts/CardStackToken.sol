@@ -22,6 +22,11 @@ contract CardStackToken is owned {
   /* This generates a public event on the blockchain that will notify clients */
   event Buy(address indexed buyer, address buyerAccount, uint value, uint purchasePrice);
   event Sell(address indexed seller, address sellerAccount, uint value, uint sellPrice);
+  event Transfer(address indexed sender,
+                 address senderAccount,
+                 address indexed recipient,
+                 address recipientAccount,
+                 uint value);
 
   /* Initializes contract with initial supply tokens to the creator of the contract */
   function CardStackToken(
@@ -45,15 +50,14 @@ contract CardStackToken is owned {
     throw;     // Prevents accidental sending of ether
   }
 
-  /* Send coins */
-  function transfer(address _to, uint _value) {
-    if (balanceOf[msg.sender] < _value) throw;           // Check if the sender has enough
-    if (balanceOf[_to] + _value < balanceOf[_to]) throw; // Check for overflows
-    balanceOf[msg.sender] -= _value;                     // Subtract from the sender
-    balanceOf[_to] += _value;                            // Add the same to the recipient
-    // Transfer(msg.sender, _to, _value);                   // Notify anyone listening that this transfer took place
-  }
+  function transfer(address recipient, uint amount) {
+    require(balanceOf[msg.sender] >= amount);
+    require(balanceOf[recipient] + amount > balanceOf[recipient]); // check for overflow
 
+    balanceOf[msg.sender] -= amount;
+    balanceOf[recipient] += amount;
+    Transfer(msg.sender, msg.sender, recipient, recipient, amount);
+  }
 
   function mintTokens(address target, uint mintedAmount) onlyOwner {
     //TODO: provide the ability to mint coin without depositing in an account
@@ -103,6 +107,7 @@ contract CardStackToken is owned {
     uint amount = msg.value / buyPrice;
     assert(totalInCirculation + amount <= sellCap);
     assert(amount <= totalSupply);
+    assert(balanceOf[msg.sender] + amount > balanceOf[msg.sender]); // check for overflow
 
     balanceOf[msg.sender] += amount;
     totalSupply -= amount;
