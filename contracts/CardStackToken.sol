@@ -14,14 +14,14 @@ contract CardStackToken is owned {
 
   /* This creates an array with all balances */
   mapping (address => uint) public balanceOf;
-  mapping (address => mapping (address => uint)) public allowance;
   mapping (address => bool) public frozenAccount;
 
   /* This generates a public event on the blockchain that will notify clients */
   event FrozenFunds(address target, bool frozen);
 
   /* This generates a public event on the blockchain that will notify clients */
-  event Buy(address indexed buyer, uint value, uint purchasePrice);
+  event Buy(address indexed buyer, address buyerAccount, uint value, uint purchasePrice);
+  event Sell(address indexed seller, address sellerAccount, uint value, uint sellPrice);
 
   /* Initializes contract with initial supply tokens to the creator of the contract */
   function CardStackToken(
@@ -107,18 +107,19 @@ contract CardStackToken is owned {
     balanceOf[msg.sender] += amount;
     totalSupply -= amount;
     totalInCirculation += amount;
-    Buy(msg.sender, amount, msg.value);
+    Buy(msg.sender, msg.sender, amount, msg.value);
   }
 
   function sell(uint amount) {
-    if (balanceOf[msg.sender] < amount ) throw;        // checks if the sender has enough to sell
-    balanceOf[this] += amount;                         // adds the amount to owner's balance
-    balanceOf[msg.sender] -= amount;                   // subtracts the amount from seller's balance
-    //TODO create function for user to withdraw ether instead of doing this
-    if (!msg.sender.send(amount * sellPrice)) {        // sends ether to the seller. It's important
-      throw;                                         // to do this last to avoid recursion attacks
-    } else {
-      // Transfer(msg.sender, this, amount);            // executes an event reflecting on the change
-    }
+    require(balanceOf[msg.sender] <= amount);
+    uint value = amount * sellPrice;
+
+    balanceOf[msg.sender] -= amount;
+    totalSupply += amount;
+    totalInCirculation -= amount;
+
+    // always send only after changing state of contract to guard against re-entry attacks
+    msg.sender.transfer(value);
+    Sell(msg.sender, msg.sender, amount, value);
   }
 }

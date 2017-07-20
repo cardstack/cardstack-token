@@ -1,4 +1,5 @@
 const GAS_PRICE = web3.toWei(20, "gwei");
+const ROUNDING_ERROR_WEI = 20000;
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
 // TODO export this from a lib
@@ -13,7 +14,6 @@ contract('CardStackToken', function(accounts) {
   describe("create contract", function() {
     it("should initialize the CST correctly", async function() {
       let cst = await CardStackToken.new(10000, "CardStack Token", "CST", 2, 1, 8000);
-      let balance = await cst.balanceOf(accounts[0]);
       let name = await cst.name();
       let symbol = await cst.symbol();
       let supply = await cst.totalSupply();
@@ -32,6 +32,69 @@ contract('CardStackToken', function(accounts) {
     });
   });
 
+  describe("sell()", function() {
+    let cst;
+
+    beforeEach(async function() {
+      cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+
+      for (let i = 0; i < Math.min(accounts.length, 10); i++) {
+        let account = accounts[i];
+        let balanceEth = await web3.eth.getBalance(account);
+        balanceEth = parseInt(web3.fromWei(balanceEth.toString(), 'ether'), 10);
+
+        if (balanceEth < 1) {
+          throw new Error(`Not enough ether in address ${account} to perform test--restart testrpc to top-off balance`);
+        }
+
+        await cst.buy({
+          from: account,
+          value: web3.toWei(1, "ether"),
+          gasPrice: GAS_PRICE
+        });
+      }
+    });
+
+    it("should be able to sell CST", async function() {
+      let sellerAccount = accounts[2];
+      let startWalletBalance = await web3.eth.getBalance(sellerAccount);
+      let sellAmount = 10;
+      startWalletBalance = asInt(startWalletBalance);
+
+      let txn = await cst.sell(sellAmount, {
+        from: sellerAccount,
+        gasPrice: GAS_PRICE
+      });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+      assert.ok(txn.receipt);
+      assert.ok(txn.logs);
+
+      let { cumulativeGasUsed } = txn.receipt;
+      let endWalletBalance = await web3.eth.getBalance(sellerAccount);
+      let endCstBalance = await cst.balanceOf(sellerAccount);
+      let supply = await cst.totalSupply();
+      let totalInCirculation = await cst.totalInCirculation();
+
+      endWalletBalance = asInt(endWalletBalance);
+
+      assert.ok(cumulativeGasUsed < 50000, "Less than 50000 gas was used for the txn");
+      assert.ok(Math.abs(startWalletBalance + (sellAmount * web3.toWei(0.1, "ether")) - (GAS_PRICE * cumulativeGasUsed) - endWalletBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet credited correctly");
+      assert.equal(asInt(endCstBalance), 0, "The CST balance is correct");
+      assert.equal(asInt(supply), 10, "The CST total supply was updated correctly");
+      assert.equal(asInt(totalInCirculation), 90, "The CST total in circulation was updated correctly");
+
+      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "Sell", "The event type is correct");
+      assert.equal(event.args.sellPrice.toString(), (sellAmount * web3.toWei(0.1, "ether")), "The sell price is correct");
+      assert.equal(event.args.value.toString(), "10", "The CST amount is correct");
+      assert.equal(event.args.seller, sellerAccount, "The CST seller is correct");
+      assert.equal(event.args.sellerAccount, sellerAccount, "The CST seller account is correct");
+    });
+  });
+
   describe("buy()", function() {
     beforeEach(async function() {
       for (let i = 0; i < accounts.length; i++) {
@@ -40,7 +103,7 @@ contract('CardStackToken', function(accounts) {
         balanceEth = parseInt(web3.fromWei(balanceEth.toString(), 'ether'), 10);
 
         if (balanceEth < 1) {
-          throw new Error(`Not enough ether in address ${address} to perform test--restart testrpc to top-off balance`);
+          throw new Error(`Not enough ether in address ${account} to perform test--restart testrpc to top-off balance`);
         }
       }
     });
@@ -50,7 +113,6 @@ contract('CardStackToken', function(accounts) {
       let buyerAccount = accounts[1];
       let txnValue = web3.toWei(2, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
-      let gas = web3.toWei(0.001, "ether");
 
       startBalance = asInt(startBalance);
 
@@ -73,7 +135,7 @@ contract('CardStackToken', function(accounts) {
       endBalance = asInt(endBalance);
 
       assert.ok(cumulativeGasUsed < 70000, "Less than 70000 gas was used for the txn");
-      assert.equal(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed), endBalance, "Buyer's account debited correctly");
+      assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(cstBalance, 2, "The CST balance is correct");
       assert.equal(supply, 8, "The CST total supply was updated correctly");
       assert.equal(totalInCirculation, 2, "The CST total in circulation was updated correctly");
@@ -83,8 +145,9 @@ contract('CardStackToken', function(accounts) {
       let event = txn.logs[0];
       assert.equal(event.event, "Buy", "The event type is correct");
       assert.equal(event.args.purchasePrice.toString(), txnValue, "The purchase price is correct");
-      assert.equal(event.args.value.toString(), "2", "The CST balance is correct");
+      assert.equal(event.args.value.toString(), "2", "The CST amount is correct");
       assert.equal(event.args.buyer, buyerAccount, "The CST buyer is correct");
+      assert.equal(event.args.buyerAccount, buyerAccount, "The CST buyerAccount is correct");
     });
 
     it("can not purchase more CST than the amount of ethers in the buyers wallet", async function() {
