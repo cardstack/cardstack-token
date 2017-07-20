@@ -93,6 +93,35 @@ contract('CardStackToken', function(accounts) {
       assert.equal(event.args.seller, sellerAccount, "The CST seller is correct");
       assert.equal(event.args.sellerAccount, sellerAccount, "The CST seller account is correct");
     });
+
+    it("should not be able to sell more CST than in sellers account", async function() {
+      let sellerAccount = accounts[2];
+      let startBalance = await web3.eth.getBalance(sellerAccount);
+      let sellAmount = 11;
+      startBalance = asInt(startBalance);
+
+      try {
+        await cst.sell(sellAmount, {
+          from: sellerAccount,
+          gas: 0 // cant introspect failed txn's, so set gas to 0 to make assertions easier
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let endBalance = await web3.eth.getBalance(sellerAccount);
+      let cstBalance = await cst.balanceOf(sellerAccount);
+      let supply = await cst.totalSupply();
+      let totalInCirculation = await cst.totalInCirculation();
+
+      endBalance = asInt(endBalance);
+
+      assert.equal(startBalance, endBalance, "The buyer's account was not changed"); // actually it will be charged gas, but that's hard to test with truffle
+      assert.equal(cstBalance, 10, "The CST balance is correct");
+      assert.equal(asInt(supply), 0, "The CST total supply was not updated");
+      assert.equal(asInt(totalInCirculation), 100, "The CST total in circulation was not updated");
+    });
   });
 
   describe("buy()", function() {
