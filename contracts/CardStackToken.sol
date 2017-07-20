@@ -109,7 +109,7 @@ contract CardStackToken is owned, freezable {
   }
 
   function sell(uint amount) unlessFrozen {
-    require(balanceOf[msg.sender] <= amount);
+    require(balanceOf[msg.sender] >= amount);
     uint value = amount * sellPrice;
 
     balanceOf[msg.sender] -= amount;
