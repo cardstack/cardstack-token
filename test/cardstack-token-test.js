@@ -86,6 +86,30 @@ contract('CardStackToken', function(accounts) {
       assert.equal(event.args.recipient, recipientAccount, "The recipient is correct");
       assert.equal(event.args.recipientAccount, recipientAccount, "The recipientAccount is correct");
     });
+
+    it("should not be able to transfer more CST than is in the sender's account", async function() {
+      let transferAmount = 11;
+
+      try {
+        await cst.transfer(recipientAccount, transferAmount, {
+          from: senderAccount,
+          gas: 0 // cant introspect failed txn's, so set gas to 0 to make assertions easier
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let senderBalance = await cst.balanceOf(senderAccount);
+      let recipientBalance = await cst.balanceOf(recipientAccount);
+      let supply = await cst.totalSupply();
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
+      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
+      assert.equal(asInt(supply), 90, "The CST total supply has not changed");
+      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+    });
   });
 
   describe("sell()", function() {
