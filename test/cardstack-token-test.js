@@ -10,6 +10,28 @@ function asInt(contractValue) {
 
 contract('CardStackToken', function(accounts) {
 
+  describe("create contract", function() {
+    it("should initialize the CST correctly", async function() {
+      let cst = await CardStackToken.new(10000, "CardStack Token", "CST", 2, 1, 8000);
+      let balance = await cst.balanceOf(accounts[0]);
+      let name = await cst.name();
+      let symbol = await cst.symbol();
+      let supply = await cst.totalSupply();
+      let buyPrice = await cst.buyPrice();
+      let sellPrice = await cst.sellPrice();
+      let sellCap = await cst.sellCap();
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(name, "CardStack Token", "The name of the token is correct");
+      assert.equal(symbol, "CST", "The symbol of the token is correct");
+      assert.equal(supply, 10000, "The totalSupply is correct");
+      assert.equal(sellCap, 8000, "The sellCap is correct");
+      assert.equal(totalInCirculation, 0, "The totalInCirculation is correct");
+      assert.equal(buyPrice, 2, "The buyPrice is correct");
+      assert.equal(sellPrice, 1, "The sellPrice is correct");
+    });
+  });
+
   describe("buy()", function() {
     beforeEach(async function() {
       for (let i = 0; i < accounts.length; i++) {
@@ -21,25 +43,6 @@ contract('CardStackToken', function(accounts) {
           throw new Error(`Not enough ether in address ${address} to perform test--restart testrpc to top-off balance`);
         }
       }
-    });
-
-    it("should initialize the CST correctly", async function() {
-      let cst = await CardStackToken.new(10000, "CardStack Token", "CST", 2, 1, 10000);
-      let balance = await cst.balanceOf(accounts[0]);
-      let name = await cst.name();
-      let symbol = await cst.symbol();
-      let supply = await cst.totalSupply();
-      let buyPrice = await cst.buyPrice();
-      let sellPrice = await cst.sellPrice();
-      let totalInCirculation = await cst.totalInCirculation();
-
-      assert.equal(name, "CardStack Token", "The name of the token is correct");
-      assert.equal(symbol, "CST", "The symbol of the token is correct");
-      assert.equal(balance.valueOf(), 10000, "10000 wasn't in the first account");
-      assert.equal(supply, 10000, "The totalSupply is correct");
-      assert.equal(totalInCirculation, 0, "The totalInCirculation is correct");
-      assert.equal(buyPrice, 2, "The buyPrice is correct");
-      assert.equal(sellPrice, 1, "The sellPrice is correct");
     });
 
     it("should be able to purchase CST", async function() {
@@ -146,7 +149,7 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.equal(startBalance, endBalance, "The buyer's account was debited for the cost of gas");
+      assert.equal(startBalance, endBalance, "The buyer's account was not changed"); // actually it will be charged gas, but that's hard to test with truffle
       assert.equal(cstBalance, 0, "The CST balance is correct");
       assert.equal(asInt(supply), 10, "The CST total supply was not updated");
       assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
@@ -178,13 +181,42 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.equal(startBalance, endBalance, "The buyer's account was debited for the cost of gas");
+      assert.equal(startBalance, endBalance, "The buyer's account was not changed"); // actually it will be charged gas, but that's hard to test with truffle
       assert.equal(cstBalance, 0, "The CST balance is correct");
       assert.equal(asInt(supply), 10, "The CST total supply was not updated");
       assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
     });
 
     it("can not purchase more CST than the CST sellCap", async function() {
+      let cst = await CardStackToken.new(10, "CardStack Token", "CST", web3.toWei(1, "ether"), web3.toWei(1, "ether"), 5);
+      let buyerAccount = accounts[1];
+      let txnValue = web3.toWei(6, "ether");
+      let startBalance = await web3.eth.getBalance(buyerAccount);
+
+      startBalance = asInt(startBalance);
+
+      try {
+        await cst.buy({
+          from: buyerAccount,
+          value: txnValue,
+          gas: 0 // cant introspect failed txn's, so set gas to 0 to make assertions easier
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let endBalance = await web3.eth.getBalance(buyerAccount);
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let supply = await cst.totalSupply();
+      let totalInCirculation = await cst.totalInCirculation();
+
+      endBalance = asInt(endBalance);
+
+      assert.equal(startBalance, endBalance, "The buyer's account was not changed"); // actually it will be charged gas, but that's hard to test with truffle
+      assert.equal(cstBalance, 0, "The CST balance is correct");
+      assert.equal(asInt(supply), 10, "The CST total supply was not updated");
+      assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
     });
   });
 
