@@ -567,7 +567,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
     });
 
-    it("TODO: cannot receive CST reward when frozen", async function() {
+    xit("cannot receive CST reward when frozen", async function() {
     });
   });
 
