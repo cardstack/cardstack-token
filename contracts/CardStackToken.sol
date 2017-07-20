@@ -58,9 +58,8 @@ contract CardStackToken is owned, freezable {
     Transfer(msg.sender, msg.sender, recipient, recipient, amount);
   }
 
-  function mintTokens(address target, uint mintedAmount) onlyOwner {
+  function mintTokens(uint mintedAmount) onlyOwner {
     //TODO: provide the ability to mint coin without depositing in an account
-    balanceOf[target] += mintedAmount;
     totalSupply += mintedAmount;
     // Transfer(0, this, mintedAmount);
     // Transfer(this, target, mintedAmount);

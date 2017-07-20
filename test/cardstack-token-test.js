@@ -34,18 +34,42 @@ contract('CardStackToken', function(accounts) {
   });
 
   describe("mintTokens()", function() {
+    xit("can allow the owner to mint tokens", async function() {
+    });
+
+    xit("does not allow a non-owner to mint tokens", async function() {
+    });
   });
 
   describe("grantTokens()", function() {
+    xit("can allow the owner to grant tokens", async function() {
+    });
+
+    xit("does not allow a non-owner to grant tokens", async function() {
+    });
   });
 
   describe("setPrices()", function() {
+    xit("can allow the owner to set buy and sell prices", async function() {
+    });
+
+    xit("does not allow a non-owner to set buy and sell prices", async function() {
+    });
   });
 
   describe("cstAvailableToBuy()", function() {
+    xit("indicates that cst are not available to buy when CST sold reaches the sell cap", async function() {
+    });
+    xit("indicates that cst are available to buy when CST sold has not reached the sell cap", async function() {
+    });
   });
 
   describe("setCstSellCap()", function() {
+    xit("can allow the owner to set sell cap", async function() {
+    });
+
+    xit("does not allow a non-owner to set sell cap", async function() {
+    });
   });
 
   describe("transfer()", function() {
@@ -582,7 +606,14 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
     });
 
+    xit("cannot send CST to the reward pool when frozen", async function() {
+    });
     xit("cannot receive CST reward when frozen", async function() {
+    });
+  });
+
+  describe("addToRewardPool", function() {
+    xit("can send CST to the reward pool", async function() {
     });
   });
 
