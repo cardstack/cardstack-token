@@ -10,14 +10,15 @@ contract CardStackToken is owned, freezable {
   uint public buyPrice;
   string public name;
   string public symbol;
-  uint public totalSupply;
   uint public totalInCirculation;
+  uint public totalTokens;
   uint public sellCap;
 
   /* This creates an array with all balances */
   mapping (address => uint) public balanceOf;
 
   /* This generates a public event on the blockchain that will notify clients */
+  event Mint(uint amountMinted, uint totalTokens);
   event Buy(address indexed buyer, address buyerAccount, uint value, uint purchasePrice);
   event Sell(address indexed seller, address sellerAccount, uint value, uint sellPrice);
   event Transfer(address indexed sender,
@@ -35,7 +36,7 @@ contract CardStackToken is owned, freezable {
     uint initialSellPrice,
     uint initialCstSellCap
   ) {
-    totalSupply = initialSupply;                        // Update total supply
+    totalTokens = initialSupply;                        // Update total supply
     name = tokenName;                                   // Set the name for display purposes
     symbol = tokenSymbol;                               // Set the symbol for display purposes
     sellPrice = initialSellPrice;
@@ -60,7 +61,7 @@ contract CardStackToken is owned, freezable {
 
   function mintTokens(uint mintedAmount) onlyOwner {
     //TODO: provide the ability to mint coin without depositing in an account
-    totalSupply += mintedAmount;
+    totalTokens += mintedAmount;
     // Transfer(0, this, mintedAmount);
     // Transfer(this, target, mintedAmount);
   }
@@ -70,7 +71,7 @@ contract CardStackToken is owned, freezable {
   }
 
   //TODO
-  function addToRewardPool(/*address account, uint amount*/) {
+  function addToRewardPool(/*address account, uint amount*/) unlessFrozen {
   }
 
   function setPrices(uint newSellPrice, uint newBuyPrice) onlyOwner {
@@ -92,12 +93,12 @@ contract CardStackToken is owned, freezable {
     assert(buyPrice > 0);
 
     uint amount = msg.value / buyPrice;
+    uint supply = totalTokens - totalInCirculation;
     assert(totalInCirculation + amount <= sellCap);
-    assert(amount <= totalSupply);
+    assert(amount <= supply);
     assert(balanceOf[msg.sender] + amount > balanceOf[msg.sender]); // check for overflow
 
     balanceOf[msg.sender] += amount;
-    totalSupply -= amount;
     totalInCirculation += amount;
     Buy(msg.sender, msg.sender, amount, msg.value);
   }
@@ -107,7 +108,6 @@ contract CardStackToken is owned, freezable {
     uint value = amount * sellPrice;
 
     balanceOf[msg.sender] -= amount;
-    totalSupply += amount;
     totalInCirculation -= amount;
 
     // always send only after changing state of contract to guard against re-entry attacks

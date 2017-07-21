@@ -47,7 +47,6 @@ contract('CardStackToken', function(accounts) {
       let { cumulativeGasUsed } = txn.receipt;
       let endWalletBalance = await web3.eth.getBalance(sellerAccount);
       let endCstBalance = await cst.balanceOf(sellerAccount);
-      let supply = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       endWalletBalance = asInt(endWalletBalance);
@@ -55,7 +54,6 @@ contract('CardStackToken', function(accounts) {
       assert.ok(cumulativeGasUsed < 50000, "Less than 50000 gas was used for the txn");
       assert.ok(Math.abs(startWalletBalance + (sellAmount * web3.toWei(0.1, "ether")) - (GAS_PRICE * cumulativeGasUsed) - endWalletBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet credited correctly");
       assert.equal(asInt(endCstBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(supply), 10, "The CST total supply was updated correctly");
       assert.equal(asInt(totalInCirculation), 90, "The CST total in circulation was updated correctly");
 
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
@@ -86,14 +84,12 @@ contract('CardStackToken', function(accounts) {
 
       let endBalance = await web3.eth.getBalance(sellerAccount);
       let cstBalance = await cst.balanceOf(sellerAccount);
-      let supply = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       endBalance = asInt(endBalance);
 
       assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The seller's account was changed for just gas");
       assert.equal(cstBalance, 10, "The CST balance is correct");
-      assert.equal(asInt(supply), 0, "The CST total supply was not updated");
       assert.equal(asInt(totalInCirculation), 100, "The CST total in circulation was not updated");
     });
   });

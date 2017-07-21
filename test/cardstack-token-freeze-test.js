@@ -45,14 +45,12 @@ contract('CardStackToken', function(accounts) {
 
       let endBalance = await web3.eth.getBalance(sellerAccount);
       let cstBalance = await cst.balanceOf(sellerAccount);
-      let supply = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       endBalance = asInt(endBalance);
 
       assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was only charged for gas"); // actually it will be charged gas, but that's hard to test with truffle
       assert.equal(asInt(cstBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(supply), 90, "The CST total supply was not updated");
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation was not updated");
     });
 
@@ -76,14 +74,12 @@ contract('CardStackToken', function(accounts) {
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
-      let supply = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       endBalance = asInt(endBalance);
 
       assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
       assert.equal(asInt(cstBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(supply), 90, "The CST total supply was not updated");
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation was not updated");
     });
 
@@ -104,12 +100,10 @@ contract('CardStackToken', function(accounts) {
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);
-      let supply = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(supply), 90, "The CST total supply has not changed");
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
     });
 
@@ -138,12 +132,10 @@ contract('CardStackToken', function(accounts) {
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);
-      let supply = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(supply), 80, "The CST total supply has not changed");
       assert.equal(asInt(totalInCirculation), 20, "The CST total in circulation has not changed");
     });
 
@@ -165,12 +157,10 @@ contract('CardStackToken', function(accounts) {
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);
-      let supply = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(supply), 90, "The CST total supply has not changed");
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
     });
 

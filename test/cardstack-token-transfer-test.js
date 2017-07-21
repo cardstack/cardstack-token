@@ -38,12 +38,10 @@ contract('CardStackToken', function(accounts) {
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);
-      let supply = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(supply), 90, "The CST total supply has not changed");
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
 
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
@@ -72,12 +70,10 @@ contract('CardStackToken', function(accounts) {
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);
-      let supply = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(supply), 90, "The CST total supply has not changed");
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
     });
   });

@@ -12,7 +12,7 @@ contract('CardStackToken', function(/*accounts*/) {
       let cst = await CardStackToken.new(10000, "CardStack Token", "CST", 2, 1, 8000);
       let name = await cst.name();
       let symbol = await cst.symbol();
-      let supply = await cst.totalSupply();
+      let totalTokens = await cst.totalTokens();
       let buyPrice = await cst.buyPrice();
       let sellPrice = await cst.sellPrice();
       let sellCap = await cst.sellCap();
@@ -20,7 +20,7 @@ contract('CardStackToken', function(/*accounts*/) {
 
       assert.equal(name, "CardStack Token", "The name of the token is correct");
       assert.equal(symbol, "CST", "The symbol of the token is correct");
-      assert.equal(supply, 10000, "The totalSupply is correct");
+      assert.equal(totalTokens, 10000, "The totalTokens is correct");
       assert.equal(sellCap, 8000, "The sellCap is correct");
       assert.equal(totalInCirculation, 0, "The totalInCirculation is correct");
       assert.equal(buyPrice, 2, "The buyPrice is correct");
