@@ -165,10 +165,90 @@ contract('CardStackToken', function(accounts) {
   });
 
   describe("setPrices()", function() {
-    xit("can allow the owner to set buy and sell prices", async function() {
+    it("can allow the owner to set buy and sell prices", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let ownerAccount = accounts[0];
+
+      let txn = await cst.setPrices(web3.toWei(2, "ether"), web3.toWei(1, "ether"), {
+        from: ownerAccount
+      });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+      assert.ok(txn.receipt);
+      assert.ok(txn.logs);
+
+      let sellPrice = await cst.sellPrice();
+      let buyPrice = await cst.buyPrice();
+
+      assert.equal(asInt(sellPrice), web3.toWei(2, "ether"), "The sellPrice is correct");
+      assert.equal(asInt(buyPrice), web3.toWei(1, "ether"), "The buyPrice is correct");
+
+      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "PriceChange", "The event type is correct");
+      assert.equal(asInt(event.args.newSellPrice), web3.toWei(2, "ether"), "The sell price is correct");
+      assert.equal(asInt(event.args.newBuyPrice), web3.toWei(1, "ether"), "The buy price is correct");
     });
 
-    xit("does not allow a non-owner to set buy and sell prices", async function() {
+    it("cannot set the buyPrice to 0", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let ownerAccount = accounts[0];
+
+      try {
+        await cst.setPrices(web3.toWei(2, "ether"), 0, {
+          from: ownerAccount
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let sellPrice = await cst.sellPrice();
+      let buyPrice = await cst.buyPrice();
+
+      assert.equal(asInt(sellPrice), web3.toWei(0.1, "ether"), "The sellPrice is correct");
+      assert.equal(asInt(buyPrice), web3.toWei(0.1, "ether"), "The buyPrice is correct");
+    });
+
+    it("cannot set the sellPrice to 0", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let ownerAccount = accounts[0];
+
+      try {
+        await cst.setPrices(0, web3.toWei(2, "ether"), {
+          from: ownerAccount
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let sellPrice = await cst.sellPrice();
+      let buyPrice = await cst.buyPrice();
+
+      assert.equal(asInt(sellPrice), web3.toWei(0.1, "ether"), "The sellPrice is correct");
+      assert.equal(asInt(buyPrice), web3.toWei(0.1, "ether"), "The buyPrice is correct");
+    });
+
+    it("does not allow a non-owner to set buy and sell prices", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let nonOwnerAccount = accounts[5];
+
+      try {
+        await cst.setPrices(web3.toWei(2, "ether"), web3.toWei(1, "ether"), {
+          from: nonOwnerAccount
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let sellPrice = await cst.sellPrice();
+      let buyPrice = await cst.buyPrice();
+
+      assert.equal(asInt(sellPrice), web3.toWei(0.1, "ether"), "The sellPrice is correct");
+      assert.equal(asInt(buyPrice), web3.toWei(0.1, "ether"), "The buyPrice is correct");
     });
   });
 

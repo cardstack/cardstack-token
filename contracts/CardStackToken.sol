@@ -18,6 +18,7 @@ contract CardStackToken is owned, freezable {
   mapping (address => uint) public balanceOf;
 
   /* This generates a public event on the blockchain that will notify clients */
+  event PriceChange(uint newSellPrice, uint newBuyPrice);
   event Grant(address indexed recipient, address recipientAccount, uint value);
   event Mint(uint amountMinted, uint totalTokens, uint sellCap);
   event Buy(address indexed buyer, address buyerAccount, uint value, uint purchasePrice);
@@ -82,8 +83,13 @@ contract CardStackToken is owned, freezable {
   }
 
   function setPrices(uint newSellPrice, uint newBuyPrice) onlyOwner {
+    require(newSellPrice > 0);
+    require(newBuyPrice > 0);
+
     sellPrice = newSellPrice;
     buyPrice = newBuyPrice;
+
+    PriceChange(newSellPrice, newBuyPrice);
   }
 
   // TODO
