@@ -18,7 +18,8 @@ contract CardStackToken is owned, freezable {
   mapping (address => uint) public balanceOf;
 
   /* This generates a public event on the blockchain that will notify clients */
-  event Mint(uint amountMinted, uint totalTokens);
+  event Grant(address indexed recipient, address recipientAccount, uint value);
+  event Mint(uint amountMinted, uint totalTokens, uint sellCap);
   event Buy(address indexed buyer, address buyerAccount, uint value, uint purchasePrice);
   event Sell(address indexed seller, address sellerAccount, uint value, uint sellPrice);
   event Transfer(address indexed sender,
@@ -60,14 +61,20 @@ contract CardStackToken is owned, freezable {
   }
 
   function mintTokens(uint mintedAmount) onlyOwner {
-    //TODO: provide the ability to mint coin without depositing in an account
+    require(totalTokens + mintedAmount > totalTokens); // test for overflow
+
     totalTokens += mintedAmount;
-    // Transfer(0, this, mintedAmount);
-    // Transfer(this, target, mintedAmount);
+    Mint(mintedAmount, totalTokens, sellCap);
   }
 
-  //TODO
-  function grantTokens() onlyOwner {
+  function grantTokens(address recipient, uint amount) onlyOwner {
+    require(amount <= totalTokens - totalInCirculation);           // make sure there are enough tokens to grant
+    require(balanceOf[recipient] + amount > balanceOf[recipient]); // test for overflow
+
+    totalInCirculation += amount;
+    balanceOf[recipient] += amount;
+
+    Grant(recipient, recipient, amount);
   }
 
   //TODO

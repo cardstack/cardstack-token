@@ -33,9 +33,13 @@ contract('CardStackToken', function(accounts) {
       let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
       let ownerAccount = accounts[0];
 
-      await cst.mintTokens(100, {
+      let txn = await cst.mintTokens(100, {
         from: ownerAccount
       });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+      assert.ok(txn.receipt);
+      assert.ok(txn.logs);
 
       let totalTokens = await cst.totalTokens();
       let sellCap = await cst.sellCap();
@@ -44,6 +48,14 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalTokens), 200, "The totalTokens is correct");
       assert.equal(asInt(sellCap), 100, "The sellCap is correct");
       assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
+
+      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "Mint", "The event type is correct");
+      assert.equal(asInt(event.args.amountMinted), 100, "The amount minted is correct");
+      assert.equal(asInt(event.args.totalTokens), 200, "The total tokens is correct");
+      assert.equal(asInt(event.args.sellCap), 100, "The sell cap is correct");
     });
 
     it("does not allow a non-owner to mint tokens", async function() {
@@ -70,10 +82,85 @@ contract('CardStackToken', function(accounts) {
   });
 
   describe("grantTokens()", function() {
-    xit("can allow the owner to grant tokens", async function() {
+    it("can allow the owner to grant tokens", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let ownerAccount = accounts[0];
+      let recipientAccount = accounts[9];
+
+      let txn = await cst.grantTokens(recipientAccount, 20, {
+        from: ownerAccount
+      });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+      assert.ok(txn.receipt);
+      assert.ok(txn.logs);
+
+      let totalTokens = await cst.totalTokens();
+      let sellCap = await cst.sellCap();
+      let totalInCirculation = await cst.totalInCirculation();
+      let recipientBalance = await cst.balanceOf(recipientAccount);
+
+      assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
+      assert.equal(asInt(sellCap), 10, "The sellCap is correct");
+      assert.equal(asInt(totalInCirculation), 20, "The totalInCirculation is correct");
+      assert.equal(asInt(recipientBalance), 20, "The recipientBalance is correct");
+
+      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "Grant", "The event type is correct");
+      assert.equal(event.args.recipient, recipientAccount, "The recipient is correct");
+      assert.equal(event.args.recipientAccount, recipientAccount, "The recipientAccount is correct");
+      assert.equal(asInt(event.args.value), 20, "The amount granted is correct");
     });
 
-    xit("does not allow a non-owner to grant tokens", async function() {
+    it("cannot grant more tokens than exist", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let ownerAccount = accounts[0];
+      let recipientAccount = accounts[9];
+
+      try {
+        await cst.grantTokens(recipientAccount, 101, {
+          from: ownerAccount
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let totalTokens = await cst.totalTokens();
+      let sellCap = await cst.sellCap();
+      let totalInCirculation = await cst.totalInCirculation();
+      let recipientBalance = await cst.balanceOf(recipientAccount);
+
+      assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
+      assert.equal(asInt(sellCap), 10, "The sellCap is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
+      assert.equal(asInt(recipientBalance), 0, "The recipientBalance is correct");
+    });
+
+    it("does not allow a non-owner to grant tokens", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let recipientAccount = accounts[9];
+
+      try {
+        await cst.grantTokens(recipientAccount, 10, {
+          from: recipientAccount
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let totalTokens = await cst.totalTokens();
+      let sellCap = await cst.sellCap();
+      let totalInCirculation = await cst.totalInCirculation();
+      let recipientBalance = await cst.balanceOf(recipientAccount);
+
+      assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
+      assert.equal(asInt(sellCap), 10, "The sellCap is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
+      assert.equal(asInt(recipientBalance), 0, "The recipientBalance is correct");
     });
   });
 
