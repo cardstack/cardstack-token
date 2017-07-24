@@ -1,11 +1,11 @@
-// const {
-//   GAS_PRICE,
-//   asInt
-// } = require("../lib/utils");
+const {
+  // GAS_PRICE,
+  asInt
+} = require("../lib/utils");
 
 const CardStackToken = artifacts.require("./CardStackToken.sol");
 
-contract('CardStackToken', function(/*accounts*/) {
+contract('CardStackToken', function(accounts) {
 
   describe("create contract", function() {
     it("should initialize the CST correctly", async function() {
@@ -20,19 +20,52 @@ contract('CardStackToken', function(/*accounts*/) {
 
       assert.equal(name, "CardStack Token", "The name of the token is correct");
       assert.equal(symbol, "CST", "The symbol of the token is correct");
-      assert.equal(totalTokens, 10000, "The totalTokens is correct");
-      assert.equal(sellCap, 8000, "The sellCap is correct");
-      assert.equal(totalInCirculation, 0, "The totalInCirculation is correct");
-      assert.equal(buyPrice, 2, "The buyPrice is correct");
-      assert.equal(sellPrice, 1, "The sellPrice is correct");
+      assert.equal(asInt(totalTokens), 10000, "The totalTokens is correct");
+      assert.equal(asInt(sellCap), 8000, "The sellCap is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
+      assert.equal(asInt(buyPrice), 2, "The buyPrice is correct");
+      assert.equal(asInt(sellPrice), 1, "The sellPrice is correct");
     });
   });
 
   describe("mintTokens()", function() {
-    xit("can allow the owner to mint tokens", async function() {
+    it("can allow the owner to mint tokens", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      let ownerAccount = accounts[0];
+
+      await cst.mintTokens(100, {
+        from: ownerAccount
+      });
+
+      let totalTokens = await cst.totalTokens();
+      let sellCap = await cst.sellCap();
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(asInt(totalTokens), 200, "The totalTokens is correct");
+      assert.equal(asInt(sellCap), 100, "The sellCap is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
     });
 
-    xit("does not allow a non-owner to mint tokens", async function() {
+    it("does not allow a non-owner to mint tokens", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      let nonOwnerAccount = accounts[9];
+
+      try {
+        await cst.mintTokens(100, {
+          from: nonOwnerAccount
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let totalTokens = await cst.totalTokens();
+      let sellCap = await cst.sellCap();
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
+      assert.equal(asInt(sellCap), 100, "The sellCap is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
     });
   });
 
