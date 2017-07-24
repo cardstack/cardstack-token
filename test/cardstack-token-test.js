@@ -1,5 +1,5 @@
 const {
-  // GAS_PRICE,
+  GAS_PRICE,
   asInt
 } = require("../lib/utils");
 
@@ -253,17 +253,76 @@ contract('CardStackToken', function(accounts) {
   });
 
   describe("cstAvailableToBuy()", function() {
-    xit("indicates that cst are not available to buy when CST sold reaches the sell cap", async function() {
+    it("indicates that cst are not available to buy when CST sold reaches the sell cap", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let nonOwnerAccount = accounts[2];
+
+      await cst.buy({
+        from: nonOwnerAccount,
+        value: web3.toWei(1, "ether"),
+        gasPrice: GAS_PRICE
+      });
+
+      let availableToBuy = await cst.cstAvailableToBuy();
+
+      assert.equal(availableToBuy, false, 'CST are not available to buy');
     });
-    xit("indicates that cst are available to buy when CST sold has not reached the sell cap", async function() {
+
+    it("indicates that cst are available to buy when CST sold has not reached the sell cap", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let nonOwnerAccount = accounts[2];
+
+      await cst.buy({
+        from: nonOwnerAccount,
+        value: web3.toWei(0.5, "ether"),
+        gasPrice: GAS_PRICE
+      });
+
+      let availableToBuy = await cst.cstAvailableToBuy();
+
+      assert.equal(availableToBuy, true, 'CST are not available to buy');
     });
   });
 
   describe("setCstSellCap()", function() {
-    xit("can allow the owner to set sell cap", async function() {
+    it("can allow the owner to set sell cap", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let ownerAccount = accounts[0];
+
+      let txn = await cst.setSellCap(20, {
+        from: ownerAccount
+      });
+
+      assert.ok(txn.receipt);
+      assert.ok(txn.logs);
+
+      let sellCap = await cst.sellCap();
+
+      assert.equal(asInt(sellCap), 20, "The sellCap is correct");
+
+      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "SellCapChange", "The event type is correct");
+      assert.equal(asInt(event.args.newSellCap), 20, "The sell price is correct");
     });
 
-    xit("does not allow a non-owner to set sell cap", async function() {
+    it("does not allow a non-owner to set sell cap", async function() {
+      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      let nonOwnerAccount = accounts[5];
+
+      try {
+        await cst.setsellcap(20, {
+          from: nonOwnerAccount
+        });
+        assert.ok(false, "Transaction should fire exception");
+      } catch(err) {
+        // expect exception to be fired
+      }
+
+      let sellCap = await cst.sellCap();
+
+      assert.equal(asInt(sellCap), 10, "The sellCap is correct");
     });
   });
 
