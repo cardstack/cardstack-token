@@ -68,7 +68,9 @@ The CardStack CST->SSC Exchange Smart Contract allows users to exchange the CST 
    * The CST smart contract mints some percentage of new CST based on the amount in the reward pool and then adds those newly minted tokens to the reward pool.
    * _(is this the right place for this--should this be on the specific application contract? - NO, applicaiton contract cannot touch CST)_ the reward function consults an oracle to get hosting fees to pay the hosting providers and transfers the appropriate amount of CST funds from the locked reward pool to the hosting provider to pay for hosting since the last reward cycle.
    * The reward function invokes attribution oracle to get a list of etherium addresses and weights for rewards (see note at bottom of document). Possible inputs to the attribution oracle could be the URL's of all the github projects governed by a cardstack application contracts; however, that is a list that only grows over time and will continue to cost more gas as time goes on.
+   * The reward function provides to the attribution oracle and the "fees" oracle the reward start block hight and the reward end block beight.
    * The reward function divides the rest of the locked reward pool based on the weights and addresses that the oracle function returns. Note, since etherium cannot support floating points, the weights provided to the smart contract should be described as fractions: NUMERATOR, DENOMINATOR, eg. `12.5%` would be described as `125, 1000`.
+  
    
    
    
