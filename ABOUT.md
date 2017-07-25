@@ -61,9 +61,15 @@ The CardStack CST->SSC Exchange Smart Contract allows users to exchange the CST 
 
 9. At regular block intervals, as part of the CardStack token mining function a reward the following is performed (which is spread out over mulitple blocks as necessary so that the block gas limit is not exceeded):
    * The reward function locks the reward pool while we are processing the reward function and establishes another pool for any new rewards to be collected for the next reward capture period.
-   * _(is this the right place for this--shoudl this be on the specific application contract?)_ the reward function consults an oracle to get hosting fees to pay the hosting providers and transfers the appropriate amount of CST funds from the locked reward pool to the hosting provider to pay for hosting since the last reward cycle.
+   * The CST smart contract mints some percentage of new CST based on the amount in the reward pool and then adds those newly minted tokens to the reward pool.
+   * _(is this the right place for this--should this be on the specific application contract?)_ the reward function consults an oracle to get hosting fees to pay the hosting providers and transfers the appropriate amount of CST funds from the locked reward pool to the hosting provider to pay for hosting since the last reward cycle.
    * The reward function invokes attribution oracle to get a list of etherium addresses and weights for rewards.
    * The reward function divides the rest of the locked reward pool based on the weights and addresses that the oracle function returns. Note, since etherium cannot support floating points, the weights provided to the smart contract should be described as fractions: NUMERATOR, DENOMINATOR, eg. `12.5%` would be described as `125, 1000`.
+   
+   
+   
+**Note:** The attribution oracle can discover all the cardstack applications and their github projects via the genesis contract. The Genesis contract will maintain a ledger of all the cardstack application conracts. From the cardstack application contracts, each application contract can point to a gitub project URL (requires public github project?), and from the github project URL a list of contibutors, their addresses, and open source contribution percentages will be found in an attribution.json file in the root of the project.
+   
     
 
   
