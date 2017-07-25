@@ -43,7 +43,7 @@ The CardStack CST->SSC Exchange Smart Contract allows users to exchange the CST 
 
    a) A CardStack user purchases CST from the CST smart contract. Additionally, the CardStack Foundation may, of its chosing, grant CST to individuals.
    
-   * A CardStack user uses the CST->SSC exchange smart contract to exchange their CST to SSC based on the current market value of CST. CST collected from this contract will be added to the reward pool maintained by the CST smart contract
+   * A CardStack user uses the CST->SSC exchange smart contract to exchange their CST to SSC based on the current market value of CST. CST collected from this contract will be added to the reward pool maintained by the CST smart contract. 
 
    b) A CardStack user uses ethers to purchase SSC from the SSC smart contract.
    
@@ -55,14 +55,18 @@ The CardStack CST->SSC Exchange Smart Contract allows users to exchange the CST 
 
 7. A CardStack user, following the terms of the CardStack Application smart contract, prepays for software and services by redeeming their SSC with the CardStack Application smart contract that governs the CardStack user's application.
 
-8. A CardStack application maintainer invokes the CardStack Application smart contract to process metered usage _(this needs to be on going and automated? a mining function probably wont work here as this contract wont regularly be mined like the CST contract, for instance)_ 
+8. A CardStack application maintainer invokes the CardStack Application smart contract to process metered usage _(there needs to be a "heartbeat" that triggers this txn, like a lambda function that has access to a wallet for gas to than can initate this function)_ 
    * The Card Stack application contract consults with an oracle to calculate hosting fees since the last time this function was invoked and uses the services multiplier to determine how many SSC should be redeemed.
    * The CardStack application contract burns the SSC that are redeemed. This burn signal (left in the ledger of the CardStack application contract) will be used later to calculate rewards.
+   * If the CardStack application balance of SSC is not enough to pay for usages bad things happen.
+   * Fire events for off chain processes when the SSC balance is low and when it is empty so that hosting provider can turn off the lights if need be.
+   * Auto refill for application smart contract with a wallet that performs this service
+   * if SSC expired it will not count towards the balance. we determine expiration based on the last time you used SSC both in terms of when you last bought SSC and if the application has a auto renew. expired SSC go into a special ledger in the application contract (used by the attribution oracle). Need to denote the time of the expiration so it doesnt get double counted by the oracle?
 
-9. At regular block intervals, as part of the CardStack token mining function a reward the following is performed (which is spread out over mulitple blocks as necessary so that the block gas limit is not exceeded):
+9. At regular block intervals, as part of the CardStack token mining function a reward funciton is invoked performed (which is spread out over mulitple blocks as necessary so that the block gas limit is not exceeded):
    * The reward function locks the reward pool while we are processing the reward function and establishes another pool for any new rewards to be collected for the next reward capture period.
    * The CST smart contract mints some percentage of new CST based on the amount in the reward pool and then adds those newly minted tokens to the reward pool.
-   * _(is this the right place for this--should this be on the specific application contract?)_ the reward function consults an oracle to get hosting fees to pay the hosting providers and transfers the appropriate amount of CST funds from the locked reward pool to the hosting provider to pay for hosting since the last reward cycle.
+   * _(is this the right place for this--should this be on the specific application contract? - NO, applicaiton contract cannot touch CST)_ the reward function consults an oracle to get hosting fees to pay the hosting providers and transfers the appropriate amount of CST funds from the locked reward pool to the hosting provider to pay for hosting since the last reward cycle.
    * The reward function invokes attribution oracle to get a list of etherium addresses and weights for rewards (see note at bottom of document). Possible inputs to the attribution oracle could be the URL's of all the github projects governed by a cardstack application contracts; however, that is a list that only grows over time and will continue to cost more gas as time goes on.
    * The reward function divides the rest of the locked reward pool based on the weights and addresses that the oracle function returns. Note, since etherium cannot support floating points, the weights provided to the smart contract should be described as fractions: NUMERATOR, DENOMINATOR, eg. `12.5%` would be described as `125, 1000`.
    
