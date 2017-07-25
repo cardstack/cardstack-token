@@ -3,14 +3,16 @@
 ## Smart Contracts
 
 ### CardStack Token Smart Contract
-The CardStack Token smart contract governs the issuance, purchase, and selling of CardStack Tokens (CST) and is owned by the CardStack Foundation. This contract has the ability to create mulitple instances of the CardSTack Attribution Smart Contract which governs specific CardStack applications.
+The CardStack Token smart contract governs the issuance, purchase, and selling of CardStack Tokens (CST) and is owned by the CardStack Foundation. This contract provides a capability to convert CST to SSC. Any CST captured as part of the CST -> SSC conversion is held in a reward pool. This contract also facilitates a special CST purchase that the SSC can perform as a means of holding custodial CST for CardStack users that wish to only deal in terms of SSC directly. At regular intervals, as part of the mining function, this contract consults an oracle to determine how to allocate the reward pool that has accrued. After the rewards are calculated, the CST balances of the reward recipients are updated accordingly. 
 
-### CardStack Attribution Smart Contract
-The CardStack Attribution smart contract is used to collect Software and Services Credits and then disseminate the CST rewards based on attribution signals for a specific CardStack project. A CardStack Attribution smart contract is instantiated from the CardStack Token contract by the CardStack application maintainer. A reward pool, based on the CST value of the SSC collected is disbursed amongst the contributors of the CardStack application for which the CardStack Attribution contract was created. The reward pool disbursements are based on attribution signals collected by a CardStack attribution oracle.
+### CardStack Application Smart Contract
+The CardStack Application smart contract is used to collect Software and Services Credits from CardStack users as prepayment for software and services as outlined by the smart contract. The CardStack Application smart contract uses an oracle function to determine how much SSC to burn the SSC based on metered usage of the application and a services multipler. A CardStack Application smart contract is instantiated from a "genesis contract" where the CardStack application maintainer can stipulate the terms of the contract between them and the CardStack user via input paramters in the Genesis contract's function to create a CardStack Applicaiton smart contract. The SSC burns made by this contract are used by the CardStack Token smart contract (or maybe the attribution oracle itself?) to determine rewards.
 
 ### Software and Services Credit Smart Contract
-The Software and Services Credit smart contracts is governs the issuance, purchase, and selling of Software and Services Credits (SSC). Software and Services Credits are non transferable credits that are pegged to the USD and expire after a certain period. SSC can be used with a CardStack Attribution Smart Contract to exchange for software and services for a CardStack application that the Attribution contract governs.
+The Software and Services Credit smart contracts is governs the issuance, purchase, and selling of Software and Services Credits (SSC). Software and Services Credits are non transferable credits that are pegged to the USD and expire after a certain period. SSC can be used with a CardStack Application Smart Contract to redeem for software and services for a CardStack application that the CardStack Application contract governs.
 
+### CardStack Application Genesis Smart Contract
+The CardStack Application Genesis Smart Contract is used a means to produce instances of the CardStack Application Smart Contract. A CardStack application maintainer can invoke a function in the Genesis smart contract with various parameters that govern the contract between a CardStack application maintainer and a CardStack user to create a new instance of a CardStack Application smart contract. Various parameters specified as part of the creation of a CardStack Application smart contact would be the amount of SSC and the frequency of SSC redemptions required to maintain the CardStack application. 
 
 ## Lifecycle
 
