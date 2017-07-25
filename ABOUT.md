@@ -59,7 +59,8 @@ The CardStack CST->SSC Exchange Smart Contract allows users to exchange the CST 
    * The Card Stack application contract consults with an oracle to calculate hosting fees since the last time this function was invoked and uses the services multiplier to determine how many SSC should be redeemed.
    * The CardStack application contract burns the SSC that are redeemed. This burn signal (left in the ledger of the CardStack application contract) will be used later to calculate rewards.
 
-9.
+9. At regular block intervals, as part of the CardStack token mining function a reward the following is performed (which is spread out over mulitple blocks as necessary so that the block gas limit is not exceeded):
+   * blah
 
   
 
