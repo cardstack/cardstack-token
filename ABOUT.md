@@ -26,6 +26,9 @@ The CardSTack CST Custodial Smart Contract is used to by the SSC contract to pur
 ### SSC Top-Off (auto-replenish) Smart Contract
 The SSC Top-Off Smart contract is owned by the CardStack user and used to automatically replenish the balance of the CardStack User's Application smart contract. The CardStack User can add SSC to the Top-Off smart contract, as well as the address of the Application Smart contract. When the Application smart contract emits an event that the funds are low, the SSC Top-Off smart contract will replenish the applicaiton contract with enough funds so that a maximum SSC balance (which is configurable) is met. Funds transferred in such a manner will have their expiration date calculated based on the date that the SSC were added to the top-off contract. 
 
+### CardStack Team Smart Contract
+The CardSTack Team Smart Contract is used to distribute CST rewards amongst the maintainers of a CardStack application. The CardStack Rewards smart contract will disseminate funds to the team. The team can leverage a CardStack team smart contract to then disseminate funds within the team.
+
 ## Lifecycle
 
 1. The CardStack Foundation creates the CardStack Token smart contract that governs CST, as part of this creation the following are established:
