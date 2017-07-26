@@ -24,6 +24,7 @@ The CardStack Reward contract is used to diesseminate CST rewards based on attri
 The CardSTack CST Custodial Smart Contract is used to by the SSC contract to purchase CST on behalf of CardStack users that do not wish to retain CST, and rather purchase SSC directly. The CardStack CST Custodial Smart Contract is send ethers from the SSC smart contract's buy function, and uses those ethers to purchase CST at the current CST sell price. The purchased CST are then sent to the CardStack CST -> SSC exchange smart contract which captures the CST for the reward pool and issues the user SSC.
 
 ### SSC Top-Off (auto-replenish) Smart Contract
+The SSC Top-Off Smart contract is owned by the CardStack user and used to automatically replenish the balance of the CardStack User's Application smart contract. The CardStack User can add SSC to the Top-Off smart contract, as well as the address of the Application Smart contract. When the Application smart contract emits an event that the funds are low, the SSC Top-Off smart contract will replenish the applicaiton contract with enough funds so that a maximum SSC balance (which is configurable) is met. Funds transferred in such a manner will have their expiration date calculated based on the date that the SSC were added to the top-off contract. 
 
 ## Lifecycle
 
