@@ -17,7 +17,6 @@ contract CardStackToken is owned, freezable {
   /* This creates an array with all balances */
   mapping (address => uint) public balanceOf;
 
-  /* This generates a public event on the blockchain that will notify clients */
   event SellCapChange(uint newSellCap);
   event PriceChange(uint newSellPrice, uint newBuyPrice);
   event Grant(address indexed recipient, address recipientAccount, uint value);
@@ -79,8 +78,15 @@ contract CardStackToken is owned, freezable {
     Grant(recipient, recipient, amount);
   }
 
-  //TODO
+  // TODO this probably needs to go into a seaprate contract, e.g. "Attribution Contract"
+  // that is created for each cardstack app maintainer so that
+  // the reward will only be shared by the contributors for the specific
+  // app.
   function addToRewardPool(/*address account, uint amount*/) unlessFrozen {
+  }
+
+  // TODO
+  function createAttributionContract() {
   }
 
   function setPrices(uint newSellPrice, uint newBuyPrice) onlyOwner {

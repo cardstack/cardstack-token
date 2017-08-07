@@ -231,6 +231,10 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(buyPrice), web3.toWei(0.1, "ether"), "The buyPrice is correct");
     });
 
+    // this prevents the CST from becoming insolvent
+    xit("cannot set sellPrice higher than amount it would cost for CST contract to buy back all CST", async function() {
+    });
+
     it("does not allow a non-owner to set buy and sell prices", async function() {
       let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
       let nonOwnerAccount = accounts[5];
