@@ -6,6 +6,7 @@ import "./open-zepplin/math/SafeMath.sol";
 
 
 // TODO add an "upgradable" base contract to provide an upgrade path for the CST contract
+// TODO add a function that can halt trading across the board for CST in case of emergency (based on consessys best practices)
 
 // TODO add additional ERC20 Token standard functions for approving spends on your behalf and setting an allowance
 // https://github.com/ConsenSys/Tokens
