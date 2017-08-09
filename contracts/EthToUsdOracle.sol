@@ -6,7 +6,7 @@
  */
 
 pragma solidity ^0.4.0;
-import "./oraclize/ethereum-api/oraclizeAPI.sol";
+import "./oraclize/usingOraclize.sol";
 
 contract EthToUsdOracle is usingOraclize {
 
@@ -16,7 +16,7 @@ contract EthToUsdOracle is usingOraclize {
   event newPriceTicker(string price);
 
   function EthToUsdOracle() {
-    // This is necessary for unit tests.
+    // This is necessary for unit tests. the address comes from `npm run oraclize`
     // TODO need to figure out a way to only set this in test and not in production
     OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
 
