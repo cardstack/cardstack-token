@@ -25,6 +25,11 @@ For testing we leverage a local private blockchain [testrpc](https://github.com/
 npm run testrpc
 ```
 
+Additionally, we use the [Oraclize](http://www.oraclize.it/) service to create own own oracles from trusted web feeds. In order to test contracts that rely on these oracle functions we need to deploy a local Oraclize service within our private blockchain. After the testrpc has been started, start up the local Oraclize service:
+```
+npm run oraclize
+```
+
 then execute the tests:
 ```
 npm test
