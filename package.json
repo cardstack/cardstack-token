@@ -7,12 +7,16 @@
   },
   "scripts": {
     "test": "./node_modules/.bin/truffle test",
-    "testrpc": "./node_modules/.bin/testrpc"
+    "testrpc": "./node_modules/.bin/testrpc --mnemonic='gooches are never the answer' --accounts 50",
+    "oraclize": "./bin/oraclize.sh"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "ethereum-bridge": "^0.5.4-alpha-1",
     "ethereumjs-testrpc": "^4.0.1",
     "truffle": "^3.4.4"
+  },
+  "dependencies": {
   }
 }

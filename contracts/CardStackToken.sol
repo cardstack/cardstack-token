@@ -2,9 +2,18 @@ pragma solidity ^0.4.2;
 
 import "./owned.sol";
 import "./freezable.sol";
+import "./open-zepplin/math/SafeMath.sol";
 
-//TODO add an "upgradable" base contract to provide an upgrade path for the CST contract
+
+// TODO add an "upgradable" base contract to provide an upgrade path for the CST contract
+
+// TODO add additional ERC20 Token standard functions for approving spends on your behalf and setting an allowance
+// https://github.com/ConsenSys/Tokens
+
 contract CardStackToken is owned, freezable {
+
+  using SafeMath for uint256;
+  // example: totalPayments = totalPayments.sub(payment);
 
   uint public sellPrice;
   uint public buyPrice;
