@@ -58,15 +58,16 @@ contract('CardStackToken', function(accounts) {
     it("should not be able to transfer more CST than is in the sender's account", async function() {
       let transferAmount = 11;
 
+      let exceptionThrown;
       try {
         await cst.transfer(recipientAccount, transferAmount, {
           from: senderAccount,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);

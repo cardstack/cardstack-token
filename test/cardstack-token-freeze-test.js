@@ -33,15 +33,16 @@ contract('CardStackToken', function(accounts) {
       let sellAmount = 1;
       startBalance = asInt(startBalance);
 
+      let exceptionThrown;
       try {
         await cst.sell(sellAmount, {
           from: sellerAccount,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(sellerAccount);
       let cstBalance = await cst.balanceOf(sellerAccount);
@@ -61,16 +62,17 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
+      let exceptionThrown;
       try {
         await cst.buy({
           from: buyerAccount,
           value: txnValue,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -88,15 +90,16 @@ contract('CardStackToken', function(accounts) {
       let recipientAccount = accounts[6];
       let transferAmount = 1;
 
+      let exceptionThrown;
       try {
         await cst.transfer(recipientAccount, transferAmount, {
           from: senderAccount,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);
@@ -120,15 +123,16 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
+      let exceptionThrown;
       try {
         await cst.transfer(recipientAccount, transferAmount, {
           from: senderAccount,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);

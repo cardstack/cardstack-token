@@ -72,15 +72,16 @@ contract('CardStackToken', function(accounts) {
       let sellAmount = 11;
       startBalance = asInt(startBalance);
 
+      let exceptionThrown;
       try {
         await cst.sell(sellAmount, {
           from: sellerAccount,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(sellerAccount);
       let cstBalance = await cst.balanceOf(sellerAccount);

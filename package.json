@@ -7,17 +7,20 @@
   },
   "scripts": {
     "test": "./node_modules/.bin/truffle test",
-    "testrpc": "rm ./node_modules/ethereum-bridge/config/instance/*.json && ./node_modules/.bin/testrpc --mnemonic='gooches are never the answer' --accounts 50",
+    "testrpc": "rm -f ./node_modules/ethereum-bridge/config/instance/*.json && ./node_modules/.bin/testrpc --mnemonic='gooches are never the answer' --accounts 50",
     "oraclize": "./bin/oraclize.sh",
-    "oraclize-clean": "rm ./node_modules/ethereum-bridge/config/instance/*.json"
+    "oraclize-clean": "rm -f ./node_modules/ethereum-bridge/config/instance/*.json"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "bluebird": "^3.5.0",
     "ethereum-bridge": "^0.5.4-alpha-1",
     "ethereumjs-testrpc": "^4.0.1",
+    "lodash": "^4.17.4",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1",
     "truffle": "^3.4.4"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }

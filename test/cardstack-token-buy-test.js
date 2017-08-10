@@ -69,16 +69,17 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
+      let exceptionThrown;
       try {
         await cst.buy({
           from: buyerAccount,
           value: txnValue,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -99,16 +100,17 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
+      let exceptionThrown;
       try {
         await cst.buy({
           from: buyerAccount,
           value: txnValue,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -129,16 +131,17 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
+      let exceptionThrown;
       try {
         await cst.buy({
           from: buyerAccount,
           value: txnValue,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -159,16 +162,17 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
+      let exceptionThrown;
       try {
         await cst.buy({
           from: buyerAccount,
           value: txnValue,
           gasPrice: GAS_PRICE
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);

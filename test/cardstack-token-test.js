@@ -62,14 +62,15 @@ contract('CardStackToken', function(accounts) {
       let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
       let nonOwnerAccount = accounts[9];
 
+      let exceptionThrown;
       try {
         await cst.mintTokens(100, {
           from: nonOwnerAccount
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let totalTokens = await cst.totalTokens();
       let sellCap = await cst.sellCap();
@@ -119,14 +120,15 @@ contract('CardStackToken', function(accounts) {
       let ownerAccount = accounts[0];
       let recipientAccount = accounts[9];
 
+      let exceptionThrown;
       try {
         await cst.grantTokens(recipientAccount, 101, {
           from: ownerAccount
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let totalTokens = await cst.totalTokens();
       let sellCap = await cst.sellCap();
@@ -143,14 +145,15 @@ contract('CardStackToken', function(accounts) {
       let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
       let recipientAccount = accounts[9];
 
+      let exceptionThrown;
       try {
         await cst.grantTokens(recipientAccount, 10, {
           from: recipientAccount
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let totalTokens = await cst.totalTokens();
       let sellCap = await cst.sellCap();
@@ -195,14 +198,15 @@ contract('CardStackToken', function(accounts) {
       let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
       let ownerAccount = accounts[0];
 
+      let exceptionThrown;
       try {
         await cst.setPrices(web3.toWei(2, "ether"), 0, {
           from: ownerAccount
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let sellPrice = await cst.sellPrice();
       let buyPrice = await cst.buyPrice();
@@ -215,14 +219,15 @@ contract('CardStackToken', function(accounts) {
       let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
       let ownerAccount = accounts[0];
 
+      let exceptionThrown;
       try {
         await cst.setPrices(0, web3.toWei(2, "ether"), {
           from: ownerAccount
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let sellPrice = await cst.sellPrice();
       let buyPrice = await cst.buyPrice();
@@ -239,14 +244,15 @@ contract('CardStackToken', function(accounts) {
       let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
       let nonOwnerAccount = accounts[5];
 
+      let exceptionThrown;
       try {
         await cst.setPrices(web3.toWei(2, "ether"), web3.toWei(1, "ether"), {
           from: nonOwnerAccount
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let sellPrice = await cst.sellPrice();
       let buyPrice = await cst.buyPrice();
@@ -315,14 +321,15 @@ contract('CardStackToken', function(accounts) {
       let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
       let nonOwnerAccount = accounts[5];
 
+      let exceptionThrown;
       try {
         await cst.setsellcap(20, {
           from: nonOwnerAccount
         });
-        assert.ok(false, "Transaction should fire exception");
       } catch(err) {
-        // expect exception to be fired
+        exceptionThrown = true;
       }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let sellCap = await cst.sellCap();
 
