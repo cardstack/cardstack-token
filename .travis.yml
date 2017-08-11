@@ -15,9 +15,9 @@ before_install:
 
 install:
   - yarn install
-  - npm run testrpc &
+  - echo "Starting testrpc" && npm run testrpc > /dev/null &
   - sleep 10
-  - npm run oraclize &
+  - echo "Starting oraclize" && npm run oraclize > /dev/null &
   - sleep 120
 
 script:
