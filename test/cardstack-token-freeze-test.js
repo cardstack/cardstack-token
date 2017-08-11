@@ -168,6 +168,12 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
     });
 
+    xit("should not be able to mint tokens when token is frozen", async function() {
+    });
+    xit("should not be able to grant tokens when token is frozen", async function() {
+    });
+    xit("should be able to freeze entire token", async function() {
+    });
     xit("cannot send CST to the reward pool when frozen", async function() {
     });
     xit("cannot receive CST reward when frozen", async function() {

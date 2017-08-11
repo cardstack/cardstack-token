@@ -71,14 +71,14 @@ contract CardStackToken is owned, freezable {
     Transfer(msg.sender, msg.sender, recipient, recipient, amount);
   }
 
-  function mintTokens(uint mintedAmount) onlyOwner {
+  function mintTokens(uint mintedAmount) onlyOwner unlessFrozen {
     require(totalTokens + mintedAmount > totalTokens); // test for overflow
 
     totalTokens += mintedAmount;
     Mint(mintedAmount, totalTokens, sellCap);
   }
 
-  function grantTokens(address recipient, uint amount) onlyOwner {
+  function grantTokens(address recipient, uint amount) onlyOwner unlessFrozen {
     require(amount <= totalTokens - totalInCirculation);           // make sure there are enough tokens to grant
     require(balanceOf[recipient] + amount > balanceOf[recipient]); // test for overflow
 
@@ -86,17 +86,6 @@ contract CardStackToken is owned, freezable {
     balanceOf[recipient] += amount;
 
     Grant(recipient, recipient, amount);
-  }
-
-  // TODO this probably needs to go into a seaprate contract, e.g. "Attribution Contract"
-  // that is created for each cardstack app maintainer so that
-  // the reward will only be shared by the contributors for the specific
-  // app.
-  function addToRewardPool(/*address account, uint amount*/) unlessFrozen {
-  }
-
-  // TODO
-  function createAttributionContract() {
   }
 
   function setPrices(uint newSellPrice, uint newBuyPrice) onlyOwner {
