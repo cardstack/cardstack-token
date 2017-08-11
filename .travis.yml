@@ -1,0 +1,24 @@
+---
+language: node_js
+
+node_js:
+  - "7.6"
+
+cache:
+  yarn: true
+  directories:
+    - node_modules
+
+before_install:
+  - curl -o- -L https://yarnpkg.com/install.sh | bash
+  - export PATH=$HOME/.yarn/bin:$PATH
+
+install:
+  - yarn install
+  - npm run testrpc
+  - sleep 10
+  - npm run oraclize
+  - sleep 120
+
+script:
+  - npm test
