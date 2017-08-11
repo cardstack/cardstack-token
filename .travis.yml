@@ -15,9 +15,9 @@ before_install:
 
 install:
   - yarn install
-  - sudo service npm run testrpc
+  - npm run testrpc &
   - sleep 10
-  - npm run oraclize
+  - npm run oraclize &
   - sleep 120
 
 script:
