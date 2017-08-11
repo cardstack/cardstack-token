@@ -1,10 +1,3 @@
-/*
-   Kraken-based ETH/XBT price ticker
-
-   This contract keeps in storage an updated ETH/XBT price,
-   which is updated every ~60 seconds.
- */
-
 pragma solidity ^0.4.0;
 import "./owned.sol";
 import "./oraclize/usingOraclize.sol";
