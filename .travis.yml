@@ -15,10 +15,12 @@ before_install:
 
 install:
   - yarn install
-  - echo "Starting testrpc" && npm run testrpc > /dev/null &
+  - npm run testrpc > /dev/null &
   - sleep 10
-  - echo "Starting oraclize" && npm run oraclize > /dev/null &
+  - npm run oraclize > /dev/null &
   - sleep 120
+  - cd $HOME
 
 script:
+  - echo `pwd`
   - npm test
