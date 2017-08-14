@@ -299,23 +299,49 @@ contract('SoftwareAndServiceCredit', function(accounts) {
   });
 
   describe("expire SSC", function() {
+    let user = accounts[9];
+
     beforeEach(async function() {
       ssc = await SoftwareAndServiceCredit.new();
     });
 
-    xit("hasExpired should return false when the account has never had SSC activity", async function() {
+    it("hasExpired should return false when the account has never had SSC activity", async function() {
+      let user = accounts[7];
+      let isExpired = await ssc.hasExpired(user, { from: user });
+
+      assert.notOk(isExpired, 'SSC hasExpired is set correctly');
     });
 
-    xit("hasExpired should return false when SSC activity has occured before the expiration period", async function() {
+    it("hasExpired should return false when SSC activity has occured before the expiration period", async function() {
+      await ssc.issueSSC(user, 100);
+      let isExpired = await ssc.hasExpired(user, { from: user });
+
+      assert.notOk(isExpired, 'SSC hasExpired is set correctly');
     });
 
-    xit("hasExpired should return true when SSC activity has not occured during the expiration period", async function() {
+    it("hasExpired should return true when SSC activity has not occured during the expiration period", async function() {
+      await ssc.issueSSC(user, 100);
+      await new Bluebird.Promise(res => setTimeout(() => res(), 2 * 1000)); // pause a moment so that the last active time will be different
+      await ssc.setSscExpiration(1, { from: owner });
+
+      let isExpired = await ssc.hasExpired(user, { from: user });
+
+      assert.ok(isExpired, 'SSC hasExpired is set correctly');
     });
 
-    xit("should allow the owner to change the SSC expiration period", async function() {
-    });
+    it("should not allow a non-owner to change the SSC expiration period", async function() {
+      let expirationTime = await ssc.sscExpirationSeconds();
+      let exceptionThrown;
 
-    xit("should not allow a non-owner to change the SSC expiration period", async function() {
+      try {
+        await ssc.setSscExpiration(10, { from: user });
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Exception was thrown when non-owner tries to change the expiration time");
+
+      let unchangedExpiration = await ssc.sscExpirationSeconds();
+      assert.equal(expirationTime.toNumber(), unchangedExpiration.toNumber(), 'The expiration time was not changed');
     });
   });
 
