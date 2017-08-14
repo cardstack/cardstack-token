@@ -1,3 +1,4 @@
+const Bluebird = require('bluebird');
 const SoftwareAndServiceCredit = artifacts.require("./SoftwareAndServiceCredit.sol");
 
 contract('SoftwareAndServiceCredit', function(accounts) {
@@ -203,28 +204,106 @@ contract('SoftwareAndServiceCredit', function(accounts) {
 
   describe("burn SSC", function() {
     let appContract = accounts[8];
+    let user = accounts[9];
 
     beforeEach(async function() {
       ssc = await SoftwareAndServiceCredit.new();
-      await ssc.applicationContracts(appContract, { from: owner });
+      await ssc.addApplicationContract(appContract, { from: owner });
+      await ssc.issueSSC(user, 100);
+      await new Bluebird.Promise(res => setTimeout(() => res(), 2 * 1000)); // pause a moment so that the last active time will be different
     });
 
-    xit("should allow application contract to burn non-expired SSC and return true", async function() {
+    it("should allow application contract to burn non-expired SSC", async function() {
+      let lastActiveTime = await ssc.lastActiveTime(user);
+
+      let txn = await ssc.burn(user, 90, { from: appContract });
+
+      let newLastActiveTime = await ssc.lastActiveTime(user);
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 10, 'the balance was updated correctly');
+      assert.ok(newLastActiveTime.toNumber() > lastActiveTime.toNumber(), 'the lastActiveTime for the user was increased');
+
+      assert.equal(txn.logs.length, 1, 'an event was fired');
+
+      let event = txn.logs[0];
+
+      assert.equal(event.event, "SSCBurned", "the event type is correct");
+      assert.equal(event.args.appContract, appContract, "the appContract is correct");
+      assert.equal(event.args.appContractAddress, appContract, "the appContractAddress is correct");
+      assert.equal(event.args.account, user, "the account is correct");
+      assert.equal(event.args.accountAddress, user, "the accountAddress is correct");
+      assert.equal(event.args.amount, "90", "the amount is correct");
     });
 
-    xit("should allow application contract to burn expired SSC and return false", async function() {
+    it("should allow application contract to burn expired SSC", async function() {
+      let lastActiveTime = await ssc.lastActiveTime(user);
+      await ssc.setSscExpiration(1, { from: owner });
+      await new Bluebird.Promise(res => setTimeout(() => res(), 2 * 1000));
+
+      let txn = await ssc.burn(user, 90, { from: appContract });
+
+      let newLastActiveTime = await ssc.lastActiveTime(user);
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 0, 'the balance was updated correctly');
+      assert.equal(newLastActiveTime.toNumber(), lastActiveTime.toNumber(), 'the lastActiveTime for the user was not changed');
+
+      assert.equal(txn.logs.length, 1, 'an event was fired');
+
+      let event = txn.logs[0];
+
+      assert.equal(event.event, "SSCExpired", "the event type is correct");
+      assert.equal(event.args.appContract, appContract, "the appContract is correct");
+      assert.equal(event.args.appContractAddress, appContract, "the appContractAddress is correct");
+      assert.equal(event.args.account, user, "the account is correct");
+      assert.equal(event.args.accountAddress, user, "the accountAddress is correct");
+      assert.equal(event.args.amount, "100", "the amount is correct");
     });
 
-    xit("should not allow non-application contract to burn SSC", async function() {
+    it("should not allow non-application contract to burn SSC", async function() {
+      let lastActiveTime = await ssc.lastActiveTime(user);
+      let exceptionThrown;
+
+      try {
+        await ssc.burn(user, 90, { from: user });
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Exception was thrown when non app contract tries to burn SSC");
+
+      let newLastActiveTime = await ssc.lastActiveTime(user);
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 100, 'the balance was updated correctly');
+      assert.equal(newLastActiveTime.toNumber(), lastActiveTime.toNumber(), 'the lastActiveTime for the user was not changed');
     });
 
-    xit("should not allow application contract to burn more SSC than in user's balance", async function() {
+    it("should not allow application contract to burn more SSC than in user's balance", async function() {
+      let lastActiveTime = await ssc.lastActiveTime(user);
+      let exceptionThrown;
+
+      try {
+        await ssc.burn(user, 101, { from: appContract });
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Exception was thrown when app contract tries to burn  more SSC than user has");
+
+      let newLastActiveTime = await ssc.lastActiveTime(user);
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 100, 'the balance was updated correctly');
+      assert.equal(newLastActiveTime.toNumber(), lastActiveTime.toNumber(), 'the lastActiveTime for the user was not changed');
     });
   });
 
   describe("expire SSC", function() {
     beforeEach(async function() {
       ssc = await SoftwareAndServiceCredit.new();
+    });
+
+    xit("hasExpired should return false when the account has never had SSC activity", async function() {
     });
 
     xit("hasExpired should return false when SSC activity has occured before the expiration period", async function() {

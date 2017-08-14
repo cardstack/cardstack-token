@@ -12,8 +12,8 @@ contract SoftwareAndServiceCredit is owned, freezable {
   mapping (address => uint) public lastActiveTime;
 
   event SSCIssued(address indexed admin, address adminAddress, address indexed recipient, address recipientAddress, uint amount);
-  event SSCBurned(address indexed admin, address adminAddress, address indexed recipient, address recipientAddress, uint amount);
-  event SSCExpired(address indexed admin, address adminAddress, address indexed recipient, address recipientAddress, uint amount);
+  event SSCBurned(address indexed appContract, address appContractAddress, address indexed account, address accountAddress, uint amount);
+  event SSCExpired(address indexed appContract, address appContractAddress, address indexed account, address accountAddress, uint amount);
 
   modifier onlyAdmins {
     if (msg.sender != owner && !admins[msg.sender]) throw;
@@ -26,17 +26,35 @@ contract SoftwareAndServiceCredit is owned, freezable {
   }
 
   function hasExpired(address account) constant returns (bool) {
+    if (lastActiveTime[account] == 0) return false;
+
+    return lastActiveTime[account] + sscExpirationSeconds < block.timestamp;
   }
 
   function burn(address account, uint amount) onlyApplicationContracts unlessFrozen returns (bool) {
-    lastActiveTime[account] = block.timestamp;
+    // we expire all the user's SSC after inactivity that lasts longer than the expiration period
+    if (hasExpired(account)) {
+      uint expiredAmount = balanceOf[account];
+      balanceOf[account] = 0;
+
+      SSCExpired(msg.sender, msg.sender, account, account, expiredAmount);
+      return false;
+    } else {
+      require(balanceOf[account] >= amount);
+
+      balanceOf[account] -= amount;
+      lastActiveTime[account] = block.timestamp;
+
+      SSCBurned(msg.sender, msg.sender, account, account, amount);
+      return true;
+    }
   }
 
   function issueSSC(address recipient, uint amount) onlyAdmins unlessFrozen {
     require(balanceOf[recipient] + amount > balanceOf[recipient]);
 
-    lastActiveTime[recipient] = block.timestamp;
     balanceOf[recipient] += amount;
+    lastActiveTime[recipient] = block.timestamp;
 
     SSCIssued(msg.sender, msg.sender, recipient, recipient, amount);
   }
@@ -59,8 +77,10 @@ contract SoftwareAndServiceCredit is owned, freezable {
     delete applicationContracts[appContract];
   }
 
-  function setSscExpiration(uint expirationDays) onlyOwner {
-    require(expirationDays > 0);
+  function setSscExpiration(uint expirationSec) onlyOwner {
+    require(expirationSec > 0);
+
+    sscExpirationSeconds = expirationSec;
   }
 
 }
