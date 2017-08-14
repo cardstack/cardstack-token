@@ -35,6 +35,8 @@ contract("EthToUsdOracle", function(accounts) {
     });
 
     it("should automatically update the ETH price", async function() {
+      this.timeout(120 * 1000);
+
       let owner = accounts[0];
       let oracleBalance = web3.toWei(0.1, "ether");
       let oracle = await EthToUsdOracle.new(true, {
@@ -59,6 +61,8 @@ contract("EthToUsdOracle", function(accounts) {
     });
 
     it("should not update the price faster than updateFrequencySeconds", async function() {
+      this.timeout(120 * 1000);
+
       let owner = accounts[0];
       let oracleBalance = web3.toWei(0.1, "ether");
       let oracle = await EthToUsdOracle.new(true, {
