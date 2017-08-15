@@ -12,6 +12,7 @@ contract('CardStackToken', function(accounts) {
   describe("frozen account", function() {
     let cst;
     let frozenAccount = accounts[5];
+    let freezeEvent;
 
     beforeEach(async function() {
       cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
@@ -24,7 +25,11 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
-      await cst.freezeAccount(frozenAccount, true);
+      freezeEvent = await cst.freezeAccount(frozenAccount, true);
+
+      assert(freezeEvent.logs[0].event, 'FrozenFunds', 'the account freeze event is correct');
+      assert(freezeEvent.logs[0].args.target, frozenAccount, 'the target value is correct');
+      assert(freezeEvent.logs[0].args.frozen, true, 'the frozen value is correct');
     });
 
     it("cannot sell CST when frozen", async function() {
@@ -144,7 +149,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("can unfreeze an account", async function() {
-      await cst.freezeAccount(frozenAccount, false);
+      let unfreezeEvent = await cst.freezeAccount(frozenAccount, false);
 
       let senderAccount = frozenAccount;
       let recipientAccount = accounts[6];
@@ -166,17 +171,32 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+
+      assert.equal(unfreezeEvent.logs[0].event, 'FrozenFunds', 'the account freeze event is correct');
+      assert.equal(unfreezeEvent.logs[0].args.target, frozenAccount, 'the target value is correct');
+      assert.equal(unfreezeEvent.logs[0].args.frozen, false, 'the frozen value is correct');
     });
 
+    xit("cannot send CST to the reward pool when frozen", async function() {
+    });
+    xit("cannot receive CST reward when frozen", async function() {
+    });
+  });
+
+  describe("frozen token", function() {
+    xit("should be able to freeze entire token", async function() {
+      // assert freeze event too
+    });
     xit("should not be able to mint tokens when token is frozen", async function() {
     });
     xit("should not be able to grant tokens when token is frozen", async function() {
     });
-    xit("should be able to freeze entire token", async function() {
+    xit("cannot send CST to the reward pool when token frozen", async function() {
     });
-    xit("cannot send CST to the reward pool when frozen", async function() {
+    xit("cannot receive CST reward when token frozen", async function() {
     });
-    xit("cannot receive CST reward when frozen", async function() {
+    xit("should be able to unfreeze entire token", async function() {
+      // assert unfreeze event too
     });
   });
 

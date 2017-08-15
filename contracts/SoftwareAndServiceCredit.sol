@@ -32,6 +32,8 @@ contract SoftwareAndServiceCredit is owned, freezable {
   }
 
   function burn(address account, uint amount) onlyApplicationContracts unlessFrozen returns (bool) {
+    require(!frozenAccount[account]);
+
     // we expire all the user's SSC after inactivity that lasts longer than the expiration period
     if (hasExpired(account)) {
       uint expiredAmount = balanceOf[account];
@@ -51,6 +53,7 @@ contract SoftwareAndServiceCredit is owned, freezable {
   }
 
   function issueSSC(address recipient, uint amount) onlyAdmins unlessFrozen {
+    require(!frozenAccount[recipient]);
     require(balanceOf[recipient] + amount > balanceOf[recipient]);
 
     balanceOf[recipient] += amount;

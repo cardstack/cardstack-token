@@ -2,7 +2,7 @@ const Bluebird = require("bluebird");
 const request = require("request-promise");
 const _ = require("lodash");
 
-const { waitForContractEvent } = require("../lib/utils");
+const { wait, waitForContractEvent } = require("../lib/utils");
 
 const EthToUsdOracle = artifacts.require("./EthToUsdOracle.sol");
 
@@ -49,7 +49,7 @@ contract("EthToUsdOracle", function(accounts) {
 
       await oracle.setUpdateFrequency(2);
 
-      await new Bluebird.Promise(res => setTimeout(() => res(), 500));
+      await wait(0.5);
 
       let secondEvent = await waitForContractEvent(oracle, "ETHPriceUpdated");
       let secondUpdateTime = await oracle.lastUpdate();
@@ -72,7 +72,7 @@ contract("EthToUsdOracle", function(accounts) {
 
       await waitForContractEvent(oracle, "ETHPriceUpdated");
 
-      await new Bluebird.Promise(res => setTimeout(() => res(),  500));
+      await wait(0.5);
 
       let updateTxn = await oracle.update(0);
 
@@ -93,7 +93,7 @@ contract("EthToUsdOracle", function(accounts) {
       let ethPrice = await oracle.ETHUSD();
 
       await oracle.setUpdateFrequency(2);
-      await new Bluebird.Promise(res => setTimeout(() => res(), 5 * 1000));
+      await wait(5);
 
       let updateTxn = await oracle.update(0);
 
