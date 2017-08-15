@@ -1,4 +1,5 @@
 const Bluebird = require('bluebird');
+const { wait } = require('../lib/utils');
 const SoftwareAndServiceCredit = artifacts.require("./SoftwareAndServiceCredit.sol");
 
 contract('SoftwareAndServiceCredit', function(accounts) {
@@ -210,7 +211,7 @@ contract('SoftwareAndServiceCredit', function(accounts) {
       ssc = await SoftwareAndServiceCredit.new();
       await ssc.addApplicationContract(appContract, { from: owner });
       await ssc.issueSSC(user, 100);
-      await new Bluebird.Promise(res => setTimeout(() => res(), 2 * 1000)); // pause a moment so that the last active time will be different
+      await wait(2);
     });
 
     it("should allow application contract to burn non-expired SSC", async function() {
@@ -239,7 +240,7 @@ contract('SoftwareAndServiceCredit', function(accounts) {
     it("should allow application contract to burn expired SSC", async function() {
       let lastActiveTime = await ssc.lastActiveTime(user);
       await ssc.setSscExpiration(1, { from: owner });
-      await new Bluebird.Promise(res => setTimeout(() => res(), 2 * 1000));
+      await wait(2);
 
       let txn = await ssc.burn(user, 90, { from: appContract });
 
@@ -321,7 +322,7 @@ contract('SoftwareAndServiceCredit', function(accounts) {
 
     it("hasExpired should return true when SSC activity has not occured during the expiration period", async function() {
       await ssc.issueSSC(user, 100);
-      await new Bluebird.Promise(res => setTimeout(() => res(), 2 * 1000)); // pause a moment so that the last active time will be different
+      await wait(2);
       await ssc.setSscExpiration(1, { from: owner });
 
       let isExpired = await ssc.hasExpired(user, { from: user });
@@ -346,20 +347,146 @@ contract('SoftwareAndServiceCredit', function(accounts) {
   });
 
   describe("freeze SSC", function() {
+    let user = accounts[9];
+
     beforeEach(async function() {
       ssc = await SoftwareAndServiceCredit.new();
     });
 
-    xit("should not allow SSC to be burned when the account is frozen", async function() {
+    it("should not allow SSC to be burned when the account is frozen", async function() {
+      await ssc.issueSSC(user, 100);
+      let lastActiveTime = await ssc.lastActiveTime(user);
+      await wait(2);
+
+      let txn = await ssc.freezeAccount(user, true);
+
+      let exceptionThrown;
+
+      try {
+        await ssc.burn(user, 90);
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Exception was thrown when account is frozen");
+
+      let newLastActiveTime = await ssc.lastActiveTime(user);
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 100, 'the balance is corect');
+      assert.equal(newLastActiveTime.toNumber(), lastActiveTime.toNumber(), 'the lastActiveTime for the user was not changed');
+      assert.equal(txn.logs[0].event, 'FrozenFunds', 'the account freeze event is correct');
+      assert.equal(txn.logs[0].args.target, user, 'the target value is correct');
+      assert.equal(txn.logs[0].args.frozen, true, 'the frozen value is correct');
     });
 
-    xit("should not allow SSC to be issued when the account is frozen", async function() {
+    it("should not allow SSC to be issued when the account is frozen", async function() {
+      await ssc.freezeAccount(user, true);
+      let exceptionThrown;
+
+      try {
+        await ssc.issueSSC(user, 100);
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Exception was thrown when account is frozen");
+
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 0, 'the balance is corect');
     });
 
-    xit("should not allow SSC to be burned when the token is frozen", async function() {
+    it("should not allow non-owner to freeze SSC account", async function() {
+      let exceptionThrown;
+
+      try {
+        await ssc.freezeAccount(user, true, { from: user });
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      let isFrozen = await ssc.frozenAccount(user);
+      assert.ok(exceptionThrown, "Exception was thrown when non-owner tries to freeze account");
+      assert.notOk(isFrozen, "the account is not frozen");
     });
 
-    xit("should not allow SSC to be issued when the token is frozen", async function() {
+    it("should not allow non-owner to freeze SSC token", async function() {
+      let exceptionThrown;
+
+      try {
+        await ssc.freezeToken(true, { from: user });
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      let isFrozen = await ssc.frozenToken();
+      assert.ok(exceptionThrown, "Exception was thrown when non-owner tries to freeze token");
+      assert.notOk(isFrozen, "the token is not frozen");
+    });
+
+    it("should allow the SSC account to be unfrozen", async function() {
+      await ssc.freezeAccount(user, true);
+      let txn = await ssc.freezeAccount(user, false);
+
+      await ssc.issueSSC(user, 100);
+
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 100, 'the balance is corect');
+      assert.equal(txn.logs[0].event, 'FrozenFunds', 'the account freeze event is correct');
+      assert.equal(txn.logs[0].args.target, user, 'the target value is correct');
+      assert.equal(txn.logs[0].args.frozen, false, 'the frozen value is correct');
+    });
+
+    it("should not allow SSC to be burned when the token is frozen", async function() {
+      await ssc.issueSSC(user, 100);
+      let lastActiveTime = await ssc.lastActiveTime(user);
+      await wait(2);
+
+      let txn = await ssc.freezeToken(true);
+
+      let exceptionThrown;
+
+      try {
+        await ssc.burn(user, 90);
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Exception was thrown when token is frozen");
+
+      let newLastActiveTime = await ssc.lastActiveTime(user);
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 100, 'the balance is corect');
+      assert.equal(newLastActiveTime.toNumber(), lastActiveTime.toNumber(), 'the lastActiveTime for the user was not changed');
+      assert.equal(txn.logs[0].event, 'FrozenToken', 'the token freeze event is correct');
+      assert.equal(txn.logs[0].args.frozen, true, 'the frozen value is correct');
+    });
+
+    it("should not allow SSC to be issued when the token is frozen", async function() {
+      await ssc.freezeToken(true);
+      let exceptionThrown;
+
+      try {
+        await ssc.issueSSC(user, 100);
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Exception was thrown when token is frozen");
+
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 0, 'the balance is corect');
+    });
+
+    it("should allow the SSC token to be unfrozen", async function() {
+      await ssc.freezeToken(true);
+      let txn = await ssc.freezeToken(false);
+
+      await ssc.issueSSC(user, 100);
+
+      let balance = await ssc.balanceOf(user);
+
+      assert.equal(balance.toNumber(), 100, 'the balance is corect');
+      assert.equal(txn.logs[0].event, 'FrozenToken', 'the token freeze event is correct');
+      assert.equal(txn.logs[0].args.frozen, false, 'the frozen value is correct');
     });
   });
 
