@@ -183,7 +183,7 @@ contract('CardStackToken', function(accounts) {
     });
   });
 
-  describe.only("frozen token", function() {
+  describe("frozen token", function() {
     let cst;
     let frozenAccount = accounts[5];
     let freezeEvent;
