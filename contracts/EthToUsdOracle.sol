@@ -44,9 +44,9 @@ contract EthToUsdOracle is Ownable, usingOraclize {
   }
 
   function update(uint delay) payable {
-    uint now = block.timestamp;
+    uint _now = block.timestamp;
 
-    if (lastUpdate == 0 || now - lastUpdate >= updateFrequencySeconds) {
+    if (lastUpdate == 0 || _now - lastUpdate >= updateFrequencySeconds) {
       uint oraclizeFee = oraclize_getPrice("URL");
 
       if (oraclizeFee > this.balance) {

@@ -6,8 +6,10 @@ const {
 } = require("../lib/utils");
 
 const CardStackToken = artifacts.require("./CardStackToken.sol");
+const CstLedger = artifacts.require("./CstLedger.sol");
 
 contract('CardStackToken', function(accounts) {
+  let ledger;
 
   describe("frozen account", function() {
     let cst;
@@ -15,7 +17,10 @@ contract('CardStackToken', function(accounts) {
     let freezeEvent;
 
     beforeEach(async function() {
-      cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      ledger = await CstLedger.new();
+      cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
 
       await checkBalance(frozenAccount, 1);
 
@@ -185,10 +190,14 @@ contract('CardStackToken', function(accounts) {
 
   describe("frozen token", function() {
     let cst;
+    let ledger;
     let frozenAccount = accounts[5];
     let freezeEvent;
     beforeEach(async function() {
-      cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      ledger = await CstLedger.new();
+      cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
 
       await checkBalance(frozenAccount, 1);
 

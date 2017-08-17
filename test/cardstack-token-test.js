@@ -4,12 +4,17 @@ const {
 } = require("../lib/utils");
 
 const CardStackToken = artifacts.require("./CardStackToken.sol");
+const CstLedger = artifacts.require("./CstLedger.sol");
 
 contract('CardStackToken', function(accounts) {
+  let ledger;
 
   describe("create contract", function() {
     it("should initialize the CST correctly", async function() {
-      let cst = await CardStackToken.new(10000, "CardStack Token", "CST", 2, 1, 8000);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", 2, 1, 8000);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(10000);
       let name = await cst.name();
       let symbol = await cst.symbol();
       let totalTokens = await cst.totalTokens();
@@ -30,7 +35,10 @@ contract('CardStackToken', function(accounts) {
 
   describe("mintTokens()", function() {
     it("can allow the owner to mint tokens", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let ownerAccount = accounts[0];
 
       let txn = await cst.mintTokens(100, {
@@ -59,7 +67,10 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow a non-owner to mint tokens", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let nonOwnerAccount = accounts[9];
 
       let exceptionThrown;
@@ -84,7 +95,10 @@ contract('CardStackToken', function(accounts) {
 
   describe("grantTokens()", function() {
     it("can allow the owner to grant tokens", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let ownerAccount = accounts[0];
       let recipientAccount = accounts[9];
 
@@ -116,7 +130,10 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("cannot grant more tokens than exist", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let ownerAccount = accounts[0];
       let recipientAccount = accounts[9];
 
@@ -142,7 +159,10 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow a non-owner to grant tokens", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let recipientAccount = accounts[9];
 
       let exceptionThrown;
@@ -169,7 +189,10 @@ contract('CardStackToken', function(accounts) {
 
   describe("setPrices()", function() {
     it("can allow the owner to set buy and sell prices", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let ownerAccount = accounts[0];
 
       let txn = await cst.setPrices(web3.toWei(2, "ether"), web3.toWei(1, "ether"), {
@@ -195,7 +218,10 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("cannot set the buyPrice to 0", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let ownerAccount = accounts[0];
 
       let exceptionThrown;
@@ -216,7 +242,10 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("cannot set the sellPrice to 0", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let ownerAccount = accounts[0];
 
       let exceptionThrown;
@@ -241,7 +270,10 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow a non-owner to set buy and sell prices", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let nonOwnerAccount = accounts[5];
 
       let exceptionThrown;
@@ -264,7 +296,10 @@ contract('CardStackToken', function(accounts) {
 
   describe("cstAvailableToBuy()", function() {
     it("indicates that cst are not available to buy when CST sold reaches the sell cap", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let nonOwnerAccount = accounts[2];
 
       await cst.buy({
@@ -279,7 +314,10 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("indicates that cst are available to buy when CST sold has not reached the sell cap", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let nonOwnerAccount = accounts[2];
 
       await cst.buy({
@@ -296,7 +334,10 @@ contract('CardStackToken', function(accounts) {
 
   describe("setCstSellCap()", function() {
     it("can allow the owner to set sell cap", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let ownerAccount = accounts[0];
 
       let txn = await cst.setSellCap(20, {
@@ -318,7 +359,10 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow a non-owner to set sell cap", async function() {
-      let cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      ledger = await CstLedger.new();
+      let cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
       let nonOwnerAccount = accounts[5];
 
       let exceptionThrown;

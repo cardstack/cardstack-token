@@ -3,6 +3,7 @@ pragma solidity ^0.4.2;
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./freezable.sol";
+import "./CstLedger.sol";
 
 
 // TODO add an "upgradable" base contract to provide an upgrade path for the CST contract
@@ -19,12 +20,8 @@ contract CardStackToken is Ownable, freezable {
   uint public buyPrice;
   string public name;
   string public symbol;
-  uint public totalInCirculation;
-  uint public totalTokens;
   uint public sellCap;
-
-  /* This creates an array with all balances */
-  mapping (address => uint) public balanceOf;
+  ITokenLedger public tokenLedger;
 
   event SellCapChange(uint newSellCap);
   event PriceChange(uint newSellPrice, uint newBuyPrice);
@@ -40,14 +37,14 @@ contract CardStackToken is Ownable, freezable {
 
   /* Initializes contract with initial supply tokens to the creator of the contract */
   function CardStackToken(
-    uint initialSupply,
+    address _tokenLedger,
     string tokenName,
     string tokenSymbol,
     uint initialBuyPrice,
     uint initialSellPrice,
     uint initialCstSellCap
   ) {
-    totalTokens = initialSupply;                        // Update total supply
+    tokenLedger = ITokenLedger(_tokenLedger);
     name = tokenName;                                   // Set the name for display purposes
     symbol = tokenSymbol;                               // Set the symbol for display purposes
     sellPrice = initialSellPrice;
@@ -60,26 +57,38 @@ contract CardStackToken is Ownable, freezable {
     throw;     // Prevents accidental sending of ether
   }
 
+  function totalInCirculation() constant returns(uint) {
+    return tokenLedger.totalInCirculation();
+  }
+
+  function totalTokens() constant returns(uint) {
+    return tokenLedger.totalTokens();
+  }
+
+  function balanceOf(address account) constant returns (uint) {
+    return tokenLedger.balanceOf(account);
+  }
+
+  function setTokenLedgerAddress(address _tokenLedger) onlyOwner {
+    tokenLedger = ITokenLedger(_tokenLedger);
+  }
+
   function transfer(address recipient, uint amount) unlessFrozen {
     require(!frozenAccount[recipient]);
-    require(balanceOf[msg.sender] >= amount);
 
-    balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
-    balanceOf[recipient] = balanceOf[recipient].add(amount);
+    tokenLedger.transfer(msg.sender, recipient, amount);
     Transfer(msg.sender, msg.sender, recipient, recipient, amount);
   }
 
   function mintTokens(uint mintedAmount) onlyOwner unlessFrozen {
-    totalTokens = totalTokens.add(mintedAmount);
-    Mint(mintedAmount, totalTokens, sellCap);
+    tokenLedger.mintTokens(mintedAmount);
+    Mint(mintedAmount, tokenLedger.totalTokens(), sellCap);
   }
 
   function grantTokens(address recipient, uint amount) onlyOwner unlessFrozen {
-    require(amount <= totalTokens - totalInCirculation);           // make sure there are enough tokens to grant
+    require(amount <= tokenLedger.totalTokens() - tokenLedger.totalInCirculation());           // make sure there are enough tokens to grant
 
-    totalInCirculation = totalInCirculation.add(amount);
-    balanceOf[recipient] = balanceOf[recipient].add(amount);
-
+    tokenLedger.debitAccount(recipient, amount);
     Grant(recipient, recipient, amount);
   }
 
@@ -100,7 +109,7 @@ contract CardStackToken is Ownable, freezable {
   }
 
   function cstAvailableToBuy() constant returns(bool) {
-    return sellCap > totalInCirculation;
+    return sellCap > tokenLedger.totalInCirculation();
   }
 
   function buy() payable unlessFrozen {
@@ -108,23 +117,19 @@ contract CardStackToken is Ownable, freezable {
     assert(buyPrice > 0);
 
     uint amount = msg.value / buyPrice;
-    uint supply = totalTokens - totalInCirculation;
-    assert(totalInCirculation + amount <= sellCap);
+    uint supply = tokenLedger.totalTokens() - tokenLedger.totalInCirculation();
+    assert(tokenLedger.totalInCirculation() + amount <= sellCap);
     assert(amount <= supply);
 
-    balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
-    totalInCirculation = totalInCirculation.add(amount);
+    tokenLedger.debitAccount(msg.sender, amount);
     Buy(msg.sender, msg.sender, amount, msg.value);
   }
 
   function sell(uint amount) unlessFrozen {
-    require(balanceOf[msg.sender] >= amount);
-    uint value = amount * sellPrice;
-
-    balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
-    totalInCirculation = totalInCirculation.sub(amount);
+    tokenLedger.creditAccount(msg.sender, amount);
 
     // always send only after changing state of contract to guard against re-entry attacks
+    uint value = amount * sellPrice;
     msg.sender.transfer(value);
     Sell(msg.sender, msg.sender, amount, value);
   }
