@@ -1,8 +1,8 @@
 pragma solidity ^0.4.2;
 
-import "./owned.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract freezable is owned {
+contract freezable is Ownable {
   bool public frozenToken;
   mapping (address => bool) public frozenAccount;
 
