@@ -1,7 +1,7 @@
 
-import "./owned.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract CstToSsc is owned {
+contract CstToSsc is Ownable {
   uint public rewardPool;
 
   function buySSC(uint cstAmount) {

@@ -1,9 +1,12 @@
 pragma solidity ^0.4.2;
 
-import "./owned.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./freezable.sol";
 
-contract SoftwareAndServiceCredit is owned, freezable {
+contract SoftwareAndServiceCredit is Ownable, freezable {
+
+  using SafeMath for uint256;
 
   uint public sscExpirationSeconds = 60 * 60 * 24 * 30 * 6; // default to 6 months
   mapping (address => bool) public admins;
@@ -28,7 +31,7 @@ contract SoftwareAndServiceCredit is owned, freezable {
   function hasExpired(address account) constant returns (bool) {
     if (lastActiveTime[account] == 0) return false;
 
-    return lastActiveTime[account] + sscExpirationSeconds < block.timestamp;
+    return lastActiveTime[account].add(sscExpirationSeconds) < block.timestamp;
   }
 
   function burn(address account, uint amount) onlyApplicationContracts unlessFrozen returns (bool) {
@@ -44,7 +47,7 @@ contract SoftwareAndServiceCredit is owned, freezable {
     } else {
       require(balanceOf[account] >= amount);
 
-      balanceOf[account] -= amount;
+      balanceOf[account] = balanceOf[account].sub(amount);
       lastActiveTime[account] = block.timestamp;
 
       SSCBurned(msg.sender, msg.sender, account, account, amount);
@@ -54,9 +57,8 @@ contract SoftwareAndServiceCredit is owned, freezable {
 
   function issueSSC(address recipient, uint amount) onlyAdmins unlessFrozen {
     require(!frozenAccount[recipient]);
-    require(balanceOf[recipient] + amount > balanceOf[recipient]);
 
-    balanceOf[recipient] += amount;
+    balanceOf[recipient] = balanceOf[recipient].add(amount);
     lastActiveTime[recipient] = block.timestamp;
 
     SSCIssued(msg.sender, msg.sender, recipient, recipient, amount);

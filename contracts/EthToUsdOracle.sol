@@ -1,8 +1,8 @@
 pragma solidity ^0.4.0;
-import "./owned.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./oraclize/usingOraclize.sol";
 
-contract EthToUsdOracle is owned, usingOraclize {
+contract EthToUsdOracle is Ownable, usingOraclize {
 
   uint public ETHUSD;
   uint public lastUpdate;
