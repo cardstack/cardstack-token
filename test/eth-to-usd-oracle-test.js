@@ -27,7 +27,7 @@ contract("EthToUsdOracle", function(accounts) {
       let lastUpdate = await oracle.lastUpdate();
       onChainPrice = onChainPrice.toNumber();
 
-      assert.ok(Math.abs(offChainPrice - onChainPrice) / onChainPrice < 0.01, "the oracle returns the current ETH price in USD cents");
+      assert.ok(Math.abs(offChainPrice - onChainPrice) / onChainPrice < 0.05, `the oracle returns the current ETH price in USD cents, offChainPrice:${offChainPrice} onChainPrice:${onChainPrice}`);
       assert.equal(event.event, "ETHPriceUpdated", "The event is correct");
       assert.equal(Math.round(parseFloat(event.args.price) * 100000), onChainPrice , "The event price is correct");
       assert.ok(lastUpdate.toNumber(), "The last update time was set");
@@ -35,8 +35,6 @@ contract("EthToUsdOracle", function(accounts) {
     });
 
     it("should automatically update the ETH price", async function() {
-      this.timeout(120 * 1000);
-
       let owner = accounts[0];
       let oracleBalance = web3.toWei(0.1, "ether");
       let oracle = await EthToUsdOracle.new(true, {
@@ -47,7 +45,7 @@ contract("EthToUsdOracle", function(accounts) {
       let firstEvent = await waitForContractEvent(oracle, "ETHPriceUpdated");
       let firstUpdateTime = await oracle.lastUpdate();
 
-      await oracle.setUpdateFrequency(2);
+      await oracle.setUpdateFrequency(1);
 
       await wait(0.5);
 
@@ -61,8 +59,6 @@ contract("EthToUsdOracle", function(accounts) {
     });
 
     it("should not update the price faster than updateFrequencySeconds", async function() {
-      this.timeout(120 * 1000);
-
       let owner = accounts[0];
       let oracleBalance = web3.toWei(0.1, "ether");
       let oracle = await EthToUsdOracle.new(true, {
@@ -76,7 +72,7 @@ contract("EthToUsdOracle", function(accounts) {
 
       let updateTxn = await oracle.update(0);
 
-      let nothing = await waitForContractEvent(oracle, "ETHPriceUpdated", 30)
+      let nothing = await waitForContractEvent(oracle, "ETHPriceUpdated", 20)
         .then(() => assert.ok(false, "Expect timeout exception waiting for event that is never fired"))
         .catch(() => { /* expect timeout exception  */});
 
@@ -92,8 +88,8 @@ contract("EthToUsdOracle", function(accounts) {
       let lastUpdate = await oracle.lastUpdate();
       let ethPrice = await oracle.ETHUSD();
 
-      await oracle.setUpdateFrequency(2);
-      await wait(5);
+      await oracle.setUpdateFrequency(1);
+      await wait(4);
 
       let updateTxn = await oracle.update(0);
 
@@ -140,7 +136,7 @@ contract("EthToUsdOracle", function(accounts) {
 
       let exceptionThrown;
       try {
-        await oracle.setUpdateFrequency(2, {
+        await oracle.setUpdateFrequency(1, {
           from: nonOwner
         });
       } catch (e) {

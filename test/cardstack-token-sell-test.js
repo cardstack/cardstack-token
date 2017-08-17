@@ -7,14 +7,19 @@ const {
 } = require("../lib/utils");
 
 const CardStackToken = artifacts.require("./CardStackToken.sol");
+const CstLedger = artifacts.require("./CstLedger.sol");
 
 contract('CardStackToken', function(accounts) {
+  let ledger;
 
   describe("sell()", function() {
     let cst;
 
     beforeEach(async function() {
-      cst = await CardStackToken.new(100, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      ledger = await CstLedger.new();
+      cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await ledger.addAdmin(cst.address);
+      await ledger.mintTokens(100);
 
       for (let i = 0; i < Math.min(accounts.length, 10); i++) {
         let account = accounts[i];
@@ -84,8 +89,8 @@ contract('CardStackToken', function(accounts) {
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(sellerAccount);
-      let cstBalance = await cst.balanceOf(sellerAccount);
-      let totalInCirculation = await cst.totalInCirculation();
+      let cstBalance = await ledger.balanceOf(sellerAccount);
+      let totalInCirculation = await ledger.totalInCirculation();
 
       endBalance = asInt(endBalance);
 

@@ -3,13 +3,13 @@ pragma solidity ^0.4.2;
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./freezable.sol";
+import "./administratable.sol";
 
-contract SoftwareAndServiceCredit is Ownable, freezable {
+contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
 
   using SafeMath for uint256;
 
   uint public sscExpirationSeconds = 60 * 60 * 24 * 30 * 6; // default to 6 months
-  mapping (address => bool) public admins;
   mapping (address => bool) public applicationContracts;
   mapping (address => uint) public balanceOf;
   mapping (address => uint) public lastActiveTime;
@@ -17,11 +17,6 @@ contract SoftwareAndServiceCredit is Ownable, freezable {
   event SSCIssued(address indexed admin, address adminAddress, address indexed recipient, address recipientAddress, uint amount);
   event SSCBurned(address indexed appContract, address appContractAddress, address indexed account, address accountAddress, uint amount);
   event SSCExpired(address indexed appContract, address appContractAddress, address indexed account, address accountAddress, uint amount);
-
-  modifier onlyAdmins {
-    if (msg.sender != owner && !admins[msg.sender]) throw;
-    _;
-  }
 
   modifier onlyApplicationContracts {
     if (msg.sender != owner && !admins[msg.sender] && !applicationContracts[msg.sender]) throw;
@@ -62,14 +57,6 @@ contract SoftwareAndServiceCredit is Ownable, freezable {
     lastActiveTime[recipient] = block.timestamp;
 
     SSCIssued(msg.sender, msg.sender, recipient, recipient, amount);
-  }
-
-  function addAdmin(address admin) onlyOwner {
-    admins[admin] = true;
-  }
-
-  function removeAdmin(address admin) onlyOwner {
-    delete admins[admin];
   }
 
   // TODO we should look up application contracts from the genesis contract instead of holding all those addresses here
