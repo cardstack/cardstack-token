@@ -8,18 +8,23 @@ const {
 
 const CardStackToken = artifacts.require("./CardStackToken.sol");
 const CstLedger = artifacts.require("./CstLedger.sol");
+const Storage = artifacts.require("./ExternalStorage.sol");
 
 contract('CardStackToken', function(accounts) {
   let ledger;
+  let storage;
 
   describe("sell()", function() {
     let cst;
 
     beforeEach(async function() {
       ledger = await CstLedger.new();
-      cst = await CardStackToken.new(ledger.address, "CardStack Token", "CST", web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      storage = await Storage.new();
+      cst = await CardStackToken.new(ledger.address, storage.address);
+      await storage.addAdmin(cst.address);
       await ledger.addAdmin(cst.address);
       await ledger.mintTokens(100);
+      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
 
       for (let i = 0; i < Math.min(accounts.length, 10); i++) {
         let account = accounts[i];

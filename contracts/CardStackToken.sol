@@ -4,6 +4,9 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./freezable.sol";
 import "./CstLedger.sol";
+import "./ExternalStorage.sol";
+import "./CstLibrary.sol";
+import "./displayable.sol";
 
 
 // TODO add an "upgradable" base contract to provide an upgrade path for the CST contract
@@ -12,16 +15,19 @@ import "./CstLedger.sol";
 // TODO add additional ERC20 Token standard functions for approving spends on your behalf and setting an allowance
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/token/StandardToken.sol
 
-contract CardStackToken is Ownable, freezable {
+contract CardStackToken is Ownable, freezable, displayable {
 
   using SafeMath for uint256;
+  using CstLibrary for address;
 
+  ITokenLedger public tokenLedger;
+  address public externalStorage;
+
+  // These are mirrored in external storage so that state can live in future version of this contract
+  // we save on gas prices by having these available as instance variables
   uint public sellPrice;
   uint public buyPrice;
-  string public name;
-  string public symbol;
   uint public sellCap;
-  ITokenLedger public tokenLedger;
 
   event SellCapChange(uint newSellCap);
   event PriceChange(uint newSellPrice, uint newBuyPrice);
@@ -34,27 +40,59 @@ contract CardStackToken is Ownable, freezable {
                  address indexed recipient,
                  address recipientAccount,
                  uint value);
+  event Debug(string msg, uint value);
+  function CardStackToken(address _tokenLedger, address _externalStorage) {
+    frozenToken = true;
 
-  /* Initializes contract with initial supply tokens to the creator of the contract */
-  function CardStackToken(
-    address _tokenLedger,
-    string tokenName,
-    string tokenSymbol,
-    uint initialBuyPrice,
-    uint initialSellPrice,
-    uint initialCstSellCap
-  ) {
     tokenLedger = ITokenLedger(_tokenLedger);
-    name = tokenName;                                   // Set the name for display purposes
-    symbol = tokenSymbol;                               // Set the symbol for display purposes
-    sellPrice = initialSellPrice;
-    buyPrice = initialBuyPrice;
-    sellCap = initialCstSellCap;
+    externalStorage = _externalStorage;
   }
 
   /* This unnamed function is called whenever someone tries to send ether to it */
   function () {
     throw;     // Prevents accidental sending of ether
+  }
+
+  function initialize(bytes32 _tokenName, bytes32 _tokenSymbol, uint _buyPrice, uint _sellPrice, uint _sellCap) onlyOwner {
+    externalStorage.setTokenName(_tokenName);
+    externalStorage.setTokenSymbol(_tokenSymbol);
+    externalStorage.setBuyPrice(_buyPrice);
+    externalStorage.setSellPrice(_sellPrice);
+    externalStorage.setSellCap(_sellCap);
+
+    sellPrice = _sellPrice;
+    buyPrice = _buyPrice;
+    sellCap = _sellCap;
+
+    frozenToken = false;
+  }
+
+  function initializeFromStorage() onlyOwner {
+    buyPrice = externalStorage.getBuyPrice();
+    sellPrice = externalStorage.getSellPrice();
+    sellCap = externalStorage.getSellCap();
+
+    frozenToken = false;
+  }
+
+  function updateLedgerStorage(address newAddress) onlyOwner {
+    tokenLedger = ITokenLedger(newAddress);
+  }
+
+  function updateExternalStorage(address newAddress) onlyOwner {
+    externalStorage = newAddress;
+
+    buyPrice = externalStorage.getBuyPrice();
+    sellPrice = externalStorage.getSellPrice();
+    sellCap = externalStorage.getSellCap();
+  }
+
+  function name() constant returns(string) {
+    return bytes32ToString(externalStorage.getTokenName());
+  }
+
+  function symbol() constant returns(string) {
+    return bytes32ToString(externalStorage.getTokenSymbol());
   }
 
   function totalInCirculation() constant returns(uint) {
@@ -86,7 +124,7 @@ contract CardStackToken is Ownable, freezable {
   }
 
   function grantTokens(address recipient, uint amount) onlyOwner unlessFrozen {
-    require(amount <= tokenLedger.totalTokens() - tokenLedger.totalInCirculation());           // make sure there are enough tokens to grant
+    require(amount <= tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation()));           // make sure there are enough tokens to grant
 
     tokenLedger.debitAccount(recipient, amount);
     Grant(recipient, recipient, amount);
@@ -99,11 +137,15 @@ contract CardStackToken is Ownable, freezable {
     sellPrice = newSellPrice;
     buyPrice = newBuyPrice;
 
+    externalStorage.setBuyPrice(newBuyPrice);
+    externalStorage.setSellPrice(newSellPrice);
+
     PriceChange(newSellPrice, newBuyPrice);
   }
 
   function setSellCap(uint newSellCap) onlyOwner {
     sellCap = newSellCap;
+    externalStorage.setSellCap(newSellCap);
 
     SellCapChange(newSellCap);
   }
@@ -116,9 +158,9 @@ contract CardStackToken is Ownable, freezable {
     require(msg.value >= buyPrice);
     assert(buyPrice > 0);
 
-    uint amount = msg.value / buyPrice;
-    uint supply = tokenLedger.totalTokens() - tokenLedger.totalInCirculation();
-    assert(tokenLedger.totalInCirculation() + amount <= sellCap);
+    uint amount = msg.value.div(buyPrice);
+    uint supply = tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation());
+    assert(tokenLedger.totalInCirculation().add(amount) <= sellCap);
     assert(amount <= supply);
 
     tokenLedger.debitAccount(msg.sender, amount);
@@ -129,7 +171,7 @@ contract CardStackToken is Ownable, freezable {
     tokenLedger.creditAccount(msg.sender, amount);
 
     // always send only after changing state of contract to guard against re-entry attacks
-    uint value = amount * sellPrice;
+    uint value = amount.mul(sellPrice);
     msg.sender.transfer(value);
     Sell(msg.sender, msg.sender, amount, value);
   }
