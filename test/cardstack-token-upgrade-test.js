@@ -1,6 +1,7 @@
-// const CardStackToken = artifacts.require("./CardStackToken.sol");
+const CardStackToken = artifacts.require("./CardStackToken.sol");
+const Registry = artifacts.require("./Registry.sol");
 
-contract('CardStackToken', function(/*accounts*/) {
+contract('CardStackToken', function(accounts) {
   describe("contract upgrade", function() {
     xit("it can indiciate if the contract is active if it has not been upgraded", async function() {
     });
