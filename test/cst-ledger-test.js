@@ -3,6 +3,15 @@
 contract('CstLedger', function(/*accounts*/) {
 
   describe("ledger", function() {
+    xit("allows owner to add an admin", async function() {
+    });
+
+    xit("allows owner to remove an admin", async function() {
+    });
+
+    xit("non-owner cannot add admins", async function() {
+    });
+
     xit("allows admin to mint tokens", async function() {
     });
 
@@ -19,15 +28,6 @@ contract('CstLedger', function(/*accounts*/) {
     });
 
     xit("does not allow crediting more tokens than are in the account", async function() {
-    });
-
-    xit("allows owner to add an admin", async function() {
-    });
-
-    xit("allows owner to remove an admin", async function() {
-    });
-
-    xit("non-owner cannot add admins", async function() {
     });
 
     xit("non-admins cannot credit accounts", async function() {
