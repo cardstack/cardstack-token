@@ -7,15 +7,12 @@ import "./CstLedger.sol";
 import "./ExternalStorage.sol";
 import "./CstLibrary.sol";
 import "./displayable.sol";
-
-
-// TODO add an "upgradable" base contract to provide an upgrade path for the CST contract
-// TODO add a function that can halt trading across the board for CST in case of emergency (based on consessys best practices)
+import "./upgradeable.sol";
 
 // TODO add additional ERC20 Token standard functions for approving spends on your behalf and setting an allowance
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/token/StandardToken.sol
 
-contract CardStackToken is Ownable, freezable, displayable {
+contract CardStackToken is Ownable, freezable, displayable, upgradeable {
 
   using SafeMath for uint256;
   using CstLibrary for address;
@@ -40,7 +37,7 @@ contract CardStackToken is Ownable, freezable, displayable {
                  address indexed recipient,
                  address recipientAccount,
                  uint value);
-  event Debug(string msg, uint value);
+
   function CardStackToken(address _tokenLedger, address _externalStorage) {
     frozenToken = true;
 
@@ -53,7 +50,11 @@ contract CardStackToken is Ownable, freezable, displayable {
     throw;     // Prevents accidental sending of ether
   }
 
-  function initialize(bytes32 _tokenName, bytes32 _tokenSymbol, uint _buyPrice, uint _sellPrice, uint _sellCap) onlyOwner {
+  function initialize(bytes32 _tokenName,
+                      bytes32 _tokenSymbol,
+                      uint _buyPrice,
+                      uint _sellPrice,
+                      uint _sellCap) onlyOwner unlessUpgraded {
     externalStorage.setTokenName(_tokenName);
     externalStorage.setTokenSymbol(_tokenSymbol);
     externalStorage.setBuyPrice(_buyPrice);
@@ -67,7 +68,7 @@ contract CardStackToken is Ownable, freezable, displayable {
     frozenToken = false;
   }
 
-  function initializeFromStorage() onlyOwner {
+  function initializeFromStorage() onlyOwner unlessUpgraded {
     buyPrice = externalStorage.getBuyPrice();
     sellPrice = externalStorage.getSellPrice();
     sellCap = externalStorage.getSellCap();
@@ -75,11 +76,11 @@ contract CardStackToken is Ownable, freezable, displayable {
     frozenToken = false;
   }
 
-  function updateLedgerStorage(address newAddress) onlyOwner {
+  function updateLedgerStorage(address newAddress) onlyOwner unlessUpgraded {
     tokenLedger = ITokenLedger(newAddress);
   }
 
-  function updateExternalStorage(address newAddress) onlyOwner {
+  function updateExternalStorage(address newAddress) onlyOwner unlessUpgraded {
     externalStorage = newAddress;
 
     buyPrice = externalStorage.getBuyPrice();
@@ -87,50 +88,50 @@ contract CardStackToken is Ownable, freezable, displayable {
     sellCap = externalStorage.getSellCap();
   }
 
-  function name() constant returns(string) {
+  function name() constant unlessUpgraded returns(string) {
     return bytes32ToString(externalStorage.getTokenName());
   }
 
-  function symbol() constant returns(string) {
+  function symbol() constant unlessUpgraded returns(string) {
     return bytes32ToString(externalStorage.getTokenSymbol());
   }
 
-  function totalInCirculation() constant returns(uint) {
+  function totalInCirculation() constant unlessUpgraded returns(uint) {
     return tokenLedger.totalInCirculation();
   }
 
-  function totalTokens() constant returns(uint) {
+  function totalTokens() constant unlessUpgraded returns(uint) {
     return tokenLedger.totalTokens();
   }
 
-  function balanceOf(address account) constant returns (uint) {
+  function balanceOf(address account) constant unlessUpgraded returns (uint) {
     return tokenLedger.balanceOf(account);
   }
 
-  function setTokenLedgerAddress(address _tokenLedger) onlyOwner {
+  function setTokenLedgerAddress(address _tokenLedger) onlyOwner unlessUpgraded {
     tokenLedger = ITokenLedger(_tokenLedger);
   }
 
-  function transfer(address recipient, uint amount) unlessFrozen {
+  function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded {
     require(!frozenAccount[recipient]);
 
     tokenLedger.transfer(msg.sender, recipient, amount);
     Transfer(msg.sender, msg.sender, recipient, recipient, amount);
   }
 
-  function mintTokens(uint mintedAmount) onlyOwner unlessFrozen {
+  function mintTokens(uint mintedAmount) onlyOwner unlessFrozen unlessUpgraded {
     tokenLedger.mintTokens(mintedAmount);
     Mint(mintedAmount, tokenLedger.totalTokens(), sellCap);
   }
 
-  function grantTokens(address recipient, uint amount) onlyOwner unlessFrozen {
+  function grantTokens(address recipient, uint amount) onlyOwner unlessFrozen unlessUpgraded {
     require(amount <= tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation()));           // make sure there are enough tokens to grant
 
     tokenLedger.debitAccount(recipient, amount);
     Grant(recipient, recipient, amount);
   }
 
-  function setPrices(uint newSellPrice, uint newBuyPrice) onlyOwner {
+  function setPrices(uint newSellPrice, uint newBuyPrice) onlyOwner unlessUpgraded {
     require(newSellPrice > 0);
     require(newBuyPrice > 0);
 
@@ -143,18 +144,18 @@ contract CardStackToken is Ownable, freezable, displayable {
     PriceChange(newSellPrice, newBuyPrice);
   }
 
-  function setSellCap(uint newSellCap) onlyOwner {
+  function setSellCap(uint newSellCap) onlyOwner unlessUpgraded {
     sellCap = newSellCap;
     externalStorage.setSellCap(newSellCap);
 
     SellCapChange(newSellCap);
   }
 
-  function cstAvailableToBuy() constant returns(bool) {
+  function cstAvailableToBuy() constant unlessUpgraded returns(bool) {
     return sellCap > tokenLedger.totalInCirculation();
   }
 
-  function buy() payable unlessFrozen {
+  function buy() payable unlessFrozen unlessUpgraded {
     require(msg.value >= buyPrice);
     assert(buyPrice > 0);
 
@@ -167,7 +168,7 @@ contract CardStackToken is Ownable, freezable, displayable {
     Buy(msg.sender, msg.sender, amount, msg.value);
   }
 
-  function sell(uint amount) unlessFrozen {
+  function sell(uint amount) unlessFrozen unlessUpgraded {
     tokenLedger.creditAccount(msg.sender, amount);
 
     // always send only after changing state of contract to guard against re-entry attacks
