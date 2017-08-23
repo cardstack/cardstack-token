@@ -94,8 +94,8 @@ contract('CardStackToken', function(accounts) {
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(sellerAccount);
-      let cstBalance = await ledger.balanceOf(sellerAccount);
-      let totalInCirculation = await ledger.totalInCirculation();
+      let cstBalance = await cst.balanceOf(sellerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
 
       endBalance = asInt(endBalance);
 

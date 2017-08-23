@@ -108,10 +108,6 @@ contract CardStackToken is Ownable, freezable, displayable, upgradeable {
     return tokenLedger.balanceOf(account);
   }
 
-  function setTokenLedgerAddress(address _tokenLedger) onlyOwner unlessUpgraded {
-    tokenLedger = ITokenLedger(_tokenLedger);
-  }
-
   function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded {
     require(!frozenAccount[recipient]);
 
