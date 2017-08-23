@@ -44,6 +44,7 @@ contract Registry is Ownable {
     upgradeable(predecessor).upgradeTo(successor);
     upgradeable(successor).upgradedFrom(predecessor);
 
+    ContractUpgraded(successor, predecessor, name);
     return hash;
   }
 }
