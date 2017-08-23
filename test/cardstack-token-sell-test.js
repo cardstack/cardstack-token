@@ -103,5 +103,8 @@ contract('CardStackToken', function(accounts) {
       assert.equal(cstBalance, 10, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 100, "The CST total in circulation was not updated");
     });
+
+    xit("should not be able to sell more CST than the CST contract can buy back in ETH", async function() {
+    });
   });
 });

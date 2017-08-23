@@ -3,6 +3,7 @@ const {
   asInt,
   NULL_ADDRESS,
   MAX_FAILED_TXN_GAS,
+  ROUNDING_ERROR_WEI,
   GAS_PRICE
 } = require("../lib/utils");
 const CardStackToken = artifacts.require("./CardStackToken.sol");
@@ -10,13 +11,13 @@ const CstLedger = artifacts.require("./CstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
 
 contract('CardStackToken', function(accounts) {
-  describe("contract upgrade", function() {
-    let cst1;
-    let cst2;
-    let ledger;
-    let storage;
-    let admin = accounts[2];
+  let cst1;
+  let cst2;
+  let ledger;
+  let storage;
+  let admin = accounts[2];
 
+  describe("contract upgrade", function() {
     beforeEach(async function() {
       storage = await Storage.new();
       ledger = await CstLedger.new();
@@ -34,44 +35,58 @@ contract('CardStackToken', function(accounts) {
       await cst2.addAdmin(admin);
     });
 
-    it("can indiciate if the contract is deprecated", async function() {
-      let isDeprecatedCst1 = await cst1.isDeprecated();
-      let isDeprecatedCst2 = await cst2.isDeprecated();
-      let cst1Successor = await cst1.successor();
-      let cst2Successor = await cst2.successor();
-      let cst1Predecessor = await cst1.predecessor();
-      let cst2Predecessor = await cst2.predecessor();
+    it("does not allow an admin to add a superAdmin", async function() {
+      let exceptionThrown;
 
-      assert.notOk(isDeprecatedCst1, "the isDeprecated value is correct");
-      assert.notOk(isDeprecatedCst2, "the isDeprecated value is correct");
-      assert.equal(cst1Predecessor, NULL_ADDRESS, 'the contract address is correct');
-      assert.equal(cst2Predecessor, NULL_ADDRESS, 'the contract address is correct');
-      assert.equal(cst1Successor, NULL_ADDRESS, 'the contract address is correct');
-      assert.equal(cst2Successor, NULL_ADDRESS, 'the contract address is correct');
+      try {
+        await cst1.addSuperAdmin(admin, { from: admin });
+      } catch (err) {
+        exceptionThrown = true;
+      }
 
-      let upgradeToTxn = await cst1.upgradeTo(cst2.address);
-      let upgradedFromTxn = await cst2.upgradedFrom(cst1.address);
+      let isSuperAdmin = await cst1.superAdmins(admin);
 
-      isDeprecatedCst1 = await cst1.isDeprecated();
-      isDeprecatedCst2 = await cst2.isDeprecated();
-      cst1Successor = await cst1.successor();
-      cst2Successor = await cst2.successor();
-      cst1Predecessor = await cst1.predecessor();
-      cst2Predecessor = await cst2.predecessor();
+      assert.ok(exceptionThrown, "exception was thrown");
+      assert.notOk(isSuperAdmin, "The admin was not set");
+    });
 
-      assert.ok(isDeprecatedCst1, "the isDeprecated value is correct");
-      assert.notOk(isDeprecatedCst2, "the isDeprecated value is correct");
-      assert.equal(cst1Predecessor, NULL_ADDRESS, 'the contract address is correct');
-      assert.equal(cst2Predecessor, cst1.address, 'the contract address is correct');
-      assert.equal(cst1Successor, cst2.address, 'the contract address is correct');
-      assert.equal(cst2Successor, NULL_ADDRESS, 'the contract address is correct');
+    it("does not allow an admin to remove a superAdmin", async function() {
+      let superAdmin = accounts[1];
+      await cst1.addSuperAdmin(superAdmin);
+      let exceptionThrown;
 
-      assert.equal(upgradeToTxn.logs.length, 1, 'the correct number of events were fired');
-      assert.equal(upgradedFromTxn.logs.length, 1, 'the correct number of events were fired');
-      assert.equal(upgradeToTxn.logs[0].event, "Upgraded", "the event type is correct");
-      assert.equal(upgradeToTxn.logs[0].args.successor, cst2.address);
-      assert.equal(upgradedFromTxn.logs[0].event, "UpgradedFrom", "the event type is correct");
-      assert.equal(upgradedFromTxn.logs[0].args.predecessor, cst1.address);
+      try {
+        await cst1.removeAdmin(superAdmin, { from: admin });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      let isSuperAdmin = await cst1.superAdmins(superAdmin);
+
+      assert.ok(exceptionThrown, "exception was thrown");
+      assert.ok(isSuperAdmin, "The admin was not removed");
+    });
+
+    it("does allow a superAdmin to add an admin", async function() {
+      let superAdmin = accounts[1];
+      let newAdmin = accounts[9];
+      await cst1.addSuperAdmin(superAdmin);
+
+      await cst1.addAdmin(newAdmin, { from: superAdmin });
+
+      let isAdmin = await cst1.admins(newAdmin);
+
+      assert.ok(isAdmin, "admin was added");
+    });
+
+    it("does allow a superAdmin to remove an admin", async function() {
+      let superAdmin = accounts[1];
+      await cst1.addSuperAdmin(superAdmin);
+
+      await cst1.removeAdmin(admin, { from: superAdmin });
+      let isAdmin = await cst1.admins(admin);
+
+      assert.notOk(isAdmin, "admin was removed");
     });
 
     it("does not allow a non-owner to add an admin", async function() {
@@ -103,7 +118,7 @@ contract('CardStackToken', function(accounts) {
       let isAdmin = await cst1.admins(admin);
 
       assert.ok(exceptionThrown, "exception was thrown");
-      assert.ok(isAdmin, "The admin was not set");
+      assert.ok(isAdmin, "The admin was not removed");
     });
 
     it("does not allow a non-admin to invoke upgradeTo", async function() {
@@ -146,6 +161,298 @@ contract('CardStackToken', function(accounts) {
       assert.notOk(isDeprecatedCst2, "the isDeprecated value is correct");
       assert.equal(cst2Predecessor, NULL_ADDRESS, 'the contract address is correct');
       assert.equal(cst2Successor, NULL_ADDRESS, 'the contract address is correct');
+    });
+
+    it("can indiciate if the contract is deprecated", async function() {
+      let isDeprecatedCst1 = await cst1.isDeprecated();
+      let isDeprecatedCst2 = await cst2.isDeprecated();
+      let cst1Successor = await cst1.successor();
+      let cst2Successor = await cst2.successor();
+      let cst1Predecessor = await cst1.predecessor();
+      let cst2Predecessor = await cst2.predecessor();
+
+      assert.notOk(isDeprecatedCst1, "the isDeprecated value is correct");
+      assert.notOk(isDeprecatedCst2, "the isDeprecated value is correct");
+      assert.equal(cst1Predecessor, NULL_ADDRESS, 'the contract address is correct');
+      assert.equal(cst2Predecessor, NULL_ADDRESS, 'the contract address is correct');
+      assert.equal(cst1Successor, NULL_ADDRESS, 'the contract address is correct');
+      assert.equal(cst2Successor, NULL_ADDRESS, 'the contract address is correct');
+
+      let upgradeToTxn = await cst1.upgradeTo(cst2.address);
+      let upgradedFromTxn = await cst2.upgradedFrom(cst1.address);
+
+      isDeprecatedCst1 = await cst1.isDeprecated();
+      isDeprecatedCst2 = await cst2.isDeprecated();
+      cst1Successor = await cst1.successor();
+      cst2Successor = await cst2.successor();
+      cst1Predecessor = await cst1.predecessor();
+      cst2Predecessor = await cst2.predecessor();
+
+      assert.ok(isDeprecatedCst1, "the isDeprecated value is correct");
+      assert.notOk(isDeprecatedCst2, "the isDeprecated value is correct");
+      assert.equal(cst1Predecessor, NULL_ADDRESS, 'the contract address is correct');
+      assert.equal(cst2Predecessor, cst1.address, 'the contract address is correct');
+      assert.equal(cst1Successor, cst2.address, 'the contract address is correct');
+      assert.equal(cst2Successor, NULL_ADDRESS, 'the contract address is correct');
+
+      assert.equal(upgradeToTxn.logs.length, 1, 'the correct number of events were fired');
+      assert.equal(upgradedFromTxn.logs.length, 1, 'the correct number of events were fired');
+      assert.equal(upgradeToTxn.logs[0].event, "Upgraded", "the event type is correct");
+      assert.equal(upgradeToTxn.logs[0].args.successor, cst2.address);
+      assert.equal(upgradedFromTxn.logs[0].event, "UpgradedFrom", "the event type is correct");
+      assert.equal(upgradedFromTxn.logs[0].args.predecessor, cst1.address);
+    });
+  });
+
+  describe("contract upgrade - successor contract", function() {
+    beforeEach(async function() {
+      storage = await Storage.new();
+      ledger = await CstLedger.new();
+      cst1 = await CardStackToken.new(ledger.address, storage.address);
+      cst2 = await CardStackToken.new(ledger.address, storage.address);
+
+      await storage.addAdmin(cst1.address);
+      await ledger.addAdmin(cst1.address);
+      await storage.addAdmin(cst2.address);
+      await ledger.addAdmin(cst2.address);
+      await ledger.mintTokens(100);
+      await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await cst2.initializeFromStorage();
+      await cst1.addAdmin(admin);
+      await cst2.addAdmin(admin);
+    });
+
+    it("allows purchase of CST for successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10);
+
+      let buyerAccount = accounts[8];
+      checkBalance(buyerAccount, 2);
+
+      let txnValue = web3.toWei(2, "ether");
+      let startBalance = await web3.eth.getBalance(buyerAccount);
+      let startCstEth = await web3.eth.getBalance(cst2.address);
+
+      startBalance = asInt(startBalance);
+
+      let txn = await cst2.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+
+      let { cumulativeGasUsed } = txn.receipt;
+      let endBalance = await web3.eth.getBalance(buyerAccount);
+      let endCstEth = await web3.eth.getBalance(cst2.address);
+      let cstBalance = await cst2.balanceOf(buyerAccount);
+      let totalInCirculation = await cst2.totalInCirculation();
+
+      endBalance = asInt(endBalance);
+
+      assert.ok(cumulativeGasUsed < 80000, "Less than 80000 gas was used for the txn");
+      assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
+      assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 2, 'the ether balance for the CST contract is correct');
+      assert.equal(cstBalance, 2, "The CST balance is correct");
+      assert.equal(totalInCirculation, 2, "The CST total in circulation was updated correctly");
+    });
+
+    it("allows selling of CST for successor contract", async function() {
+      let sellerAccount = accounts[2];
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      await cst2.buy({
+        from: sellerAccount,
+        value: web3.toWei(1, "ether"),
+        gasPrice: GAS_PRICE
+      });
+
+      let startWalletBalance = await web3.eth.getBalance(sellerAccount);
+      let sellAmount = 10;
+      startWalletBalance = asInt(startWalletBalance);
+
+      let txn = await cst2.sell(sellAmount, {
+        from: sellerAccount,
+        gasPrice: GAS_PRICE
+      });
+
+      assert.ok(txn.receipt);
+
+      let { cumulativeGasUsed } = txn.receipt;
+      let endWalletBalance = await web3.eth.getBalance(sellerAccount);
+      let endCstBalance = await cst2.balanceOf(sellerAccount);
+      let totalInCirculation = await cst2.totalInCirculation();
+
+      endWalletBalance = asInt(endWalletBalance);
+
+      assert.ok(cumulativeGasUsed < 50000, "Less than 50000 gas was used for the txn");
+      assert.ok(Math.abs(startWalletBalance + (sellAmount * web3.toWei(0.1, "ether")) - (GAS_PRICE * cumulativeGasUsed) - endWalletBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet credited correctly");
+      assert.equal(asInt(endCstBalance), 0, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was updated correctly");
+    });
+
+    it("allows transfer of CST for successor contract", async function() {
+      let senderAccount = accounts[3];
+      let recipientAccount = accounts[4];
+      await ledger.debitAccount(senderAccount, 10);
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      let transferAmount = 10;
+
+      let txn = await cst2.transfer(recipientAccount, transferAmount, {
+        from: senderAccount,
+        gasPrice: GAS_PRICE
+      });
+
+      assert.ok(txn.receipt);
+
+      let senderBalance = await cst2.balanceOf(senderAccount);
+      let recipientBalance = await cst2.balanceOf(recipientAccount);
+      let totalInCirculation = await cst2.totalInCirculation();
+
+      assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
+      assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+    });
+
+    it("allows minting of CST for successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      let txn = await cst2.mintTokens(100);
+
+      assert.ok(txn.receipt);
+
+      let totalTokens = await cst2.totalTokens();
+      let sellCap = await cst2.sellCap();
+      let totalInCirculation = await cst2.totalInCirculation();
+
+      assert.equal(asInt(totalTokens), 200, "The totalTokens is correct");
+      assert.equal(asInt(sellCap), 100, "The sellCap is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
+    });
+
+    it("allows granting of CST for successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      let recipientAccount = accounts[9];
+
+      let txn = await cst2.grantTokens(recipientAccount, 20);
+
+      assert.ok(txn.receipt);
+
+      let totalTokens = await cst2.totalTokens();
+      let totalInCirculation = await cst2.totalInCirculation();
+      let recipientBalance = await cst2.balanceOf(recipientAccount);
+
+      assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
+      assert.equal(asInt(totalInCirculation), 20, "The totalInCirculation is correct");
+      assert.equal(asInt(recipientBalance), 20, "The recipientBalance is correct");
+    });
+
+    it("allows set buy and sell price of CST for successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      await cst2.setPrices(web3.toWei(2, "ether"), web3.toWei(1, "ether"));
+
+      let sellPrice = await cst2.sellPrice();
+      let buyPrice = await cst2.buyPrice();
+
+      assert.equal(asInt(sellPrice), web3.toWei(2, "ether"), "The sellPrice is correct");
+      assert.equal(asInt(buyPrice), web3.toWei(1, "ether"), "The buyPrice is correct");
+    });
+
+    it("allows set sellCap of CST for successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      await cst2.setSellCap(20);
+
+      let sellCap = await cst2.sellCap();
+
+      assert.equal(asInt(sellCap), 20, "The sellCap is correct");
+    });
+
+    it("allows initializeFromStorage() of CST for successor contract", async function() {
+      await storage.setUIntValue(web3.sha3("cstBuyPrice"), web3.toWei(0.5, "ether"));
+      await storage.setUIntValue(web3.sha3("cstSellPrice"), web3.toWei(0.4, "ether"));
+      await storage.setUIntValue(web3.sha3("cstSellCap"), 10);
+      await storage.setBytes32Value(web3.sha3("cstTokenSymbol"), web3.toHex("CST1"));
+      await storage.setBytes32Value(web3.sha3("cstTokenName"), web3.toHex("New CardStack Token"));
+
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      await cst2.initializeFromStorage();
+
+      let name = await cst2.name();
+      let symbol = await cst2.symbol();
+      let buyPrice = await cst2.buyPrice();
+      let sellPrice = await cst2.sellPrice();
+      let sellCap = await cst2.sellCap();
+      let tokenFrozen = await cst2.frozenToken();
+
+      assert.equal(name, "New CardStack Token", "The name of the token is correct");
+      assert.equal(symbol, "CST1", "The symbol of the token is correct");
+      assert.equal(asInt(sellCap), 10, "The sellCap is correct");
+      assert.equal(asInt(buyPrice), web3.toWei(0.5, "ether"), "The buyPrice is correct");
+      assert.equal(asInt(sellPrice), web3.toWei(0.4, "ether"), "The sellPrice is correct");
+      assert.notOk(tokenFrozen, "token is not frozen");
+    });
+
+    it("allows updateLedgerStorage() of CST for successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      let tokenHolder = accounts[6];
+      let newLedger = await CstLedger.new();
+      ledger = await CstLedger.new();
+
+      await newLedger.addAdmin(cst2.address);
+      await newLedger.mintTokens(200);
+      await newLedger.debitAccount(tokenHolder, 100);
+
+      await cst2.updateLedgerStorage(newLedger.address);
+
+      let totalTokens = await cst2.totalTokens();
+      let totalInCirculation = await cst2.totalInCirculation();
+      let balance = await cst2.balanceOf(tokenHolder);
+
+      assert.equal(asInt(totalTokens), 200, "The totalTokens is correct");
+      assert.equal(asInt(totalInCirculation), 100, "The totalInCirculation is correct");
+      assert.equal(asInt(balance), 100, "The balance is correct");
+    });
+
+    it("allows updateExternalStorage() of CST for successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      let newStorage = await Storage.new();
+
+      await newStorage.addAdmin(cst2.address);
+      await newStorage.setUIntValue(web3.sha3("cstBuyPrice"), web3.toWei(0.5, "ether"));
+      await newStorage.setUIntValue(web3.sha3("cstSellPrice"), web3.toWei(0.4, "ether"));
+      await newStorage.setUIntValue(web3.sha3("cstSellCap"), 10);
+      await newStorage.setBytes32Value(web3.sha3("cstTokenSymbol"), web3.toHex("CST1"));
+      await newStorage.setBytes32Value(web3.sha3("cstTokenName"), web3.toHex("New CardStack Token"));
+
+      await cst2.updateExternalStorage(newStorage.address);
+
+      let name = await cst2.name();
+      let symbol = await cst2.symbol();
+      let buyPrice = await cst2.buyPrice();
+      let sellPrice = await cst2.sellPrice();
+      let sellCap = await cst2.sellCap();
+
+      assert.equal(name, "New CardStack Token", "The name of the token is correct");
+      assert.equal(symbol, "CST1", "The symbol of the token is correct");
+      assert.equal(asInt(sellCap), 10, "The sellCap is correct");
+      assert.equal(asInt(buyPrice), web3.toWei(0.5, "ether"), "The buyPrice is correct");
+      assert.equal(asInt(sellPrice), web3.toWei(0.4, "ether"), "The sellPrice is correct");
+    });
+  });
+
+  describe("contract upgrade - predecessor contract", function() {
+    beforeEach(async function() {
+      storage = await Storage.new();
+      ledger = await CstLedger.new();
+      cst1 = await CardStackToken.new(ledger.address, storage.address);
+      cst2 = await CardStackToken.new(ledger.address, storage.address);
+
+      await storage.addAdmin(cst1.address);
+      await ledger.addAdmin(cst1.address);
+      await storage.addAdmin(cst2.address);
+      await ledger.addAdmin(cst2.address);
+      await ledger.mintTokens(100);
+      await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await cst2.initializeFromStorage();
+      await cst1.addAdmin(admin);
+      await cst2.addAdmin(admin);
     });
 
     it("does not allow purchase of CST when the contract has been upgraded", async function() {
