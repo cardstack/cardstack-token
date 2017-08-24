@@ -54,12 +54,6 @@ contract('CardStackToken', function(accounts) {
       assert.equal(storageSellCap.toNumber(), 8000, "external storage is updated");
     });
 
-    xit("should not be able to be created with null storage address", async function() {
-    });
-
-    xit("should not be able to be created with null ledger address", async function() {
-    });
-
     it("freezes the token before it has been initialized", async function() {
       ledger = await CstLedger.new();
       storage = await Storage.new();
