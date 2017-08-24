@@ -5,20 +5,33 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./freezable.sol";
 import "./CstLedger.sol";
 import "./ExternalStorage.sol";
+import "./Registry.sol";
 import "./CstLibrary.sol";
 import "./displayable.sol";
 import "./upgradeable.sol";
+import "./initializable.sol";
+import "./startable.sol";
+import "./storable.sol";
 
 // TODO add additional ERC20 Token standard functions for approving spends on your behalf and setting an allowance
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/token/StandardToken.sol
 
-contract CardStackToken is Ownable, freezable, displayable, upgradeable {
+contract CardStackToken is Ownable,
+                           freezable,
+                           displayable,
+                           upgradeable,
+                           initializable,
+                           startable,
+                           storable {
 
   using SafeMath for uint256;
   using CstLibrary for address;
 
+  string public storageName;
+  string public ledgerName;
   ITokenLedger public tokenLedger;
   address public externalStorage;
+  address public registry;
 
   // These are mirrored in external storage so that state can live in future version of this contract
   // we save on gas prices by having these available as instance variables
@@ -38,11 +51,23 @@ contract CardStackToken is Ownable, freezable, displayable, upgradeable {
                  address recipientAccount,
                  uint value);
 
-  function CardStackToken(address _tokenLedger, address _externalStorage) {
+  modifier initStorage {
+    address ledgerAddress = Registry(registry).getStorage(ledgerName);
+    address storageAddress = Registry(registry).getStorage(storageName);
+
+    tokenLedger = ITokenLedger(ledgerAddress);
+    externalStorage = storageAddress;
+    _;
+  }
+
+  function CardStackToken(address _registry, string _storageName, string _ledgerName) {
     frozenToken = true;
 
-    tokenLedger = ITokenLedger(_tokenLedger);
-    externalStorage = _externalStorage;
+    storageName = _storageName;
+    ledgerName = _ledgerName;
+    registry = _registry;
+
+    addSuperAdmin(registry);
   }
 
   /* This unnamed function is called whenever someone tries to send ether to it */
@@ -50,11 +75,20 @@ contract CardStackToken is Ownable, freezable, displayable, upgradeable {
     throw;     // Prevents accidental sending of ether
   }
 
+  function getLedgerNameHash() constant returns (bytes32) {
+    return sha3(ledgerName);
+  }
+
+  function getStorageNameHash() constant returns (bytes32) {
+    return sha3(storageName);
+  }
+
   function initialize(bytes32 _tokenName,
                       bytes32 _tokenSymbol,
                       uint _buyPrice,
                       uint _sellPrice,
-                      uint _sellCap) onlyOwner unlessUpgraded {
+                      uint _sellCap) onlySuperAdmins unlessUpgraded initStorage {
+
     externalStorage.setTokenName(_tokenName);
     externalStorage.setTokenSymbol(_tokenSymbol);
     externalStorage.setBuyPrice(_buyPrice);
@@ -68,24 +102,21 @@ contract CardStackToken is Ownable, freezable, displayable, upgradeable {
     frozenToken = false;
   }
 
-  function initializeFromStorage() onlyOwner unlessUpgraded {
+  function initializeFromStorage() onlySuperAdmins unlessUpgraded initStorage {
     buyPrice = externalStorage.getBuyPrice();
     sellPrice = externalStorage.getSellPrice();
     sellCap = externalStorage.getSellCap();
+  }
 
+  function start() onlySuperAdmins unlessUpgraded {
     frozenToken = false;
   }
 
-  function updateLedgerStorage(address newAddress) onlyOwner unlessUpgraded {
-    tokenLedger = ITokenLedger(newAddress);
-  }
+  function updateStorage(string newStorageName, string newLedgerName) onlySuperAdmins unlessUpgraded {
+    storageName = newStorageName;
+    ledgerName = newLedgerName;
 
-  function updateExternalStorage(address newAddress) onlyOwner unlessUpgraded {
-    externalStorage = newAddress;
-
-    buyPrice = externalStorage.getBuyPrice();
-    sellPrice = externalStorage.getSellPrice();
-    sellCap = externalStorage.getSellCap();
+    initializeFromStorage();
   }
 
   function name() constant unlessUpgraded returns(string) {
@@ -96,15 +127,15 @@ contract CardStackToken is Ownable, freezable, displayable, upgradeable {
     return bytes32ToString(externalStorage.getTokenSymbol());
   }
 
-  function totalInCirculation() constant unlessUpgraded returns(uint) {
+  function totalInCirculation() constant unlessFrozen unlessUpgraded returns(uint) {
     return tokenLedger.totalInCirculation();
   }
 
-  function totalTokens() constant unlessUpgraded returns(uint) {
+  function totalTokens() constant unlessFrozen unlessUpgraded returns(uint) {
     return tokenLedger.totalTokens();
   }
 
-  function balanceOf(address account) constant unlessUpgraded returns (uint) {
+  function balanceOf(address account) constant unlessUpgraded unlessFrozen returns (uint) {
     return tokenLedger.balanceOf(account);
   }
 
@@ -115,19 +146,19 @@ contract CardStackToken is Ownable, freezable, displayable, upgradeable {
     Transfer(msg.sender, msg.sender, recipient, recipient, amount);
   }
 
-  function mintTokens(uint mintedAmount) onlyOwner unlessFrozen unlessUpgraded {
+  function mintTokens(uint mintedAmount) onlySuperAdmins unlessFrozen unlessUpgraded {
     tokenLedger.mintTokens(mintedAmount);
     Mint(mintedAmount, tokenLedger.totalTokens(), sellCap);
   }
 
-  function grantTokens(address recipient, uint amount) onlyOwner unlessFrozen unlessUpgraded {
+  function grantTokens(address recipient, uint amount) onlySuperAdmins unlessFrozen unlessUpgraded {
     require(amount <= tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation()));           // make sure there are enough tokens to grant
 
     tokenLedger.debitAccount(recipient, amount);
     Grant(recipient, recipient, amount);
   }
 
-  function setPrices(uint newSellPrice, uint newBuyPrice) onlyOwner unlessUpgraded {
+  function setPrices(uint newSellPrice, uint newBuyPrice) onlySuperAdmins unlessUpgraded {
     require(newSellPrice > 0);
     require(newBuyPrice > 0);
 
@@ -140,7 +171,7 @@ contract CardStackToken is Ownable, freezable, displayable, upgradeable {
     PriceChange(newSellPrice, newBuyPrice);
   }
 
-  function setSellCap(uint newSellCap) onlyOwner unlessUpgraded {
+  function setSellCap(uint newSellCap) onlySuperAdmins unlessUpgraded {
     sellCap = newSellCap;
     externalStorage.setSellCap(newSellCap);
 

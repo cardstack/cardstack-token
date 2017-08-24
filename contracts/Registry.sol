@@ -3,22 +3,29 @@ pragma solidity ^0.4.2;
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./upgradeable.sol";
+import "./ExternalStorage.sol";
+import "./CstLedger.sol";
+import "./administratable.sol";
+import "./initializable.sol";
+import "./startable.sol";
+import "./storable.sol";
 
-contract Registry is Ownable {
+contract Registry is Ownable, administratable, upgradeable {
   using SafeMath for uint256;
 
   uint public numContracts;
+  mapping(bytes32 => address) public storageForHash;
   mapping(bytes32 => address) public contractForHash;
   mapping(uint => string) public contractNameForIndex;
 
-  event ContractRegistered(address indexed contractAddress, string name);
+  event ContractRegistered(address indexed _contract, address contractAddress, string name);
   event ContractUpgraded(address indexed successor, address indexed predecessor, string name);
 
-  function getContractHash(string name) constant returns (bytes32) {
+  function getContractHash(string name) constant unlessUpgraded returns (bytes32) {
     return sha3(name);
   }
 
-  function addContract(string name, address contractAddress) onlyOwner returns (bytes32) {
+  function register(string name, address contractAddress, bool pauseToken) onlySuperAdmins unlessUpgraded returns (bytes32) {
     bytes32 hash = sha3(name);
     require(bytes(name).length > 0);
     require(contractAddress != 0x0);
@@ -29,11 +36,27 @@ contract Registry is Ownable {
 
     numContracts = numContracts.add(1);
 
-    ContractRegistered(contractAddress, name);
+    address storageAddress = storageForHash[storable(contractAddress).getStorageNameHash()];
+    address ledgerAddress = storageForHash[storable(contractAddress).getLedgerNameHash()];
+
+    if (storageAddress != 0x0) {
+      ExternalStorage(storageAddress).addAdmin(contractAddress);
+    }
+    if (ledgerAddress != 0x0) {
+      CstLedger(ledgerAddress).addAdmin(contractAddress);
+    }
+
+    initializable(contractAddress).initializeFromStorage();
+
+    if (!pauseToken) {
+      startable(contractAddress).start();
+    }
+
+    ContractRegistered(contractAddress, contractAddress, name);
     return hash;
   }
 
-  function upgradeContract(string name, address successor) onlyOwner returns (bytes32) {
+  function upgradeContract(string name, address successor, bool pauseToken) onlySuperAdmins unlessUpgraded returns (bytes32) {
     bytes32 hash = sha3(name);
     require(successor != 0x0);
     require(contractForHash[hash] != 0x0);
@@ -44,8 +67,81 @@ contract Registry is Ownable {
     upgradeable(predecessor).upgradeTo(successor);
     upgradeable(successor).upgradedFrom(predecessor);
 
+    address successorStorageAddress = storageForHash[storable(successor).getStorageNameHash()];
+    address successorLedgerAddress = storageForHash[storable(successor).getLedgerNameHash()];
+    address predecessorStorageAddress = storageForHash[storable(predecessor).getStorageNameHash()];
+    address predecessorLedgerAddress = storageForHash[storable(predecessor).getLedgerNameHash()];
+
+    if (successorStorageAddress != 0x0) {
+      ExternalStorage(successorStorageAddress).addAdmin(successor);
+    }
+    if (predecessorStorageAddress != 0x0) {
+      ExternalStorage(predecessorStorageAddress).removeAdmin(predecessor);
+    }
+
+    if (successorLedgerAddress != 0x0) {
+      CstLedger(successorLedgerAddress).addAdmin(successor);
+    }
+    if (predecessorLedgerAddress != 0x0) {
+      CstLedger(predecessorLedgerAddress).removeAdmin(predecessor);
+    }
+
+    initializable(successor).initializeFromStorage();
+    if (!pauseToken) {
+      startable(successor).start();
+    }
+
     ContractUpgraded(successor, predecessor, name);
     return hash;
   }
+
+  function addStorage(string name, address storageAddress) onlySuperAdmins unlessUpgraded {
+    bytes32 hash = sha3(name);
+    storageForHash[hash] = storageAddress;
+  }
+
+  function getStorage(string name) constant unlessUpgraded returns (address) {
+    return storageForHash[sha3(name)];
+  }
+
+  function removeStorage(string name) onlySuperAdmins unlessUpgraded {
+    delete storageForHash[sha3(name)];
+  }
+
+  function setStorageUIntValue(string storageName, string fieldName, uint value) onlySuperAdmins unlessUpgraded {
+    address storageAddress = getStorage(storageName);
+    ExternalStorage(storageAddress).setUIntValue(fieldName, value);
+  }
+
+  function setStorageLedgerBalance(string storageName, address account, uint value) onlySuperAdmins unlessUpgraded {
+    address storageAddress = getStorage(storageName);
+    ExternalStorage(storageAddress).setBalance(account, value);
+  }
+
+  function setStorageBytes32Value(string storageName, string fieldName, bytes32 value) onlySuperAdmins unlessUpgraded {
+    address storageAddress = getStorage(storageName);
+    ExternalStorage(storageAddress).setBytes32Value(fieldName, value);
+  }
+
+  function setStorageBytesValue(string storageName, string fieldName, bytes value) onlySuperAdmins unlessUpgraded {
+    address storageAddress = getStorage(storageName);
+    ExternalStorage(storageAddress).setBytesValue(fieldName, value);
+  }
+
+  function setStorageAddressValue(string storageName, string fieldName, address value) onlySuperAdmins unlessUpgraded {
+    address storageAddress = getStorage(storageName);
+    ExternalStorage(storageAddress).setAddressValue(fieldName, value);
+  }
+
+  function setStorageBooleanValue(string storageName, string fieldName, bool value) onlySuperAdmins unlessUpgraded {
+    address storageAddress = getStorage(storageName);
+    ExternalStorage(storageAddress).setBooleanValue(fieldName, value);
+  }
+
+  function setStorageIntValue(string storageName, string fieldName, int value) onlySuperAdmins unlessUpgraded {
+    address storageAddress = getStorage(storageName);
+    ExternalStorage(storageAddress).setIntValue(fieldName, value);
+  }
+
 }
 

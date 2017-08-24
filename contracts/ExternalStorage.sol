@@ -4,63 +4,73 @@ import "./administratable.sol";
 
 contract ExternalStorage is administratable {
 
-  mapping(bytes32 => uint) UIntStorage;
+  mapping(address => uint) simpleLedger;
 
-  function getUIntValue(bytes32 record) constant returns (uint) {
-    return UIntStorage[record];
+  function getBalanceFor(address _address) constant returns (uint) {
+    return simpleLedger[_address];
   }
 
-  function setUIntValue(bytes32 record, uint value) onlyAdmins {
-    UIntStorage[record] = value;
+  function setBalance(address _address, uint value) onlyAdmins {
+    simpleLedger[_address] = value;
+  }
+
+  mapping(bytes32 => uint) UIntStorage;
+
+  function getUIntValue(string record) constant returns (uint) {
+    return UIntStorage[sha3(record)];
+  }
+
+  function setUIntValue(string record, uint value) onlyAdmins {
+    UIntStorage[sha3(record)] = value;
   }
 
   mapping(bytes32 => bytes32) Bytes32Storage;
 
-  function getBytes32Value(bytes32 record) constant returns (bytes32) {
-    return Bytes32Storage[record];
+  function getBytes32Value(string record) constant returns (bytes32) {
+    return Bytes32Storage[sha3(record)];
   }
 
-  function setBytes32Value(bytes32 record, bytes32 value) onlyAdmins {
-    Bytes32Storage[record] = value;
+  function setBytes32Value(string record, bytes32 value) onlyAdmins {
+    Bytes32Storage[sha3(record)] = value;
   }
 
   mapping(bytes32 => address) AddressStorage;
 
-  function getAddressValue(bytes32 record) constant returns (address) {
-    return AddressStorage[record];
+  function getAddressValue(string record) constant returns (address) {
+    return AddressStorage[sha3(record)];
   }
 
-  function setAddressValue(bytes32 record, address value) onlyAdmins {
-    AddressStorage[record] = value;
+  function setAddressValue(string record, address value) onlyAdmins {
+    AddressStorage[sha3(record)] = value;
   }
 
   mapping(bytes32 => bytes) BytesStorage;
 
-  function getBytesValue(bytes32 record) constant returns (bytes) {
-    return BytesStorage[record];
+  function getBytesValue(string record) constant returns (bytes) {
+    return BytesStorage[sha3(record)];
   }
 
-  function setBytesValue(bytes32 record, bytes value) onlyAdmins {
-    BytesStorage[record] = value;
+  function setBytesValue(string record, bytes value) onlyAdmins {
+    BytesStorage[sha3(record)] = value;
   }
 
   mapping(bytes32 => bool) BooleanStorage;
 
-  function getBooleanValue(bytes32 record) constant returns (bool) {
-    return BooleanStorage[record];
+  function getBooleanValue(string record) constant returns (bool) {
+    return BooleanStorage[sha3(record)];
   }
 
-  function setBooleanValue(bytes32 record, bool value) onlyAdmins {
-    BooleanStorage[record] = value;
+  function setBooleanValue(string record, bool value) onlyAdmins {
+    BooleanStorage[sha3(record)] = value;
   }
 
   mapping(bytes32 => int) IntStorage;
 
-  function getIntValue(bytes32 record) constant returns (int) {
-    return IntStorage[record];
+  function getIntValue(string record) constant returns (int) {
+    return IntStorage[sha3(record)];
   }
 
-  function setIntValue(bytes32 record, int value) onlyAdmins {
-    IntStorage[record] = value;
+  function setIntValue(string record, int value) onlyAdmins {
+    IntStorage[sha3(record)] = value;
   }
 }

@@ -9,20 +9,26 @@ const {
 const CardStackToken = artifacts.require("./CardStackToken.sol");
 const CstLedger = artifacts.require("./CstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
+const Registry = artifacts.require("./Registry.sol");
 
 contract('CardStackToken', function(accounts) {
   let ledger;
   let storage;
+  let cst;
+  let registry;
 
   describe("sell()", function() {
-    let cst;
 
     beforeEach(async function() {
       ledger = await CstLedger.new();
       storage = await Storage.new();
-      cst = await CardStackToken.new(ledger.address, storage.address);
-      await storage.addAdmin(cst.address);
-      await ledger.addAdmin(cst.address);
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await registry.register("CST", cst.address, false);
       await ledger.mintTokens(100);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
 

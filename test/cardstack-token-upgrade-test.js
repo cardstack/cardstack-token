@@ -9,28 +9,35 @@ const {
 const CardStackToken = artifacts.require("./CardStackToken.sol");
 const CstLedger = artifacts.require("./CstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
+const Registry = artifacts.require("./Registry.sol");
 
 contract('CardStackToken', function(accounts) {
   let cst1;
   let cst2;
   let ledger;
   let storage;
+  let registry;
   let admin = accounts[2];
 
   describe("contract upgrade", function() {
     beforeEach(async function() {
-      storage = await Storage.new();
       ledger = await CstLedger.new();
-      cst1 = await CardStackToken.new(ledger.address, storage.address);
-      cst2 = await CardStackToken.new(ledger.address, storage.address);
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst1 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst2 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
 
       await storage.addAdmin(cst1.address);
-      await ledger.addAdmin(cst1.address);
       await storage.addAdmin(cst2.address);
+      await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
       await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
-      await cst2.initializeFromStorage();
+      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
       await cst1.addAdmin(admin);
       await cst2.addAdmin(admin);
     });
@@ -206,18 +213,23 @@ contract('CardStackToken', function(accounts) {
 
   describe("contract upgrade - successor contract", function() {
     beforeEach(async function() {
-      storage = await Storage.new();
       ledger = await CstLedger.new();
-      cst1 = await CardStackToken.new(ledger.address, storage.address);
-      cst2 = await CardStackToken.new(ledger.address, storage.address);
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst1 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst2 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
 
       await storage.addAdmin(cst1.address);
-      await ledger.addAdmin(cst1.address);
       await storage.addAdmin(cst2.address);
+      await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
       await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
-      await cst2.initializeFromStorage();
+      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
       await cst1.addAdmin(admin);
       await cst2.addAdmin(admin);
     });
@@ -363,94 +375,27 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(asInt(sellCap), 20, "The sellCap is correct");
     });
-
-    it("allows initializeFromStorage() of CST for successor contract", async function() {
-      await storage.setUIntValue(web3.sha3("cstBuyPrice"), web3.toWei(0.5, "ether"));
-      await storage.setUIntValue(web3.sha3("cstSellPrice"), web3.toWei(0.4, "ether"));
-      await storage.setUIntValue(web3.sha3("cstSellCap"), 10);
-      await storage.setBytes32Value(web3.sha3("cstTokenSymbol"), web3.toHex("CST1"));
-      await storage.setBytes32Value(web3.sha3("cstTokenName"), web3.toHex("New CardStack Token"));
-
-      await cst2.upgradedFrom(cst1.address, { from: admin });
-      await cst2.initializeFromStorage();
-
-      let name = await cst2.name();
-      let symbol = await cst2.symbol();
-      let buyPrice = await cst2.buyPrice();
-      let sellPrice = await cst2.sellPrice();
-      let sellCap = await cst2.sellCap();
-      let tokenFrozen = await cst2.frozenToken();
-
-      assert.equal(name, "New CardStack Token", "The name of the token is correct");
-      assert.equal(symbol, "CST1", "The symbol of the token is correct");
-      assert.equal(asInt(sellCap), 10, "The sellCap is correct");
-      assert.equal(asInt(buyPrice), web3.toWei(0.5, "ether"), "The buyPrice is correct");
-      assert.equal(asInt(sellPrice), web3.toWei(0.4, "ether"), "The sellPrice is correct");
-      assert.notOk(tokenFrozen, "token is not frozen");
-    });
-
-    it("allows updateLedgerStorage() of CST for successor contract", async function() {
-      await cst2.upgradedFrom(cst1.address, { from: admin });
-      let tokenHolder = accounts[6];
-      let newLedger = await CstLedger.new();
-      ledger = await CstLedger.new();
-
-      await newLedger.addAdmin(cst2.address);
-      await newLedger.mintTokens(200);
-      await newLedger.debitAccount(tokenHolder, 100);
-
-      await cst2.updateLedgerStorage(newLedger.address);
-
-      let totalTokens = await cst2.totalTokens();
-      let totalInCirculation = await cst2.totalInCirculation();
-      let balance = await cst2.balanceOf(tokenHolder);
-
-      assert.equal(asInt(totalTokens), 200, "The totalTokens is correct");
-      assert.equal(asInt(totalInCirculation), 100, "The totalInCirculation is correct");
-      assert.equal(asInt(balance), 100, "The balance is correct");
-    });
-
-    it("allows updateExternalStorage() of CST for successor contract", async function() {
-      await cst2.upgradedFrom(cst1.address, { from: admin });
-      let newStorage = await Storage.new();
-
-      await newStorage.addAdmin(cst2.address);
-      await newStorage.setUIntValue(web3.sha3("cstBuyPrice"), web3.toWei(0.5, "ether"));
-      await newStorage.setUIntValue(web3.sha3("cstSellPrice"), web3.toWei(0.4, "ether"));
-      await newStorage.setUIntValue(web3.sha3("cstSellCap"), 10);
-      await newStorage.setBytes32Value(web3.sha3("cstTokenSymbol"), web3.toHex("CST1"));
-      await newStorage.setBytes32Value(web3.sha3("cstTokenName"), web3.toHex("New CardStack Token"));
-
-      await cst2.updateExternalStorage(newStorage.address);
-
-      let name = await cst2.name();
-      let symbol = await cst2.symbol();
-      let buyPrice = await cst2.buyPrice();
-      let sellPrice = await cst2.sellPrice();
-      let sellCap = await cst2.sellCap();
-
-      assert.equal(name, "New CardStack Token", "The name of the token is correct");
-      assert.equal(symbol, "CST1", "The symbol of the token is correct");
-      assert.equal(asInt(sellCap), 10, "The sellCap is correct");
-      assert.equal(asInt(buyPrice), web3.toWei(0.5, "ether"), "The buyPrice is correct");
-      assert.equal(asInt(sellPrice), web3.toWei(0.4, "ether"), "The sellPrice is correct");
-    });
   });
 
   describe("contract upgrade - predecessor contract", function() {
     beforeEach(async function() {
-      storage = await Storage.new();
       ledger = await CstLedger.new();
-      cst1 = await CardStackToken.new(ledger.address, storage.address);
-      cst2 = await CardStackToken.new(ledger.address, storage.address);
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst1 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst2 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
 
       await storage.addAdmin(cst1.address);
-      await ledger.addAdmin(cst1.address);
       await storage.addAdmin(cst2.address);
+      await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
       await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
-      await cst2.initializeFromStorage();
+      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
       await cst1.addAdmin(admin);
       await cst2.addAdmin(admin);
     });
@@ -596,8 +541,8 @@ contract('CardStackToken', function(accounts) {
       }
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let buyPrice = await storage.getUIntValue(web3.sha3("cstBuyPrice"));
-      let sellPrice = await storage.getUIntValue(web3.sha3("cstSellPrice"));
+      let buyPrice = await storage.getUIntValue("cstBuyPrice");
+      let sellPrice = await storage.getUIntValue("cstSellPrice");
 
       assert.equal(asInt(sellPrice), web3.toWei(0.1, "ether"), "The sellPrice is correct");
       assert.equal(asInt(buyPrice), web3.toWei(0.1, "ether"), "The buyPrice is correct");
@@ -613,7 +558,7 @@ contract('CardStackToken', function(accounts) {
       }
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let sellCap = await storage.getUIntValue(web3.sha3("cstSellCap"));
+      let sellCap = await storage.getUIntValue("cstSellCap");
 
       assert.equal(asInt(sellCap), 100, "The sellCap is correct");
     });

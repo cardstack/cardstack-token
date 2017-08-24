@@ -11,6 +11,8 @@ contract ITokenLedger {
   function transfer(address sender, address reciever, uint amount);
   function creditAccount(address account, uint amount);
   function debitAccount(address account, uint amount);
+  function addAdmin(address admin);
+  function removeAdmin(address admin);
 }
 
 contract CstLedger is ITokenLedger, administratable {
