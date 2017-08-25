@@ -7,8 +7,8 @@ contract upgradeable is administratable {
   address public predecessor;
   address public successor;
 
-  event Upgraded(address indexed successor);
-  event UpgradedFrom(address indexed predecessor);
+  event Upgraded(address indexed successor, address successorAddress);
+  event UpgradedFrom(address indexed predecessor, address predecessorAddress);
 
   modifier unlessUpgraded() {
     if (successor != 0x0) throw;
@@ -32,7 +32,7 @@ contract upgradeable is administratable {
   function upgradeTo(address _successor) onlyAdmins unlessUpgraded {
     successor = _successor;
 
-    Upgraded(_successor);
+    Upgraded(_successor, _successor);
   }
 
   function upgradedFrom(address _predecessor) onlyAdmins {
@@ -40,6 +40,6 @@ contract upgradeable is administratable {
 
     predecessor = _predecessor;
 
-    UpgradedFrom(_predecessor);
+    UpgradedFrom(_predecessor, _predecessor);
   }
 }

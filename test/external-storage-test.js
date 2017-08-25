@@ -27,6 +27,15 @@ contract('ExternalStorage', function(/*accounts*/) {
     xit("does not allow non-admin to set bytes32 value", async function() {
     });
 
+    xit("gets ledger balance value", async function () {
+    });
+
+    xit("allows admin to set ledger balance value", async function () {
+    });
+
+    xit("does not allow non-admin to set ledger balance value", async function() {
+    });
+
     xit("gets bytes32 value", async function () {
     });
 

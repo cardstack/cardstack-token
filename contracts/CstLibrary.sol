@@ -2,42 +2,42 @@ import "./ExternalStorage.sol";
 
 library CstLibrary {
   function getTokenName(address _storage) constant returns(bytes32) {
-    return ExternalStorage(_storage).getBytes32Value(sha3("cstTokenName"));
+    return ExternalStorage(_storage).getBytes32Value("cstTokenName");
   }
 
   function setTokenName(address _storage, bytes32 tokenName) {
-    ExternalStorage(_storage).setBytes32Value(sha3("cstTokenName"), tokenName);
+    ExternalStorage(_storage).setBytes32Value("cstTokenName", tokenName);
   }
 
   function getTokenSymbol(address _storage) constant returns(bytes32) {
-    return ExternalStorage(_storage).getBytes32Value(sha3("cstTokenSymbol"));
+    return ExternalStorage(_storage).getBytes32Value("cstTokenSymbol");
   }
 
   function setTokenSymbol(address _storage, bytes32 tokenName) {
-    ExternalStorage(_storage).setBytes32Value(sha3("cstTokenSymbol"), tokenName);
+    ExternalStorage(_storage).setBytes32Value("cstTokenSymbol", tokenName);
   }
 
   function getBuyPrice(address _storage) constant returns(uint) {
-    return ExternalStorage(_storage).getUIntValue(sha3("cstBuyPrice"));
+    return ExternalStorage(_storage).getUIntValue("cstBuyPrice");
   }
 
   function setBuyPrice(address _storage, uint value) {
-    ExternalStorage(_storage).setUIntValue(sha3("cstBuyPrice"), value);
+    ExternalStorage(_storage).setUIntValue("cstBuyPrice", value);
   }
 
   function getSellPrice(address _storage) constant returns(uint) {
-    return ExternalStorage(_storage).getUIntValue(sha3("cstSellPrice"));
+    return ExternalStorage(_storage).getUIntValue("cstSellPrice");
   }
 
   function setSellPrice(address _storage, uint value) {
-    ExternalStorage(_storage).setUIntValue(sha3("cstSellPrice"), value);
+    ExternalStorage(_storage).setUIntValue("cstSellPrice", value);
   }
 
   function getSellCap(address _storage) constant returns(uint) {
-    return ExternalStorage(_storage).getUIntValue(sha3("cstSellCap"));
+    return ExternalStorage(_storage).getUIntValue("cstSellCap");
   }
 
   function setSellCap(address _storage, uint value) {
-    ExternalStorage(_storage).setUIntValue(sha3("cstSellCap"), value);
+    ExternalStorage(_storage).setUIntValue("cstSellCap", value);
   }
 }

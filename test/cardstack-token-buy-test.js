@@ -9,26 +9,34 @@ const {
 const CardStackToken = artifacts.require("./CardStackToken.sol");
 const CstLedger = artifacts.require("./CstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
+const Registry = artifacts.require("./Registry.sol");
 
 contract('CardStackToken', function(accounts) {
   let ledger;
   let storage;
+  let cst;
+  let registry;
 
   describe("buy()", function() {
     beforeEach(async function() {
       ledger = await CstLedger.new();
       storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await registry.register("CST", cst.address, false);
+
       for (let i = 0; i < accounts.length; i++) {
         await checkBalance(accounts[i], 1);
       }
     });
 
     it("should be able to purchase CST", async function() {
-      let cst = await CardStackToken.new(ledger.address, storage.address);
-      await storage.addAdmin(cst.address);
-      await ledger.addAdmin(cst.address);
-      await ledger.mintTokens(10);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10);
+      await ledger.mintTokens(10);
       let buyerAccount = accounts[8];
       let txnValue = web3.toWei(2, "ether");
 
@@ -72,11 +80,9 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("can not purchase more CST than the amount of ethers in the buyers wallet", async function() {
-      let cst = await CardStackToken.new(ledger.address, storage.address);
-      await storage.addAdmin(cst.address);
-      await ledger.addAdmin(cst.address);
       await ledger.mintTokens(10);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10);
+
       let buyerAccount = accounts[1];
       let txnValue = web3.toWei(1000, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
@@ -111,9 +117,6 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("can not purchase more CST than has been minted", async function() {
-      let cst = await CardStackToken.new(ledger.address, storage.address);
-      await storage.addAdmin(cst.address);
-      await ledger.addAdmin(cst.address);
       await ledger.mintTokens(10);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 15);
       let buyerAccount = accounts[1];
@@ -146,9 +149,6 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("can not purchase fractional CST (less than purchase price for a single CST)", async function() {
-      let cst = await CardStackToken.new(ledger.address, storage.address);
-      await storage.addAdmin(cst.address);
-      await ledger.addAdmin(cst.address);
       await ledger.mintTokens(10);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 15);
       let buyerAccount = accounts[1];
@@ -181,9 +181,6 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("can not purchase more CST than the CST sellCap", async function() {
-      let cst = await CardStackToken.new(ledger.address, storage.address);
-      await storage.addAdmin(cst.address);
-      await ledger.addAdmin(cst.address);
       await ledger.mintTokens(10);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 5);
       let buyerAccount = accounts[1];

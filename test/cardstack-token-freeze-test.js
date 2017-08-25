@@ -8,22 +8,29 @@ const {
 const CardStackToken = artifacts.require("./CardStackToken.sol");
 const CstLedger = artifacts.require("./CstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
+const Registry = artifacts.require("./Registry.sol");
 
 contract('CardStackToken', function(accounts) {
   let ledger;
   let storage;
+  let cst;
+  let registry;
 
   describe("frozen account", function() {
-    let cst;
     let frozenAccount = accounts[5];
     let freezeEvent;
 
     beforeEach(async function() {
-      storage = await Storage.new();
       ledger = await CstLedger.new();
-      cst = await CardStackToken.new(ledger.address, storage.address);
-      await storage.addAdmin(cst.address);
-      await ledger.addAdmin(cst.address);
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await registry.register("CST", cst.address, false);
+
       await ledger.mintTokens(100);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(1, "ether"), 100);
 
@@ -194,17 +201,20 @@ contract('CardStackToken', function(accounts) {
   });
 
   describe("frozen token", function() {
-    let cst;
-    let storage;
-    let ledger;
     let frozenAccount = accounts[5];
     let freezeEvent;
+
     beforeEach(async function() {
       ledger = await CstLedger.new();
       storage = await Storage.new();
-      cst = await CardStackToken.new(ledger.address, storage.address);
-      await storage.addAdmin(cst.address);
-      await ledger.addAdmin(cst.address);
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+
+      await registry.register("CST", cst.address, false);
       await ledger.mintTokens(100);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
 
@@ -228,12 +238,10 @@ contract('CardStackToken', function(accounts) {
       }
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let totalTokens = await cst.totalTokens();
-      let sellCap = await cst.sellCap();
-      let totalInCirculation = await cst.totalInCirculation();
+      let totalTokens = await ledger.totalTokens();
+      let totalInCirculation = await ledger.totalInCirculation();
 
       assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
-      assert.equal(asInt(sellCap), 100, "The sellCap is correct");
       assert.equal(asInt(totalInCirculation), 10, "The totalInCirculation is correct");
     });
 
@@ -247,13 +255,11 @@ contract('CardStackToken', function(accounts) {
       }
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let totalTokens = await cst.totalTokens();
-      let sellCap = await cst.sellCap();
-      let totalInCirculation = await cst.totalInCirculation();
-      let recipientBalance = await cst.balanceOf(frozenAccount);
+      let totalTokens = await ledger.totalTokens();
+      let totalInCirculation = await ledger.totalInCirculation();
+      let recipientBalance = await ledger.balanceOf(frozenAccount);
 
       assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
-      assert.equal(asInt(sellCap), 100, "The sellCap is correct");
       assert.equal(asInt(totalInCirculation), 10, "The totalInCirculation is correct");
       assert.equal(asInt(recipientBalance), 10, "The balance is correct");
     });
@@ -278,8 +284,8 @@ contract('CardStackToken', function(accounts) {
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(sellerAccount);
-      let cstBalance = await cst.balanceOf(sellerAccount);
-      let totalInCirculation = await cst.totalInCirculation();
+      let cstBalance = await ledger.balanceOf(sellerAccount);
+      let totalInCirculation = await ledger.totalInCirculation();
 
       endBalance = asInt(endBalance);
 
@@ -312,8 +318,8 @@ contract('CardStackToken', function(accounts) {
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
-      let cstBalance = await cst.balanceOf(buyerAccount);
-      let totalInCirculation = await cst.totalInCirculation();
+      let cstBalance = await ledger.balanceOf(buyerAccount);
+      let totalInCirculation = await ledger.totalInCirculation();
 
       endBalance = asInt(endBalance);
 
@@ -339,9 +345,9 @@ contract('CardStackToken', function(accounts) {
       }
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let senderBalance = await cst.balanceOf(senderAccount);
-      let recipientBalance = await cst.balanceOf(recipientAccount);
-      let totalInCirculation = await cst.totalInCirculation();
+      let senderBalance = await ledger.balanceOf(senderAccount);
+      let recipientBalance = await ledger.balanceOf(recipientAccount);
+      let totalInCirculation = await ledger.totalInCirculation();
 
       assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
@@ -374,9 +380,9 @@ contract('CardStackToken', function(accounts) {
       }
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let senderBalance = await cst.balanceOf(senderAccount);
-      let recipientBalance = await cst.balanceOf(recipientAccount);
-      let totalInCirculation = await cst.totalInCirculation();
+      let senderBalance = await ledger.balanceOf(senderAccount);
+      let recipientBalance = await ledger.balanceOf(recipientAccount);
+      let totalInCirculation = await ledger.totalInCirculation();
 
       assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
@@ -403,9 +409,9 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
-      let senderBalance = await cst.balanceOf(senderAccount);
-      let recipientBalance = await cst.balanceOf(recipientAccount);
-      let totalInCirculation = await cst.totalInCirculation();
+      let senderBalance = await ledger.balanceOf(senderAccount);
+      let recipientBalance = await ledger.balanceOf(recipientAccount);
+      let totalInCirculation = await ledger.totalInCirculation();
 
       assert.equal(asInt(senderBalance), 9, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 11, "The CST balance is correct");
@@ -413,6 +419,15 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(unfreezeEvent.logs[0].event, 'FrozenToken', 'the account freeze event is correct');
       assert.equal(unfreezeEvent.logs[0].args.frozen, false, 'the frozen value is correct');
+    });
+
+    xit("cannot invoke balanceOf when token frozen", async function() {
+    });
+
+    xit("cannot invoke totalInCirculation when token frozen", async function() {
+    });
+
+    xit("cannot invoke totalTokens when token frozen", async function() {
     });
 
     xit("cannot send CST to the reward pool when token frozen", async function() {
