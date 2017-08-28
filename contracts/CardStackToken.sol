@@ -38,6 +38,8 @@ contract CardStackToken is Ownable,
   uint public sellPrice;
   uint public buyPrice;
   uint public sellCap;
+  uint public minimumEthBalance;
+  address public foundation;
 
   event SellCapChange(uint newSellCap);
   event PriceChange(uint newSellPrice, uint newBuyPrice);
@@ -50,6 +52,11 @@ contract CardStackToken is Ownable,
                  address indexed recipient,
                  address recipientAccount,
                  uint value);
+
+  modifier onlyFoundation {
+    if (msg.sender != owner && msg.sender != foundation) throw;
+    _;
+  }
 
   modifier initStorage {
     address ledgerAddress = Registry(registry).getStorage(ledgerName);
@@ -87,17 +94,20 @@ contract CardStackToken is Ownable,
                       bytes32 _tokenSymbol,
                       uint _buyPrice,
                       uint _sellPrice,
-                      uint _sellCap) onlySuperAdmins unlessUpgraded initStorage {
+                      uint _sellCap,
+                      address _foundation) onlySuperAdmins unlessUpgraded initStorage {
 
     externalStorage.setTokenName(_tokenName);
     externalStorage.setTokenSymbol(_tokenSymbol);
     externalStorage.setBuyPrice(_buyPrice);
     externalStorage.setSellPrice(_sellPrice);
     externalStorage.setSellCap(_sellCap);
+    externalStorage.setFoundation(_foundation);
 
     sellPrice = _sellPrice;
     buyPrice = _buyPrice;
     sellCap = _sellCap;
+    foundation = _foundation;
 
     frozenToken = false;
   }
@@ -106,6 +116,8 @@ contract CardStackToken is Ownable,
     buyPrice = externalStorage.getBuyPrice();
     sellPrice = externalStorage.getSellPrice();
     sellCap = externalStorage.getSellCap();
+    minimumEthBalance = externalStorage.getMinimumEthBalance();
+    foundation = externalStorage.getFoundation();
   }
 
   function start() onlySuperAdmins unlessUpgraded {
@@ -178,6 +190,12 @@ contract CardStackToken is Ownable,
     SellCapChange(newSellCap);
   }
 
+  function setMinimumEthBalance(uint newMinimumEthBalance) onlySuperAdmins {
+    minimumEthBalance = newMinimumEthBalance;
+
+    externalStorage.setMinimumEthBalance(newMinimumEthBalance);
+  }
+
   function cstAvailableToBuy() constant unlessUpgraded returns(bool) {
     return sellCap > tokenLedger.totalInCirculation();
   }
@@ -196,11 +214,27 @@ contract CardStackToken is Ownable,
   }
 
   function sell(uint amount) unlessFrozen unlessUpgraded {
+    uint value = amount.mul(sellPrice);
+    require(value <= this.balance.sub(minimumEthBalance));
+
     tokenLedger.creditAccount(msg.sender, amount);
 
     // always send only after changing state of contract to guard against re-entry attacks
-    uint value = amount.mul(sellPrice);
     msg.sender.transfer(value);
     Sell(msg.sender, msg.sender, amount, value);
+  }
+
+  function setFoundation(address _foundation) onlySuperAdmins unlessUpgraded {
+    foundation = _foundation;
+  }
+
+  function foundationWithdraw(uint amount) onlyFoundation {
+    require(amount <= this.balance.sub(minimumEthBalance));
+
+    msg.sender.transfer(amount);
+  }
+
+  // intentionally did not lock this down to foundation only. if someone wants to send ethers, no biggie0:w
+  function foundationDeposit() payable unlessUpgraded {
   }
 }

@@ -1,6 +1,8 @@
 const {
   GAS_PRICE,
   MAX_FAILED_TXN_GAS,
+  ROUNDING_ERROR_WEI,
+  NULL_ADDRESS,
   asInt,
   checkBalance
 } = require("../lib/utils");
@@ -15,6 +17,7 @@ contract('CardStackToken', function(accounts) {
   let storage;
   let registry;
   let cst;
+  let superAdmin = accounts[42];
 
   describe("create contract", function() {
     beforeEach(async function() {
@@ -32,12 +35,13 @@ contract('CardStackToken', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 100);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address, true);
+      await cst.addSuperAdmin(superAdmin);
     });
 
     it("should initialize the CST correctly", async function() {
       await ledger.mintTokens(10000);
 
-      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 1, 8000);
+      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 1, 8000, NULL_ADDRESS);
 
       let name = await cst.name();
       let symbol = await cst.symbol();
@@ -115,7 +119,7 @@ contract('CardStackToken', function(accounts) {
 
       let exceptionThrown;
       try {
-        await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 1, 8000, {
+        await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 1, 8000, NULL_ADDRESS, {
           from: nonOwner
         });
       } catch(err) {
@@ -166,7 +170,7 @@ contract('CardStackToken', function(accounts) {
       assert.ok(tokenFrozen, "token is still frozen");
     });
 
-    it("can allow owner to start the token after initialize using the external storage", async function() {
+    it("can allow superAdmin to start the token after initialize using the external storage", async function() {
       await ledger.mintTokens(10000);
 
       await storage.setUIntValue("cstBuyPrice", web3.toWei(0.5, "ether"));
@@ -175,8 +179,8 @@ contract('CardStackToken', function(accounts) {
       await storage.setBytes32Value("cstTokenSymbol", web3.toHex("CST1"));
       await storage.setBytes32Value("cstTokenName", web3.toHex("New CardStack Token"));
 
-      await cst.initializeFromStorage();
-      await cst.start();
+      await cst.initializeFromStorage({ from: superAdmin });
+      await cst.start({ from: superAdmin });
 
       let name = await cst.name();
       let symbol = await cst.symbol();
@@ -193,7 +197,7 @@ contract('CardStackToken', function(accounts) {
       assert.notOk(tokenFrozen, "token is not frozen");
     });
 
-    it("does not allow non-owner to initialize using external storage", async function() {
+    it("does not allow non-superAdmin to initialize using external storage", async function() {
       let nonOwner = accounts[1];
 
       await ledger.mintTokens(10000);
@@ -217,7 +221,7 @@ contract('CardStackToken', function(accounts) {
       assert.ok(tokenFrozen, "token is still frozen");
     });
 
-    it("can allow owner to update storage", async function() {
+    it("can allow superAdmin to update storage", async function() {
       await cst.start();
 
       let tokenHolder = accounts[6];
@@ -241,7 +245,7 @@ contract('CardStackToken', function(accounts) {
       await newStorage.addAdmin(cst.address);
       await newLedger.addAdmin(cst.address);
 
-      await cst.updateStorage("newStorage", "newLedger");
+      await cst.updateStorage("newStorage", "newLedger", { from: superAdmin });
 
       let name = await cst.name();
       let symbol = await cst.symbol();
@@ -262,7 +266,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(balance), 100, "The balance is correct");
     });
 
-    it("non-owner cannot not update storage", async function() {
+    it("non-superAdmin cannot not update storage", async function() {
       await cst.start();
       let nonOwner = accounts[9];
       let tokenHolder = accounts[6];
@@ -328,14 +332,14 @@ contract('CardStackToken', function(accounts) {
       await ledger.addSuperAdmin(registry.address);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address, false);
+      await cst.addSuperAdmin(superAdmin);
     });
 
-    it("can allow the owner to mint tokens", async function() {
+    it("can allow the superAdmin to mint tokens", async function() {
       await ledger.mintTokens(100);
-      let ownerAccount = accounts[0];
 
       let txn = await cst.mintTokens(100, {
-        from: ownerAccount
+        from: superAdmin
       });
 
       // console.log("TXN", JSON.stringify(txn, null, 2));
@@ -389,15 +393,15 @@ contract('CardStackToken', function(accounts) {
       await ledger.addSuperAdmin(registry.address);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address, false);
+      await cst.addSuperAdmin(superAdmin);
     });
 
-    it("can allow the owner to grant tokens", async function() {
+    it("can allow the superAdmin to grant tokens", async function() {
       await ledger.mintTokens(100);
-      let ownerAccount = accounts[0];
       let recipientAccount = accounts[9];
 
       let txn = await cst.grantTokens(recipientAccount, 20, {
-        from: ownerAccount
+        from: superAdmin
       });
 
       // console.log("TXN", JSON.stringify(txn, null, 2));
@@ -423,13 +427,12 @@ contract('CardStackToken', function(accounts) {
 
     it("cannot grant more tokens than exist", async function() {
       await ledger.mintTokens(100);
-      let ownerAccount = accounts[0];
       let recipientAccount = accounts[9];
 
       let exceptionThrown;
       try {
         await cst.grantTokens(recipientAccount, 101, {
-          from: ownerAccount
+          from: superAdmin
         });
       } catch(err) {
         exceptionThrown = true;
@@ -445,7 +448,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(recipientBalance), 0, "The recipientBalance is correct");
     });
 
-    it("does not allow a non-owner to grant tokens", async function() {
+    it("does not allow a non-superAdmin to grant tokens", async function() {
       await ledger.mintTokens(100);
       let recipientAccount = accounts[9];
 
@@ -485,14 +488,14 @@ contract('CardStackToken', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 100);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address, false);
+      await cst.addSuperAdmin(superAdmin);
     });
 
-    it("can allow the owner to set buy and sell prices", async function() {
+    it("can allow the superAdmin to set buy and sell prices", async function() {
       await ledger.mintTokens(100);
-      let ownerAccount = accounts[0];
 
       let txn = await cst.setPrices(web3.toWei(2, "ether"), web3.toWei(1, "ether"), {
-        from: ownerAccount
+        from: superAdmin
       });
 
       // console.log("TXN", JSON.stringify(txn, null, 2));
@@ -520,12 +523,11 @@ contract('CardStackToken', function(accounts) {
 
     it("cannot set the buyPrice to 0", async function() {
       await ledger.mintTokens(100);
-      let ownerAccount = accounts[0];
 
       let exceptionThrown;
       try {
         await cst.setPrices(web3.toWei(2, "ether"), 0, {
-          from: ownerAccount
+          from: superAdmin
         });
       } catch(err) {
         exceptionThrown = true;
@@ -541,12 +543,11 @@ contract('CardStackToken', function(accounts) {
 
     it("cannot set the sellPrice to 0", async function() {
       await ledger.mintTokens(100);
-      let ownerAccount = accounts[0];
 
       let exceptionThrown;
       try {
         await cst.setPrices(0, web3.toWei(2, "ether"), {
-          from: ownerAccount
+          from: superAdmin
         });
       } catch(err) {
         exceptionThrown = true;
@@ -560,11 +561,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(buyPrice), web3.toWei(0.1, "ether"), "The buyPrice is correct");
     });
 
-    // this prevents the CST from becoming insolvent
-    xit("cannot set sellPrice higher than amount it would cost for CST contract to buy back all CST", async function() {
-    });
-
-    it("does not allow a non-owner to set buy and sell prices", async function() {
+    it("does not allow a non-superAdmin to set buy and sell prices", async function() {
       await ledger.mintTokens(100);
       let nonOwnerAccount = accounts[5];
 
@@ -651,14 +648,14 @@ contract('CardStackToken', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 10);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address, false);
+      await cst.addSuperAdmin(superAdmin);
     });
 
-    it("can allow the owner to set sell cap", async function() {
+    it("can allow the superAdmin to set sell cap", async function() {
       await ledger.mintTokens(100);
-      let ownerAccount = accounts[0];
 
       let txn = await cst.setSellCap(20, {
-        from: ownerAccount
+        from: superAdmin
       });
 
       assert.ok(txn.receipt);
@@ -678,7 +675,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(storageSellCap.toNumber(), 20, "external storage is updated");
     });
 
-    it("does not allow a non-owner to set sell cap", async function() {
+    it("does not allow a non-superAdmin to set sell cap", async function() {
       await ledger.mintTokens(100);
       let nonOwnerAccount = accounts[5];
 
@@ -696,6 +693,214 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(asInt(sellCap), 10, "The sellCap is correct");
     });
+  });
+
+  describe("foundation", function() {
+    let foundation = accounts[11];
+
+    beforeEach(async function() {
+      ledger = await CstLedger.new();
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      await registry.setStorageBytes32Value("cstStorage", "cstTokenName", web3.toHex("CardStack Token"));
+      await registry.setStorageBytes32Value("cstStorage", "cstTokenSymbol", web3.toHex("CST"));
+      await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.1, "ether"));
+      await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.1, "ether"));
+      await registry.setStorageUIntValue("cstStorage", "cstSellCap", 1000);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await registry.register("CST", cst.address, false);
+      await cst.addSuperAdmin(superAdmin);
+      await cst.mintTokens(1000);
+    });
+
+    it("allows superAdmin to add foundation address", async function() {
+      await cst.setFoundation(foundation, { from: superAdmin });
+
+      let observedFoundation = await cst.foundation();
+
+      assert.equal(observedFoundation, foundation, "the foundation address is set");
+    });
+
+    it("does not allow non-superAdmin to add foundation address", async function() {
+      let nonSuperAdmin = accounts[2];
+      let exceptionThrown;
+      try {
+        await cst.setFoundation(foundation, {
+          from: nonSuperAdmin
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      let observedFoundation = await cst.foundation();
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+      assert.equal(observedFoundation, NULL_ADDRESS, "the foundation is not set");
+    });
+
+    it("allows foundation to withdraw ether from foundationWithdraw()", async function() {
+      let buyer = accounts[20];
+      await checkBalance(buyer, 1);
+      await cst.setFoundation(foundation, { from: superAdmin });
+
+      let txnValue = web3.toWei(1, "ether");
+      await cst.buy({
+        from: buyer,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+
+      let startFoundationBalance = await web3.eth.getBalance(foundation);
+      startFoundationBalance = asInt(startFoundationBalance);
+
+      let txn = await cst.foundationWithdraw(txnValue, {
+        from: foundation,
+        gasPrice: GAS_PRICE
+      });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+
+      let { cumulativeGasUsed } = txn.receipt;
+      let endCstBalance = await web3.eth.getBalance(cst.address);
+      let endFoundationBalance = await web3.eth.getBalance(foundation);
+      endCstBalance = asInt(endCstBalance);
+      endFoundationBalance = asInt(endFoundationBalance);
+
+      // doing math in ethers to prevent overflow errors
+      let finalBalance = parseFloat(web3.fromWei(startFoundationBalance, "ether"))
+                       + parseFloat(web3.fromWei(txnValue, "ether"))
+                       - parseFloat(web3.fromWei(GAS_PRICE * cumulativeGasUsed, "ether"))
+                       - parseFloat(web3.fromWei(endFoundationBalance, "ether"));
+
+      assert.ok(cumulativeGasUsed < 40000, "Less than 40000 gas was used for the txn");
+      assert.ok(Math.abs(finalBalance) < parseFloat(web3.fromWei(ROUNDING_ERROR_WEI, "ether")), "Foundations's wallet balance was changed correctly");
+      assert.equal(endCstBalance, 0, "The CST balance is correct");
+    });
+
+    it("does not allow non-foundation to withdraw ether from foundationWithdraw()", async function() {
+      let buyer = accounts[20];
+      let nonFoundation = accounts[21];
+      await checkBalance(buyer, 1);
+      await cst.setFoundation(foundation, { from: superAdmin });
+
+      let txnValue = web3.toWei(1, "ether");
+      await cst.buy({
+        from: buyer,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+
+      let startNonFoundationBalance = await web3.eth.getBalance(nonFoundation);
+      startNonFoundationBalance = asInt(startNonFoundationBalance);
+
+      let exceptionThrown;
+      try {
+        await cst.foundationWithdraw(txnValue, {
+          from: nonFoundation,
+          gasPrice: GAS_PRICE
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let endCstBalance = await web3.eth.getBalance(cst.address);
+      let endNonFoundationBalance = await web3.eth.getBalance(nonFoundation);
+      endCstBalance = asInt(endCstBalance);
+      endNonFoundationBalance = asInt(endNonFoundationBalance);
+
+      assert.ok(startNonFoundationBalance - endNonFoundationBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The non foundation account was changed for just gas");
+      assert.equal(endCstBalance, txnValue, "The CST balance is correct");
+    });
+
+    it("does not allow foundation to withdraw more ether than minimumEthBalance amount", async function() {
+      let buyer = accounts[20];
+      await checkBalance(buyer, 1);
+      await cst.setFoundation(foundation, { from: superAdmin });
+
+      let txnValue = web3.toWei(1, "ether");
+      let minValue = web3.toWei(0.5, "ether");
+      await cst.setMinimumEthBalance(minValue, { from: superAdmin });
+      await cst.buy({
+        from: buyer,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+
+      let startFoundationBalance = await web3.eth.getBalance(foundation);
+      startFoundationBalance = asInt(startFoundationBalance);
+
+      let exceptionThrown;
+      try {
+        await cst.foundationWithdraw(txnValue, {
+          from: foundation,
+          gasPrice: GAS_PRICE
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let endCstBalance = await web3.eth.getBalance(cst.address);
+      let endFoundationBalance = await web3.eth.getBalance(foundation);
+      endCstBalance = asInt(endCstBalance);
+      endFoundationBalance = asInt(endFoundationBalance);
+
+      assert.ok(startFoundationBalance - endFoundationBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The foundation account was changed for just gas");
+      assert.equal(endCstBalance, txnValue, "The CST balance is correct");
+    });
+
+    it("allows foundation to deposit ether in foundationDeposit", async function() {
+      await cst.setFoundation(foundation, { from: superAdmin });
+
+      let txnValue = web3.toWei(1, "ether");
+      let startFoundationBalance = await web3.eth.getBalance(foundation);
+      startFoundationBalance = asInt(startFoundationBalance);
+
+      let txn = await cst.foundationDeposit({
+        from: foundation,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+
+      let { cumulativeGasUsed } = txn.receipt;
+      let endCstBalance = await web3.eth.getBalance(cst.address);
+      let endFoundationBalance = await web3.eth.getBalance(foundation);
+      endCstBalance = asInt(endCstBalance);
+      endFoundationBalance = asInt(endFoundationBalance);
+
+      // doing math in ethers to prevent overflow errors
+      let finalBalance = parseFloat(web3.fromWei(startFoundationBalance, "ether"))
+                       - parseFloat(web3.fromWei(GAS_PRICE * cumulativeGasUsed, "ether"))
+                       - parseFloat(web3.fromWei(txnValue, "ether"))
+                       - parseFloat(web3.fromWei(endFoundationBalance, "ether"));
+
+      assert.ok(cumulativeGasUsed < 40000, "Less than 40000 gas was used for the txn");
+      assert.ok(Math.abs(finalBalance) < parseFloat(web3.fromWei(ROUNDING_ERROR_WEI, "ether")), "Foundations's wallet balance was changed correctly");
+      assert.equal(endCstBalance, txnValue, "The CST balance is correct");
+    });
+
+    it("does not allow non-super admin to set minimumEthBalance", async function() {
+      let nonSuperAdmin = accounts[4];
+      let minValue = web3.toWei(0.5, "ether");
+      let exceptionThrown;
+      try {
+        await cst.setMinimumEthBalance(minValue, { from: nonSuperAdmin });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+      let minimumEthBalance = await cst.minimumEthBalance();
+
+      assert.equal(minimumEthBalance.toNumber(), 0, "The minimumEthBalance is correct");
+    });
+
   });
 
 });

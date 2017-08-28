@@ -4,6 +4,7 @@ const Storage = artifacts.require("./ExternalStorage.sol");
 const Registry = artifacts.require("./Registry.sol");
 const {
   GAS_PRICE,
+  NULL_ADDRESS,
   asInt,
   checkBalance
 } = require("../lib/utils");
@@ -29,7 +30,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address, false);
       await ledger.mintTokens(100);
-      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
 
       await checkBalance(senderAccount, 1);
 

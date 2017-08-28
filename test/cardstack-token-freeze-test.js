@@ -1,6 +1,7 @@
 const {
   GAS_PRICE,
   MAX_FAILED_TXN_GAS,
+  NULL_ADDRESS,
   asInt,
   checkBalance
 } = require("../lib/utils");
@@ -32,7 +33,7 @@ contract('CardStackToken', function(accounts) {
       await registry.register("CST", cst.address, false);
 
       await ledger.mintTokens(100);
-      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(1, "ether"), 100);
+      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(1, "ether"), 100, NULL_ADDRESS);
 
       await checkBalance(frozenAccount, 1);
 
@@ -216,7 +217,7 @@ contract('CardStackToken', function(accounts) {
 
       await registry.register("CST", cst.address, false);
       await ledger.mintTokens(100);
-      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
 
       await checkBalance(frozenAccount, 1);
 

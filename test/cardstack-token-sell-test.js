@@ -2,6 +2,7 @@ const {
   GAS_PRICE,
   ROUNDING_ERROR_WEI,
   MAX_FAILED_TXN_GAS,
+  NULL_ADDRESS,
   asInt,
   checkBalance
 } = require("../lib/utils");
@@ -30,7 +31,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address, false);
       await ledger.mintTokens(100);
-      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
 
       for (let i = 0; i < Math.min(accounts.length, 10); i++) {
         let account = accounts[i];
@@ -68,7 +69,7 @@ contract('CardStackToken', function(accounts) {
       endWalletBalance = asInt(endWalletBalance);
 
       assert.ok(cumulativeGasUsed < 50000, "Less than 50000 gas was used for the txn");
-      assert.ok(Math.abs(startWalletBalance + (sellAmount * web3.toWei(0.1, "ether")) - (GAS_PRICE * cumulativeGasUsed) - endWalletBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet credited correctly");
+      assert.ok(Math.abs(startWalletBalance + (sellAmount * web3.toWei(0.1, "ether")) - (GAS_PRICE * cumulativeGasUsed) - endWalletBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet balance is correct");
       assert.equal(asInt(endCstBalance), 0, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 90, "The CST total in circulation was updated correctly");
 
@@ -110,7 +111,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 100, "The CST total in circulation was not updated");
     });
 
-    xit("should not be able to sell more CST than the CST contract can buy back in ETH", async function() {
+    xit("should not be able to sell more CST that would cause CST eth to be below minimumEthBalance", async function() {
     });
   });
 });

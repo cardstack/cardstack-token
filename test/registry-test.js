@@ -14,6 +14,7 @@ contract('Registry', function(accounts) {
     let cst1;
     let cst2;
     let superAdmin = accounts[19];
+    let foundation = accounts[31];
 
     beforeEach(async function() {
       let ledger = await CstLedger.new();
@@ -30,6 +31,8 @@ contract('Registry', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.1, "ether"), { from: superAdmin });
       await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.1, "ether"), { from: superAdmin });
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 100, { from: superAdmin });
+      await registry.setStorageUIntValue("cstStorage", "cstMinimumEthBalance", web3.toWei(0.2, "ether"), { from: superAdmin });
+      await registry.setStorageAddressValue("cstStorage", "cstFoundation", foundation, { from: superAdmin });
 
       cst1 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       cst2 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
@@ -235,10 +238,25 @@ contract('Registry', function(accounts) {
       let senderBalance = await cst2.balanceOf(buyerAccount);
       let recipientBalance = await cst2.balanceOf(recipientAccount);
       totalInCirculation = await cst2.totalInCirculation();
+      let name = await cst2.name();
+      let symbol = await cst2.symbol();
+      let buyPrice = await cst2.buyPrice();
+      let sellPrice = await cst2.sellPrice();
+      let sellCap = await cst2.sellCap();
+      let minimumEthBalance = await cst2.minimumEthBalance();
+      let foundationAddress = await cst2.foundation();
 
       assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
       assert.equal(asInt(recipientBalance), 2, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 2, "The CST total in circulation has not changed");
+
+      assert.equal(name, "CardStack Token", "the name is correct");
+      assert.equal(symbol, "CST", "the symbol is correct");
+      assert.equal(buyPrice.toNumber(), web3.toWei(0.1, "ether"), "the buyPrice is correct");
+      assert.equal(sellPrice.toNumber(), web3.toWei(0.1, "ether"), "the sellPrice is correct");
+      assert.equal(sellCap.toNumber(), 100, "the sellCap is correct");
+      assert.equal(minimumEthBalance.toNumber(), web3.toWei(0.2, "ether"), "the minimumEthBalance is correct");
+      assert.equal(foundationAddress, foundation, "the foundation address is correct");
     });
 
     xit("allows token to be paused after registration so that storage can be changed before token is live", async function() {

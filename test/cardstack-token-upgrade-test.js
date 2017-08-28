@@ -36,8 +36,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
-      await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
-      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
+      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
       await cst1.addAdmin(admin);
       await cst2.addAdmin(admin);
     });
@@ -228,15 +228,15 @@ contract('CardStackToken', function(accounts) {
       await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
-      await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
-      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
+      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
       await cst1.addAdmin(admin);
       await cst2.addAdmin(admin);
     });
 
     it("allows purchase of CST for successor contract", async function() {
       await cst2.upgradedFrom(cst1.address, { from: admin });
-      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10);
+      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, NULL_ADDRESS);
 
       let buyerAccount = accounts[8];
       checkBalance(buyerAccount, 2);
@@ -375,6 +375,61 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(asInt(sellCap), 20, "The sellCap is correct");
     });
+
+    it("allows foundationWithdraw and foundationDeposit for successor contract", async function() {
+      let foundation = accounts[24];
+      await cst2.setFoundation(foundation);
+
+      let txnValue = web3.toWei(1, "ether");
+      let startFoundationBalance = await web3.eth.getBalance(foundation);
+      startFoundationBalance = asInt(startFoundationBalance);
+
+      let txn = await cst2.foundationDeposit({
+        from: foundation,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+
+      let { cumulativeGasUsed } = txn.receipt;
+      let endCstBalance = await web3.eth.getBalance(cst2.address);
+      let endFoundationBalance = await web3.eth.getBalance(foundation);
+      endCstBalance = asInt(endCstBalance);
+      endFoundationBalance = asInt(endFoundationBalance);
+
+      // doing math in ethers to prevent overflow errors
+      let finalBalance = parseFloat(web3.fromWei(startFoundationBalance, "ether"))
+                       - parseFloat(web3.fromWei(GAS_PRICE * cumulativeGasUsed, "ether"))
+                       - parseFloat(web3.fromWei(txnValue, "ether"))
+                       - parseFloat(web3.fromWei(endFoundationBalance, "ether"));
+
+      assert.ok(cumulativeGasUsed < 40000, "Less than 40000 gas was used for the txn");
+      assert.ok(Math.abs(finalBalance) < parseFloat(web3.fromWei(ROUNDING_ERROR_WEI, "ether")), "Foundations's wallet balance was changed correctly");
+      assert.equal(endCstBalance, txnValue, "The CST balance is correct");
+
+      startFoundationBalance = await web3.eth.getBalance(foundation);
+      startFoundationBalance = asInt(startFoundationBalance);
+
+      txn = await cst2.foundationWithdraw(txnValue, {
+        from: foundation,
+        gasPrice: GAS_PRICE
+      });
+
+      cumulativeGasUsed = txn.receipt.cumulativeGasUsed;
+      endCstBalance = await web3.eth.getBalance(cst2.address);
+      endFoundationBalance = await web3.eth.getBalance(foundation);
+      endCstBalance = asInt(endCstBalance);
+      endFoundationBalance = asInt(endFoundationBalance);
+
+      // doing math in ethers to prevent overflow errors
+      finalBalance = parseFloat(web3.fromWei(startFoundationBalance, "ether"))
+                   + parseFloat(web3.fromWei(txnValue, "ether"))
+                   - parseFloat(web3.fromWei(GAS_PRICE * cumulativeGasUsed, "ether"))
+                   - parseFloat(web3.fromWei(endFoundationBalance, "ether"));
+
+      assert.ok(cumulativeGasUsed < 40000, "Less than 40000 gas was used for the txn");
+      assert.ok(Math.abs(finalBalance) < parseFloat(web3.fromWei(ROUNDING_ERROR_WEI, "ether")), "Foundations's wallet balance was changed correctly");
+      assert.equal(endCstBalance, 0, "The CST balance is correct");
+    });
   });
 
   describe("contract upgrade - predecessor contract", function() {
@@ -394,8 +449,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
-      await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
-      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+      await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
+      await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
       await cst1.addAdmin(admin);
       await cst2.addAdmin(admin);
     });
@@ -604,7 +659,7 @@ contract('CardStackToken', function(accounts) {
       await cst1.upgradeTo(cst2.address, { from: admin });
       let exceptionThrown;
       try {
-        await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100);
+        await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
       } catch (err) {
         exceptionThrown = true;
       }
@@ -682,6 +737,96 @@ contract('CardStackToken', function(accounts) {
       }
 
       assert.ok(exceptionThrown, "Expected exception to be thrown");
+    });
+
+    it("does not allow setFoundation when contract has been upgraded", async function() {
+      let foundation = accounts[24];
+      await cst1.upgradeTo(cst2.address, { from: admin });
+
+      let exceptionThrown;
+      try {
+        await cst1.setFoundation(foundation);
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Expected exception to be thrown");
+    });
+
+    // yes we intentionally allow this to change after contract has been upgraded so foundation can recoup all ethers for the deprecated contract
+    it("does allow setMinimumEthBalance when contract has been upgraded", async function() {
+      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.setMinimumEthBalance(web3.toWei(0.1, "ether"));
+
+      let resultingMinEthBalance = await cst1.minimumEthBalance();
+
+      assert.equal(resultingMinEthBalance.toNumber(), web3.toWei(0.1, "ether"), "the minimumEthBalance is correct");
+    });
+
+    // yes we intentionally allow this to change after contract has been upgraded so foundation can recoup all ethers for the deprecated contract
+    it("does allow foundationWithdraw when contract has been upgraded", async function() {
+      let foundation = accounts[34];
+      let txnValue = web3.toWei(0.1, "ether");
+      await cst1.setFoundation(foundation);
+      await cst1.foundationDeposit({
+        from: foundation,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+      await cst1.upgradeTo(cst2.address, { from: admin });
+
+      let startFoundationBalance = await web3.eth.getBalance(foundation);
+      startFoundationBalance = asInt(startFoundationBalance);
+
+      let txn = await cst1.foundationWithdraw(txnValue, {
+        from: foundation,
+        gasPrice: GAS_PRICE
+      });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+
+      let { cumulativeGasUsed } = txn.receipt;
+      let endCstBalance = await web3.eth.getBalance(cst1.address);
+      let endFoundationBalance = await web3.eth.getBalance(foundation);
+      endCstBalance = asInt(endCstBalance);
+      endFoundationBalance = asInt(endFoundationBalance);
+
+      // doing math in ethers to prevent overflow errors
+      let finalBalance = parseFloat(web3.fromWei(startFoundationBalance, "ether"))
+                       + parseFloat(web3.fromWei(txnValue, "ether"))
+                       - parseFloat(web3.fromWei(GAS_PRICE * cumulativeGasUsed, "ether"))
+                       - parseFloat(web3.fromWei(endFoundationBalance, "ether"));
+
+      assert.ok(cumulativeGasUsed < 40000, "Less than 40000 gas was used for the txn");
+      assert.ok(Math.abs(finalBalance) < parseFloat(web3.fromWei(ROUNDING_ERROR_WEI, "ether")), "Foundations's wallet balance was changed correctly");
+      assert.equal(endCstBalance, 0, "The CST balance is correct");
+    });
+
+    it("does not allow foundationDeposit when contract has been upgraded", async function() {
+      let foundation = accounts[34];
+      let txnValue = web3.toWei(0.1, "ether");
+      await cst1.upgradeTo(cst2.address, { from: admin });
+
+      let startFoundationBalance = await web3.eth.getBalance(foundation);
+
+      let exceptionThrown;
+      try {
+        await cst1.foundationDeposit({
+          from: foundation,
+          value: txnValue,
+          gasPrice: GAS_PRICE
+        });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Expected exception to be thrown");
+
+      let endCstBalance = await web3.eth.getBalance(cst1.address);
+      let endFoundationBalance = await web3.eth.getBalance(foundation);
+
+      assert.ok(startFoundationBalance.toNumber() - endFoundationBalance.toNumber() < MAX_FAILED_TXN_GAS * GAS_PRICE, "The foundations's account was just charged for gas");
+      assert.equal(endCstBalance.toNumber(), 0, "The CST balance is correct");
     });
   });
 });
