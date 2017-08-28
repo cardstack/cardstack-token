@@ -40,4 +40,20 @@ library CstLibrary {
   function setSellCap(address _storage, uint value) {
     ExternalStorage(_storage).setUIntValue("cstSellCap", value);
   }
+
+  function getMinimumEthBalance(address _storage) constant returns(uint) {
+    return ExternalStorage(_storage).getUIntValue("cstMinimumEthBalance");
+  }
+
+  function setMinimumEthBalance(address _storage, uint value) {
+    ExternalStorage(_storage).setUIntValue("cstMinimumEthBalance", value);
+  }
+
+  function getFoundation(address _storage) constant returns(address) {
+    return ExternalStorage(_storage).getAddressValue("cstFoundation");
+  }
+
+  function setFoundation(address _storage, address value) {
+    ExternalStorage(_storage).setAddressValue("cstFoundation", value);
+  }
 }
