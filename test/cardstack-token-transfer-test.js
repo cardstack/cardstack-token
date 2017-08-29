@@ -45,8 +45,7 @@ contract('CardStackToken', function(accounts) {
       let transferAmount = 10;
 
       let txn = await cst.transfer(recipientAccount, transferAmount, {
-        from: senderAccount,
-        gasPrice: GAS_PRICE
+        from: senderAccount
       });
 
       // console.log("TXN", JSON.stringify(txn, null, 2));
@@ -78,8 +77,7 @@ contract('CardStackToken', function(accounts) {
       let exceptionThrown;
       try {
         await cst.transfer(recipientAccount, transferAmount, {
-          from: senderAccount,
-          gasPrice: GAS_PRICE
+          from: senderAccount
         });
       } catch(err) {
         exceptionThrown = true;

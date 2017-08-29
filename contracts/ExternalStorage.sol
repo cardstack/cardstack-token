@@ -1,17 +1,65 @@
 pragma solidity ^0.4.2;
 
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./administratable.sol";
 
 contract ExternalStorage is administratable {
+  using SafeMath for uint256;
 
-  mapping(address => uint) simpleLedger;
+  mapping(bytes32 => mapping(address => mapping(address => uint))) MultiLedgerStorage;
+  mapping(bytes32 => uint) primaryLedgerCount;
+  mapping(bytes32 => mapping(address => bool)) ledgerPrimaryEntries;
+  mapping(bytes32 => mapping(uint => address)) primaryLedgerEntryForIndex;
+  mapping(bytes32 => mapping(address => uint)) secondaryLedgerCount;
+  mapping(bytes32 => mapping(address => mapping(address => bool))) ledgerSecondaryEntries;
+  mapping(bytes32 => mapping(address => mapping(uint => address))) secondaryLedgerEntryForIndex;
 
-  function getBalanceFor(address _address) constant returns (uint) {
-    return simpleLedger[_address];
+  function getMultiLedgerValue(string record, address primaryAddress, address secondaryAddress) constant returns (uint) {
+    return MultiLedgerStorage[sha3(record)][primaryAddress][secondaryAddress];
   }
 
-  function setBalance(address _address, uint value) onlyAdmins {
-    simpleLedger[_address] = value;
+  function setMultiLedgerValue(string record, address primaryAddress, address secondaryAddress, uint value) onlyAdmins {
+    bytes32 hash = sha3(record);
+    uint primaryLedgerIndex = primaryLedgerCount[hash];
+    uint secondaryLedgerIndex = secondaryLedgerCount[hash][primaryAddress];
+    if (!ledgerSecondaryEntries[hash][primaryAddress][secondaryAddress]) {
+      secondaryLedgerEntryForIndex[hash][primaryAddress][secondaryLedgerIndex] = secondaryAddress;
+      secondaryLedgerCount[hash][primaryAddress] = secondaryLedgerIndex.add(1);
+      ledgerSecondaryEntries[hash][primaryAddress][secondaryAddress] = true;
+
+      if (!ledgerPrimaryEntries[hash][primaryAddress]) {
+        primaryLedgerEntryForIndex[hash][primaryLedgerIndex] = primaryAddress;
+        primaryLedgerCount[hash] = primaryLedgerIndex.add(1);
+        ledgerPrimaryEntries[hash][primaryAddress] = true;
+      }
+    }
+
+    MultiLedgerStorage[hash][primaryAddress][secondaryAddress] = value;
+  }
+
+  mapping(bytes32 => mapping(address => uint)) LedgerStorage;
+  mapping(bytes32 => uint) ledgerCount;
+  mapping(bytes32 => mapping(address => bool)) ledgerAccounts;
+  mapping(bytes32 => mapping(uint => address)) ledgerEntryForIndex;
+
+  function getLedgerValue(string record, address _address) constant returns (uint) {
+    return LedgerStorage[sha3(record)][_address];
+  }
+
+  function getLedgerCount(string record) constant returns (uint) {
+    return ledgerCount[sha3(record)];
+  }
+
+  function setLedgerValue(string record, address _address, uint value) onlyAdmins {
+    bytes32 hash = sha3(record);
+    if (!ledgerAccounts[hash][_address]) {
+      uint ledgerIndex = ledgerCount[hash];
+      ledgerEntryForIndex[hash][ledgerIndex] = _address;
+      ledgerCount[hash] = ledgerIndex.add(1);
+      ledgerAccounts[hash][_address] = true;
+    }
+
+    LedgerStorage[hash][_address] = value;
   }
 
   mapping(bytes32 => uint) UIntStorage;

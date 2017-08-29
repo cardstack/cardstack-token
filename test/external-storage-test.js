@@ -1,8 +1,10 @@
+const {
+  NULL_ADDRESS,
+} = require("../lib/utils");
 const ExternalStorage = artifacts.require("./ExternalStorage.sol");
 
 contract('ExternalStorage', function(accounts) {
   let storage;
-  let owner = accounts[0];
   let admin = accounts[3];
 
   describe("external storage", function() {
@@ -39,7 +41,7 @@ contract('ExternalStorage', function(accounts) {
         exceptionThrown = true;
       }
 
-      isAdmin = await storage.admins(admin);
+      let isAdmin = await storage.admins(admin);
 
       assert.ok(exceptionThrown, "Exception was thrown");
       assert.notOk(isAdmin, "admin was not added");
@@ -111,41 +113,6 @@ contract('ExternalStorage', function(accounts) {
       assert.equal(web3.toUtf8(storageTokenSymbol.toString()), "CST", "bytes32 value was getted by non-admin");
     });
 
-    it("allows admin to set ledger balance value", async function () {
-      let someUser = accounts[13];
-
-      await storage.addAdmin(admin);
-      await storage.setBalance(someUser, 200, { from: admin });
-
-      let storageBalance = await storage.getBalanceFor(someUser);
-      assert.equal(storageBalance, 200, "balance value was set by admin");
-    });
-
-    it("does not allow non-admin to set ledger balance value", async function() {
-      let someUser = accounts[13];
-      let exceptionThrown;
-
-      try {
-        await storage.setBalance(someUser, 200, { from: someUser });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to set balance as non-admin");
-      let storageBalance = await storage.getBalanceFor(someUser);
-      assert.equal(storageBalance, 0, "balance value was not set by non-admin");
-    });
-
-    it("gets ledger balance value", async function () {
-      let someUser = accounts[13];
-
-      await storage.addAdmin(admin);
-      await storage.setBalance(someUser, 200, { from: admin });
-
-      let storageBalance = await storage.getBalanceFor(someUser, { from: someUser });
-      assert.equal(storageBalance, 200, "balance value was getted by non-admin");
-    });
-
     it("allows admin to set address value", async function () {
       let rewardPool = accounts[8];
 
@@ -168,8 +135,8 @@ contract('ExternalStorage', function(accounts) {
       }
 
       assert.ok(exceptionThrown, "exception was thrown trying to set address as non-admin");
-      let storageRewardPool = await storage.getBalanceFor(someUser);
-      assert.equal(storageRewardPool.toString(), "0", "address value was not set by non-admin");
+      let storageRewardPool = await storage.getAddressValue("cstRewardPool");
+      assert.equal(storageRewardPool.toString(), NULL_ADDRESS, "address value was not set by non-admin");
     });
 
     it("gets address value", async function () {
@@ -279,6 +246,42 @@ contract('ExternalStorage', function(accounts) {
 
       let storageSomeint = await storage.getIntValue("someint", { from: someUser });
       assert.equal(storageSomeint, 37, "int value was getted by non-admin");
+    });
+
+    xit("allows admin to set ledger value", async function () {
+    });
+
+    xit("does not allow non-admin to set ledger value", async function() {
+    });
+
+    xit("gets ledger value", async function () {
+    });
+
+    xit("gets ledger count", async function() {
+    });
+
+    xit("gets ledger address by index", async function() {
+    });
+
+    xit("allows admin to set multi-ledger value", async function () {
+    });
+
+    xit("does not allow non-admin to set multi-ledger value", async function() {
+    });
+
+    xit("gets multi-ledger value", async function () {
+    });
+
+    xit("gets multi-ledger primary address count", async function() {
+    });
+
+    xit("gets multi-ledger primary address by index", async function() {
+    });
+
+    xit("gets multi-ledger secondary address count", async function() {
+    });
+
+    xit("gets multi-ledger secondary address by index", async function() {
     });
   });
 });
