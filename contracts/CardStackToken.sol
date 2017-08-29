@@ -47,6 +47,11 @@ contract CardStackToken is Ownable,
   event Mint(uint amountMinted, uint totalTokens, uint sellCap);
   event Buy(address indexed buyer, address buyerAccount, uint value, uint purchasePrice);
   event Sell(address indexed seller, address sellerAccount, uint value, uint sellPrice);
+  event Approval(address indexed grantor,
+                 address grantorAccount,
+                 address indexed spender,
+                 address spenderAccount,
+                 uint256 value);
   event Transfer(address indexed sender,
                  address senderAccount,
                  address indexed recipient,
@@ -95,7 +100,7 @@ contract CardStackToken is Ownable,
                       uint _buyPrice,
                       uint _sellPrice,
                       uint _sellCap,
-                      address _foundation) onlySuperAdmins unlessUpgraded initStorage {
+                      address _foundation) onlySuperAdmins unlessUpgraded initStorage returns (bool) {
 
     externalStorage.setTokenName(_tokenName);
     externalStorage.setTokenSymbol(_tokenSymbol);
@@ -110,25 +115,33 @@ contract CardStackToken is Ownable,
     foundation = _foundation;
 
     frozenToken = false;
+
+    return true;
   }
 
-  function initializeFromStorage() onlySuperAdmins unlessUpgraded initStorage {
+  function initializeFromStorage() onlySuperAdmins unlessUpgraded initStorage returns (bool) {
     buyPrice = externalStorage.getBuyPrice();
     sellPrice = externalStorage.getSellPrice();
     sellCap = externalStorage.getSellCap();
     minimumEthBalance = externalStorage.getMinimumEthBalance();
     foundation = externalStorage.getFoundation();
+
+    return true;
   }
 
-  function start() onlySuperAdmins unlessUpgraded {
+  function start() onlySuperAdmins unlessUpgraded returns (bool) {
     frozenToken = false;
+
+    return true;
   }
 
-  function updateStorage(string newStorageName, string newLedgerName) onlySuperAdmins unlessUpgraded {
+  function updateStorage(string newStorageName, string newLedgerName) onlySuperAdmins unlessUpgraded returns (bool) {
     storageName = newStorageName;
     ledgerName = newLedgerName;
 
     initializeFromStorage();
+
+    return true;
   }
 
   function name() constant unlessUpgraded returns(string) {
@@ -151,26 +164,32 @@ contract CardStackToken is Ownable,
     return tokenLedger.balanceOf(account);
   }
 
-  function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded {
+  function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded returns (bool) {
     require(!frozenAccount[recipient]);
 
     tokenLedger.transfer(msg.sender, recipient, amount);
     Transfer(msg.sender, msg.sender, recipient, recipient, amount);
+
+    return true;
   }
 
-  function mintTokens(uint mintedAmount) onlySuperAdmins unlessFrozen unlessUpgraded {
+  function mintTokens(uint mintedAmount) onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
     tokenLedger.mintTokens(mintedAmount);
     Mint(mintedAmount, tokenLedger.totalTokens(), sellCap);
+
+    return true;
   }
 
-  function grantTokens(address recipient, uint amount) onlySuperAdmins unlessFrozen unlessUpgraded {
+  function grantTokens(address recipient, uint amount) onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
     require(amount <= tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation()));           // make sure there are enough tokens to grant
 
     tokenLedger.debitAccount(recipient, amount);
     Grant(recipient, recipient, amount);
+
+    return true;
   }
 
-  function setPrices(uint newSellPrice, uint newBuyPrice) onlySuperAdmins unlessUpgraded {
+  function setPrices(uint newSellPrice, uint newBuyPrice) onlySuperAdmins unlessUpgraded returns (bool) {
     require(newSellPrice > 0);
     require(newBuyPrice > 0);
 
@@ -181,26 +200,32 @@ contract CardStackToken is Ownable,
     externalStorage.setSellPrice(newSellPrice);
 
     PriceChange(newSellPrice, newBuyPrice);
+
+    return true;
   }
 
-  function setSellCap(uint newSellCap) onlySuperAdmins unlessUpgraded {
+  function setSellCap(uint newSellCap) onlySuperAdmins unlessUpgraded returns (bool) {
     sellCap = newSellCap;
     externalStorage.setSellCap(newSellCap);
 
     SellCapChange(newSellCap);
+
+    return true;
   }
 
-  function setMinimumEthBalance(uint newMinimumEthBalance) onlySuperAdmins {
+  function setMinimumEthBalance(uint newMinimumEthBalance) onlySuperAdmins  returns (bool) {
     minimumEthBalance = newMinimumEthBalance;
 
     externalStorage.setMinimumEthBalance(newMinimumEthBalance);
+
+    return true;
   }
 
-  function cstAvailableToBuy() constant unlessUpgraded returns(bool) {
+  function cstAvailableToBuy() constant unlessUpgraded returns (bool) {
     return sellCap > tokenLedger.totalInCirculation();
   }
 
-  function buy() payable unlessFrozen unlessUpgraded {
+  function buy() payable unlessFrozen unlessUpgraded returns (uint) {
     require(msg.value >= buyPrice);
     assert(buyPrice > 0);
 
@@ -211,9 +236,11 @@ contract CardStackToken is Ownable,
 
     tokenLedger.debitAccount(msg.sender, amount);
     Buy(msg.sender, msg.sender, amount, msg.value);
+
+    return amount;
   }
 
-  function sell(uint amount) unlessFrozen unlessUpgraded {
+  function sell(uint amount) unlessFrozen unlessUpgraded returns (uint) {
     uint value = amount.mul(sellPrice);
     require(value <= this.balance.sub(minimumEthBalance));
 
@@ -222,19 +249,51 @@ contract CardStackToken is Ownable,
     // always send only after changing state of contract to guard against re-entry attacks
     msg.sender.transfer(value);
     Sell(msg.sender, msg.sender, amount, value);
+
+    return value;
   }
 
-  function setFoundation(address _foundation) onlySuperAdmins unlessUpgraded {
+  function setFoundation(address _foundation) onlySuperAdmins unlessUpgraded returns (bool) {
     foundation = _foundation;
   }
 
-  function foundationWithdraw(uint amount) onlyFoundation {
+  function foundationWithdraw(uint amount) onlyFoundation returns (bool) {
     require(amount <= this.balance.sub(minimumEthBalance));
 
     msg.sender.transfer(amount);
+
+    return true;
   }
 
   // intentionally did not lock this down to foundation only. if someone wants to send ethers, no biggie0:w
-  function foundationDeposit() payable unlessUpgraded {
+  function foundationDeposit() payable unlessUpgraded returns (bool) {
+    return true;
+  }
+
+  function allowance(address owner, address spender) constant unlessUpgraded returns (uint256) {
+    return externalStorage.getAllowance(owner, spender);
+  }
+
+  function transferFrom(address from, address to, uint256 value) unlessFrozen unlessUpgraded returns (bool) {
+    require(!frozenAccount[from]);
+    require(!frozenAccount[to]);
+
+    uint allowanceValue = allowance(from, msg.sender);
+    require(allowanceValue >= value);
+
+    tokenLedger.transfer(from, to, value);
+    externalStorage.setAllowance(from, msg.sender, allowanceValue.sub(value));
+
+    Transfer(from, from, to, to, value);
+    return true;
+  }
+
+  function approve(address spender, uint256 value) unlessFrozen unlessUpgraded returns (bool) {
+    require(!frozenAccount[spender]);
+
+    externalStorage.setAllowance(msg.sender, spender, value);
+
+    Approval(msg.sender, msg.sender, spender, spender, value);
+    return true;
   }
 }

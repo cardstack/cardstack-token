@@ -259,6 +259,9 @@ contract('Registry', function(accounts) {
       assert.equal(foundationAddress, foundation, "the foundation address is correct");
     });
 
+    xit("can preserve allowance state through a contract upgrade", async function() {
+    });
+
     xit("allows token to be paused after registration so that storage can be changed before token is live", async function() {
     });
 
@@ -316,6 +319,18 @@ contract('Registry', function(accounts) {
     });
 
     xit("does not allow non-superAdmin to set int value", async function() {
+    });
+
+    xit("allows superAdmin to set ledger value", async function () {
+    });
+
+    xit("does not allow non-superAdmin to set ledger value", async function() {
+    });
+
+    xit("allows superAdmin to set multi-ledger value", async function () {
+    });
+
+    xit("does not allow non-superAdmin to set multi-ledger value", async function() {
     });
 
     xit("so many `unlessUpgraded` tests...", async function() {

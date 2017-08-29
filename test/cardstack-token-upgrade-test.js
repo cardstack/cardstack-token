@@ -230,8 +230,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.mintTokens(100);
       await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
       await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
-      await cst1.addAdmin(admin);
-      await cst2.addAdmin(admin);
+      await cst1.addSuperAdmin(admin);
+      await cst2.addSuperAdmin(admin);
     });
 
     it("allows purchase of CST for successor contract", async function() {
@@ -261,7 +261,7 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.ok(cumulativeGasUsed < 80000, "Less than 80000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 150000, "Less than 150000 gas was used for the txn");
       assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 2, 'the ether balance for the CST contract is correct');
       assert.equal(cstBalance, 2, "The CST balance is correct");
@@ -430,6 +430,12 @@ contract('CardStackToken', function(accounts) {
       assert.ok(Math.abs(finalBalance) < parseFloat(web3.fromWei(ROUNDING_ERROR_WEI, "ether")), "Foundations's wallet balance was changed correctly");
       assert.equal(endCstBalance, 0, "The CST balance is correct");
     });
+
+    xit("allows approving allowance for successor contract", async function() {
+    });
+
+    xit("allows transferFrom for successor contract", async function() {
+    });
   });
 
   describe("contract upgrade - predecessor contract", function() {
@@ -451,8 +457,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.mintTokens(100);
       await cst1.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
       await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
-      await cst1.addAdmin(admin);
-      await cst2.addAdmin(admin);
+      await cst1.addSuperAdmin(admin);
+      await cst2.addSuperAdmin(admin);
     });
 
     it("does not allow purchase of CST when the contract has been upgraded", async function() {
@@ -828,5 +834,11 @@ contract('CardStackToken', function(accounts) {
       assert.ok(startFoundationBalance.toNumber() - endFoundationBalance.toNumber() < MAX_FAILED_TXN_GAS * GAS_PRICE, "The foundations's account was just charged for gas");
       assert.equal(endCstBalance.toNumber(), 0, "The CST balance is correct");
     });
+  });
+
+  xit("does not allow approving allowance when contract has been upgraded", async function() {
+  });
+
+  xit("does not allow transferFrom when contract has been updateded", async function() {
   });
 });

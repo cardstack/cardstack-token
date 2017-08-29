@@ -22,6 +22,9 @@ contract CstLedger is ITokenLedger, administratable {
   uint public _totalInCirculation;
   uint public _totalTokens;
   mapping (address => uint) public _balanceOf;
+  uint ledgerCount;
+  mapping (uint => address) accountForIndex;
+  mapping (address => bool) accounts;
 
   function totalTokens() constant returns (uint) {
     return _totalTokens;
@@ -39,9 +42,18 @@ contract CstLedger is ITokenLedger, administratable {
     _totalTokens = _totalTokens.add(amount);
   }
 
+  function makeAccountIterable(address account) internal {
+    if (!accounts[account]) {
+      accountForIndex[ledgerCount] = account;
+      ledgerCount = ledgerCount.add(1);
+      accounts[account] = true;
+    }
+  }
+
   function transfer(address sender, address recipient, uint amount) onlyAdmins {
     require(_balanceOf[sender] >= amount);
 
+    makeAccountIterable(recipient);
     _balanceOf[sender] = _balanceOf[sender].sub(amount);
     _balanceOf[recipient] = _balanceOf[recipient].add(amount);
   }
@@ -54,6 +66,7 @@ contract CstLedger is ITokenLedger, administratable {
   }
 
   function debitAccount(address account, uint amount) onlyAdmins { // add tokens
+    makeAccountIterable(account);
     _totalInCirculation = _totalInCirculation.add(amount);
     _balanceOf[account] = _balanceOf[account].add(amount);
   }

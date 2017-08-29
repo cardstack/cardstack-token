@@ -1,3 +1,4 @@
+pragma solidity ^0.4.2;
 import "./ExternalStorage.sol";
 
 library CstLibrary {
@@ -56,4 +57,13 @@ library CstLibrary {
   function setFoundation(address _storage, address value) {
     ExternalStorage(_storage).setAddressValue("cstFoundation", value);
   }
+
+  function getAllowance(address _storage, address account, address spender) constant returns (uint) {
+    return ExternalStorage(_storage).getMultiLedgerValue("cstAllowance", account, spender);
+  }
+
+  function setAllowance(address _storage, address account, address spender, uint allowance) {
+    ExternalStorage(_storage).setMultiLedgerValue("cstAllowance", account, spender, allowance);
+  }
+
 }

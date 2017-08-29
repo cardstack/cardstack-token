@@ -216,5 +216,18 @@ contract('CstLedger', function(accounts) {
 
       assert.ok(exceptionThrown, "exception was thrown trying to transfer as non-admin");
     });
+
+    xit("returns ledgerCount correctly when transfer to a new account", async function() {
+    });
+
+    xit("returns accountForIndex correctly when transfer to a new account", async function() {
+    });
+
+    xit("returns ledgerCount correctly when debit to a new account", async function() {
+    });
+
+    xit("returns accountForIndex correctly when debit to a new account", async function() {
+    });
+
   });
 });

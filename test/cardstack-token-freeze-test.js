@@ -195,6 +195,21 @@ contract('CardStackToken', function(accounts) {
       assert.equal(unfreezeEvent.logs[0].args.frozen, false, 'the frozen value is correct');
     });
 
+    xit("does not allow approving allowance when spender account has been frozen", async function() {
+    });
+
+    xit("does not allow approving allowance when grantor account has been frozen", async function() {
+    });
+
+    xit("does not allow transferFrom when sender account has been frozen", async function() {
+    });
+
+    xit("does not allow transferFrom when 'from' account has been frozen", async function() {
+    });
+
+    xit("does not allow transferFrom when 'to' account has been frozen", async function() {
+    });
+
     xit("cannot send CST to the reward pool when frozen", async function() {
     });
     xit("cannot receive CST reward when frozen", async function() {
@@ -420,6 +435,12 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(unfreezeEvent.logs[0].event, 'FrozenToken', 'the account freeze event is correct');
       assert.equal(unfreezeEvent.logs[0].args.frozen, false, 'the frozen value is correct');
+    });
+
+    xit("does not allow setting allowance when token frozen", async function() {
+    });
+
+    xit("does not allow transferFrom when token frozen", async function() {
     });
 
     xit("cannot invoke balanceOf when token frozen", async function() {

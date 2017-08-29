@@ -29,17 +29,19 @@ contract upgradeable is administratable {
     return successor != 0x0;
   }
 
-  function upgradeTo(address _successor) onlyAdmins unlessUpgraded {
+  function upgradeTo(address _successor) onlySuperAdmins unlessUpgraded returns (bool){
     successor = _successor;
 
     Upgraded(_successor, _successor);
+    return true;
   }
 
-  function upgradedFrom(address _predecessor) onlyAdmins {
+  function upgradedFrom(address _predecessor) onlySuperAdmins returns (bool) {
     require(_predecessor != 0x0);
 
     predecessor = _predecessor;
 
     UpgradedFrom(_predecessor, _predecessor);
+    return true;
   }
 }
