@@ -10,6 +10,7 @@ const CardStackToken = artifacts.require("./CardStackToken.sol");
 const CstLedger = artifacts.require("./CstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
 const Registry = artifacts.require("./Registry.sol");
+const CstRewards = artifacts.require("./CstRewards.sol");
 
 contract('CardStackToken', function(accounts) {
   let cst1;
@@ -384,6 +385,8 @@ contract('CardStackToken', function(accounts) {
       let startFoundationBalance = await web3.eth.getBalance(foundation);
       startFoundationBalance = asInt(startFoundationBalance);
 
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+
       let txn = await cst2.foundationDeposit({
         from: foundation,
         value: txnValue,
@@ -429,6 +432,16 @@ contract('CardStackToken', function(accounts) {
       assert.ok(cumulativeGasUsed < 40000, "Less than 40000 gas was used for the txn");
       assert.ok(Math.abs(finalBalance) < parseFloat(web3.fromWei(ROUNDING_ERROR_WEI, "ether")), "Foundations's wallet balance was changed correctly");
       assert.equal(endCstBalance, 0, "The CST balance is correct");
+    });
+
+    it("allows adding rewards contract for successor contract", async function() {
+      let rewards = await CstRewards.new();
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      await cst2.setRewardsContract(rewards.address, { from: admin });
+
+      let observedRewards = await cst2.rewardsContract();
+
+      assert.equal(observedRewards, rewards.address, "the rewards contract is correct");
     });
 
     xit("allows approving allowance for successor contract", async function() {
@@ -834,11 +847,27 @@ contract('CardStackToken', function(accounts) {
       assert.ok(startFoundationBalance.toNumber() - endFoundationBalance.toNumber() < MAX_FAILED_TXN_GAS * GAS_PRICE, "The foundations's account was just charged for gas");
       assert.equal(endCstBalance.toNumber(), 0, "The CST balance is correct");
     });
-  });
 
-  xit("does not allow approving allowance when contract has been upgraded", async function() {
-  });
+    it("does not allow adding a rewards contract when contract has been upgraded", async function() {
+      let rewards = await CstRewards.new();
+      await cst1.upgradeTo(cst2.address, { from: admin });
+      let exceptionThrown;
+      try {
+        await cst1.setRewardsContract(rewards.address, { from: admin });
+      } catch (err) {
+        exceptionThrown = true;
+      }
 
-  xit("does not allow transferFrom when contract has been updateded", async function() {
+      assert.ok(exceptionThrown, "Exception was thrown");
+      let observedRewards = await cst1.rewardsContract();
+
+      assert.equal(observedRewards, NULL_ADDRESS, "the rewards contract is correct");
+    });
+
+    xit("does not allow approving allowance when contract has been upgraded", async function() {
+    });
+
+    xit("does not allow transferFrom when contract has been upgraded", async function() {
+    });
   });
 });

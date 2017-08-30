@@ -12,6 +12,7 @@ import "./upgradeable.sol";
 import "./initializable.sol";
 import "./startable.sol";
 import "./storable.sol";
+import "./rewardable.sol";
 
 // TODO add additional ERC20 Token standard functions for approving spends on your behalf and setting an allowance
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/token/StandardToken.sol
@@ -20,6 +21,7 @@ contract CardStackToken is Ownable,
                            freezable,
                            displayable,
                            upgradeable,
+                           rewardable,
                            initializable,
                            startable,
                            storable {
@@ -164,7 +166,7 @@ contract CardStackToken is Ownable,
     return tokenLedger.balanceOf(account);
   }
 
-  function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded returns (bool) {
+  function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded triggersRewards returns (bool) {
     require(!frozenAccount[recipient]);
 
     tokenLedger.transfer(msg.sender, recipient, amount);
@@ -180,7 +182,7 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function grantTokens(address recipient, uint amount) onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
+  function grantTokens(address recipient, uint amount) onlySuperAdmins unlessFrozen unlessUpgraded triggersRewards returns (bool) {
     require(amount <= tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation()));           // make sure there are enough tokens to grant
 
     tokenLedger.debitAccount(recipient, amount);
@@ -225,7 +227,7 @@ contract CardStackToken is Ownable,
     return sellCap > tokenLedger.totalInCirculation();
   }
 
-  function buy() payable unlessFrozen unlessUpgraded returns (uint) {
+  function buy() payable unlessFrozen unlessUpgraded triggersRewards returns (uint) {
     require(msg.value >= buyPrice);
     assert(buyPrice > 0);
 
@@ -240,7 +242,7 @@ contract CardStackToken is Ownable,
     return amount;
   }
 
-  function sell(uint amount) unlessFrozen unlessUpgraded returns (uint) {
+  function sell(uint amount) unlessFrozen unlessUpgraded triggersRewards returns (uint) {
     uint value = amount.mul(sellPrice);
     require(value <= this.balance.sub(minimumEthBalance));
 
@@ -274,7 +276,7 @@ contract CardStackToken is Ownable,
     return externalStorage.getAllowance(owner, spender);
   }
 
-  function transferFrom(address from, address to, uint256 value) unlessFrozen unlessUpgraded returns (bool) {
+  function transferFrom(address from, address to, uint256 value) unlessFrozen unlessUpgraded triggersRewards returns (bool) {
     require(!frozenAccount[from]);
     require(!frozenAccount[to]);
 

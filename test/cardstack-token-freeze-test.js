@@ -209,11 +209,6 @@ contract('CardStackToken', function(accounts) {
 
     xit("does not allow transferFrom when 'to' account has been frozen", async function() {
     });
-
-    xit("cannot send CST to the reward pool when frozen", async function() {
-    });
-    xit("cannot receive CST reward when frozen", async function() {
-    });
   });
 
   describe("frozen token", function() {
@@ -452,10 +447,6 @@ contract('CardStackToken', function(accounts) {
     xit("cannot invoke totalTokens when token frozen", async function() {
     });
 
-    xit("cannot send CST to the reward pool when token frozen", async function() {
-    });
-    xit("cannot receive CST reward when token frozen", async function() {
-    });
   });
 
 });
