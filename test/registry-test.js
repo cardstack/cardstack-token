@@ -13,13 +13,14 @@ contract('Registry', function(accounts) {
   describe("register contract", function() {
     let registry;
     let storage;
+    let ledger;
     let cst1;
     let cst2;
     let superAdmin = accounts[19];
     let foundation = accounts[31];
 
     beforeEach(async function() {
-      let ledger = await CstLedger.new();
+      ledger = await CstLedger.new();
       storage = await Storage.new();
       registry = await Registry.new();
       await registry.addSuperAdmin(superAdmin);
@@ -295,7 +296,48 @@ contract('Registry', function(accounts) {
       assert.equal(foundationAddress, foundation, "the foundation address is correct");
     });
 
-    xit("can preserve allowance state through a contract upgrade", async function() {
+    it("can preserve allowance state through a contract upgrade", async function() {
+      let grantor = accounts[23];
+      let spender = accounts[31];
+      let recipient = accounts[37];
+
+      await ledger.debitAccount(grantor, 50);
+      await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      await cst1.approve(spender, 10, { from: grantor });
+
+      let allowance = await cst1.allowance(grantor, spender);
+      let grantorBalance = await cst1.balanceOf(grantor);
+      let spenderBalance = await cst1.balanceOf(spender);
+      let recipientBalance = await cst1.balanceOf(recipient);
+
+      assert.equal(asInt(allowance), 10, "the allowance is correct");
+      assert.equal(asInt(grantorBalance), 50, "the balance is correct");
+      assert.equal(asInt(spenderBalance), 0, "the balance is correct");
+      assert.equal(asInt(recipientBalance), 0, "the balance is correct");
+
+      await registry.upgradeContract("CardStack Token", cst2.address, false, { from: superAdmin });
+
+      allowance = await cst2.allowance(grantor, spender);
+      grantorBalance = await cst2.balanceOf(grantor);
+      spenderBalance = await cst2.balanceOf(spender);
+      recipientBalance = await cst2.balanceOf(recipient);
+
+      assert.equal(asInt(allowance), 10, "the allowance is correct");
+      assert.equal(asInt(grantorBalance), 50, "the balance is correct");
+      assert.equal(asInt(spenderBalance), 0, "the balance is correct");
+      assert.equal(asInt(recipientBalance), 0, "the balance is correct");
+
+      await cst2.transferFrom(grantor, recipient, 10, { from: spender });
+
+      allowance = await cst2.allowance(grantor, spender);
+      grantorBalance = await cst2.balanceOf(grantor);
+      spenderBalance = await cst2.balanceOf(spender);
+      recipientBalance = await cst2.balanceOf(recipient);
+
+      assert.equal(asInt(allowance), 0, "the allowance is correct");
+      assert.equal(asInt(grantorBalance), 40, "the balance is correct");
+      assert.equal(asInt(spenderBalance), 0, "the balance is correct");
+      assert.equal(asInt(recipientBalance), 10, "the balance is correct");
     });
 
     it("allows token to be paused after registration so that storage can be changed before token is live", async function() {
@@ -463,21 +505,21 @@ contract('Registry', function(accounts) {
       assert.equal(web3.toUtf8(cstTokenSymbol.toString()), "CST", "bytes32 value has not changed");
     });
 
-    it("allows superAdmin to set ledger balance value", async function () {
+    it("allows superAdmin to set ledger value", async function () {
       let someAccount = accounts[9];
       await registry.setLedgerValue("cstStorage", "cstBalance", someAccount, 30, { from: superAdmin });
 
       let balance = await storage.getLedgerValue("cstBalance", someAccount);
-      assert.equal(balance, 30, "ledger balance value was set by super admin");
+      assert.equal(balance, 30, "ledger value was set by super admin");
     });
 
-    it("does not allow non-superAdmin to set ledger balance value", async function() {
+    it("does not allow non-superAdmin to set ledger value", async function() {
       let nonSuperAdmin = accounts[8];
       let someAccount = accounts[9];
       let exceptionThrown;
 
       let balance = await storage.getLedgerValue("cstBalance", someAccount);
-      assert.equal(balance, 0, "ledger balance is 0");
+      assert.equal(balance, 0, "ledger value is 0");
 
       try {
         await registry.setLedgerValue("cstStorage", "cstBalance", someAccount, 30, { from: nonSuperAdmin });
@@ -487,7 +529,7 @@ contract('Registry', function(accounts) {
 
       assert.ok(exceptionThrown, "exception is thrown");
       balance = await storage.getLedgerValue("cstBalance", someAccount);
-      assert.equal(balance, 0, "ledger balance is still 0");
+      assert.equal(balance, 0, "ledger value is still 0");
     });
 
     it("allows superAdmin to set address value", async function () {
@@ -590,17 +632,35 @@ contract('Registry', function(accounts) {
       assert.equal(someint, 0, "int value is still not set");
     });
 
-    xit("allows superAdmin to set ledger value", async function () {
+    it("allows superAdmin to set multi-ledger value", async function () {
+      let someAccount = accounts[9];
+      let anotherAccount = accounts[19];
+      await registry.setMultiLedgerValue("cstStorage", "allowance", someAccount, anotherAccount, 30, { from: superAdmin });
+
+      let balance = await storage.getMultiLedgerValue("allowance", someAccount, anotherAccount);
+      assert.equal(balance, 30, "multi-ledger value was set by super admin");
     });
 
-    xit("does not allow non-superAdmin to set ledger value", async function() {
+    it("does not allow non-superAdmin to set multi-ledger value", async function() {
+      let nonSuperAdmin = accounts[8];
+      let someAccount = accounts[9];
+      let anotherAccount = accounts[19];
+      let exceptionThrown;
+
+      let balance = await storage.getMultiLedgerValue("allowance", someAccount, anotherAccount);
+      assert.equal(balance, 0, "ledger value is 0");
+
+      try {
+        await registry.setMultiLedgerValue("cstStorage", "allowance", someAccount, anotherAccount, 30, { from: nonSuperAdmin });
+      } catch(e) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "exception is thrown");
+      balance = await storage.getMultiLedgerValue("allowance", someAccount, anotherAccount);
+      assert.equal(balance, 0, "ledger value is still 0");
     });
 
-    xit("allows superAdmin to set multi-ledger value", async function () {
-    });
-
-    xit("does not allow non-superAdmin to set multi-ledger value", async function() {
-    });
 
     describe("unlessUpgraded", function() {
       beforeEach(async function() {
