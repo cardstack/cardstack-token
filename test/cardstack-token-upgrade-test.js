@@ -455,10 +455,38 @@ contract('CardStackToken', function(accounts) {
       assert.equal(observedRewards, rewards.address, "the rewards contract is correct");
     });
 
-    xit("allows approving allowance for successor contract", async function() {
+    it("allows approving allowance for successor contract", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+
+      await cst2.approve(spender, 10, { from: grantor });
+
+      let allowance = await cst2.allowance(grantor, spender);
+
+      assert.equal(asInt(allowance), 10, "the allowance is correct");
     });
 
-    xit("allows transferFrom for successor contract", async function() {
+    it("allows transferFrom for successor contract", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+      let recipient = accounts[7];
+
+      await ledger.debitAccount(grantor, 50);
+
+      await cst2.approve(spender, 10, { from: grantor });
+
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      await cst2.transferFrom(grantor, recipient, 10, { from: spender });
+
+      let grantorBalance = await cst2.balanceOf(grantor);
+      let recipientBalance = await cst2.balanceOf(recipient);
+      let allowance = await cst2.allowance(grantor, spender);
+
+      assert.equal(asInt(allowance), 0, "the allowance is correct");
+      assert.equal(asInt(grantorBalance), 40, "the balance is correct");
+      assert.equal(asInt(recipientBalance), 10, "the balance is correct");
     });
   });
 
@@ -890,10 +918,45 @@ contract('CardStackToken', function(accounts) {
       assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("does not allow approving allowance when contract has been upgraded", async function() {
+    it("does not allow approving allowance when contract has been upgraded", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst1.upgradeTo(cst2.address, { from: admin });
+
+      let exceptionThrown;
+      try {
+        await cst1.approve(spender, 10, { from: grantor });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("does not allow transferFrom when contract has been upgraded", async function() {
+    it("does not allow transferFrom when contract has been upgraded", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+      let recipient = accounts[7];
+
+      await ledger.debitAccount(grantor, 50);
+      await cst1.approve(spender, 10, { from: grantor });
+
+      await cst1.upgradeTo(cst2.address, { from: admin });
+      let exceptionThrown;
+      try {
+        await cst1.transferFrom(grantor, recipient, 10, { from: spender });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
+
+      let grantorBalance = await ledger.balanceOf(grantor);
+      let recipientBalance = await ledger.balanceOf(recipient);
+
+      assert.equal(asInt(grantorBalance), 50, "the balance is correct");
+      assert.equal(asInt(recipientBalance), 0, "the balance is correct");
     });
   });
 });
