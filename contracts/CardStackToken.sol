@@ -12,7 +12,7 @@ import "./upgradeable.sol";
 import "./initializable.sol";
 import "./startable.sol";
 import "./storable.sol";
-import "./rewardable.sol";
+import "./IRewards.sol";
 
 // TODO add additional ERC20 Token standard functions for approving spends on your behalf and setting an allowance
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/token/StandardToken.sol
@@ -21,7 +21,6 @@ contract CardStackToken is Ownable,
                            freezable,
                            displayable,
                            upgradeable,
-                           rewardable,
                            initializable,
                            startable,
                            storable {
@@ -40,7 +39,7 @@ contract CardStackToken is Ownable,
   uint public sellPrice;
   uint public buyPrice;
   uint public sellCap;
-  uint public minimumEthBalance;
+  uint public minimumBalance;
   address public foundation;
 
   event SellCapChange(uint newSellCap);
@@ -72,6 +71,15 @@ contract CardStackToken is Ownable,
     tokenLedger = ITokenLedger(ledgerAddress);
     externalStorage = storageAddress;
     _;
+  }
+
+  modifier triggersRewards() {
+    _;
+
+    address rewards = rewardsContract();
+    if (rewards != 0x0) {
+      IRewards(rewards).processRewards();
+    }
   }
 
   function CardStackToken(address _registry, string _storageName, string _ledgerName) {
@@ -125,7 +133,7 @@ contract CardStackToken is Ownable,
     buyPrice = externalStorage.getBuyPrice();
     sellPrice = externalStorage.getSellPrice();
     sellCap = externalStorage.getSellCap();
-    minimumEthBalance = externalStorage.getMinimumEthBalance();
+    minimumBalance = externalStorage.getMinimumBalance();
     foundation = externalStorage.getFoundation();
 
     return true;
@@ -215,10 +223,10 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function setMinimumEthBalance(uint newMinimumEthBalance) onlySuperAdmins  returns (bool) {
-    minimumEthBalance = newMinimumEthBalance;
+  function setMinimumBalance(uint newMinimumBalance) onlySuperAdmins  returns (bool) {
+    minimumBalance = newMinimumBalance;
 
-    externalStorage.setMinimumEthBalance(newMinimumEthBalance);
+    externalStorage.setMinimumBalance(newMinimumBalance);
 
     return true;
   }
@@ -244,7 +252,7 @@ contract CardStackToken is Ownable,
 
   function sell(uint amount) unlessFrozen unlessUpgraded triggersRewards returns (uint) {
     uint value = amount.mul(sellPrice);
-    require(value <= this.balance.sub(minimumEthBalance));
+    require(value <= this.balance.sub(minimumBalance));
 
     tokenLedger.creditAccount(msg.sender, amount);
 
@@ -260,7 +268,7 @@ contract CardStackToken is Ownable,
   }
 
   function foundationWithdraw(uint amount) onlyFoundation returns (bool) {
-    require(amount <= this.balance.sub(minimumEthBalance));
+    require(amount <= this.balance.sub(minimumBalance));
 
     msg.sender.transfer(amount);
 
@@ -297,5 +305,16 @@ contract CardStackToken is Ownable,
 
     Approval(msg.sender, msg.sender, spender, spender, value);
     return true;
+  }
+
+  function setRewardsContractName(string rewardsContractName) onlySuperAdmins unlessUpgraded returns (bool) {
+    externalStorage.setRewardsContractHash(sha3(rewardsContractName));
+    return true;
+  }
+
+  function rewardsContract() constant unlessUpgraded returns (address) {
+    bytes32 hash = externalStorage.getRewardsContractHash();
+
+    return Registry(registry).contractForHash(hash);
   }
 }

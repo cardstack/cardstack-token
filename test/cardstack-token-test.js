@@ -38,6 +38,15 @@ contract('CardStackToken', function(accounts) {
       await cst.addSuperAdmin(superAdmin);
     });
 
+    // be kind and return ethers to the root account
+    afterEach(async function() {
+      let cstEth = await web3.eth.getBalance(cst.address);
+
+      await cst.setFoundation(accounts[0]);
+      await cst.setMinimumBalance(0);
+      await cst.foundationWithdraw(cstEth.toNumber());
+    });
+
     it("should initialize the CST correctly", async function() {
       await ledger.mintTokens(10000);
 
@@ -601,6 +610,16 @@ contract('CardStackToken', function(accounts) {
       await registry.register("CST", cst.address, false);
     });
 
+    // be kind and return ethers to the root account
+    afterEach(async function() {
+      let cstEth = await web3.eth.getBalance(cst.address);
+
+      await cst.setFoundation(accounts[0]);
+      await cst.setMinimumBalance(0);
+      await cst.foundationWithdraw(cstEth.toNumber());
+    });
+
+
     it("indicates that cst are not available to buy when CST sold reaches the sell cap", async function() {
       await ledger.mintTokens(100);
       let nonOwnerAccount = accounts[2];
@@ -717,6 +736,16 @@ contract('CardStackToken', function(accounts) {
       await cst.mintTokens(1000);
     });
 
+    // be kind and return ethers to the root account
+    afterEach(async function() {
+      let cstEth = await web3.eth.getBalance(cst.address);
+
+      await cst.setFoundation(accounts[0]);
+      await cst.setMinimumBalance(0);
+      await cst.foundationWithdraw(cstEth.toNumber());
+    });
+
+
     it("allows superAdmin to add foundation address", async function() {
       await cst.setFoundation(foundation, { from: superAdmin });
 
@@ -817,14 +846,14 @@ contract('CardStackToken', function(accounts) {
       assert.equal(endCstBalance, txnValue, "The CST balance is correct");
     });
 
-    it("does not allow foundation to withdraw more ether than minimumEthBalance amount", async function() {
+    it("does not allow foundation to withdraw more ether than minimumBalance amount", async function() {
       let buyer = accounts[20];
       await checkBalance(buyer, 1);
       await cst.setFoundation(foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
       let minValue = web3.toWei(0.5, "ether");
-      await cst.setMinimumEthBalance(minValue, { from: superAdmin });
+      await cst.setMinimumBalance(minValue, { from: superAdmin });
       await cst.buy({
         from: buyer,
         value: txnValue,
@@ -885,20 +914,20 @@ contract('CardStackToken', function(accounts) {
       assert.equal(endCstBalance, txnValue, "The CST balance is correct");
     });
 
-    it("does not allow non-super admin to set minimumEthBalance", async function() {
+    it("does not allow non-super admin to set minimumBalance", async function() {
       let nonSuperAdmin = accounts[4];
       let minValue = web3.toWei(0.5, "ether");
       let exceptionThrown;
       try {
-        await cst.setMinimumEthBalance(minValue, { from: nonSuperAdmin });
+        await cst.setMinimumBalance(minValue, { from: nonSuperAdmin });
       } catch(err) {
         exceptionThrown = true;
       }
 
       assert.ok(exceptionThrown, "Transaction should fire exception");
-      let minimumEthBalance = await cst.minimumEthBalance();
+      let minimumBalance = await cst.minimumBalance();
 
-      assert.equal(minimumEthBalance.toNumber(), 0, "The minimumEthBalance is correct");
+      assert.equal(minimumBalance.toNumber(), 0, "The minimumBalance is correct");
     });
 
   });

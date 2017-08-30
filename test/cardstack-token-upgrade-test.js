@@ -235,6 +235,15 @@ contract('CardStackToken', function(accounts) {
       await cst2.addSuperAdmin(admin);
     });
 
+    // be kind and return ethers to the root account
+    afterEach(async function() {
+      let cstEth = await web3.eth.getBalance(cst2.address);
+
+      await cst2.setFoundation(accounts[0]);
+      await cst2.setMinimumBalance(0);
+      await cst2.foundationWithdraw(cstEth.toNumber());
+    });
+
     it("allows purchase of CST for successor contract", async function() {
       await cst2.upgradedFrom(cst1.address, { from: admin });
       await cst2.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, NULL_ADDRESS);
@@ -436,8 +445,10 @@ contract('CardStackToken', function(accounts) {
 
     it("allows adding rewards contract for successor contract", async function() {
       let rewards = await CstRewards.new();
+      await registry.register("rewards", rewards.address, false);
+
       await cst2.upgradedFrom(cst1.address, { from: admin });
-      await cst2.setRewardsContract(rewards.address, { from: admin });
+      await cst2.setRewardsContractName("rewards", { from: admin });
 
       let observedRewards = await cst2.rewardsContract();
 
@@ -773,13 +784,13 @@ contract('CardStackToken', function(accounts) {
     });
 
     // yes we intentionally allow this to change after contract has been upgraded so foundation can recoup all ethers for the deprecated contract
-    it("does allow setMinimumEthBalance when contract has been upgraded", async function() {
+    it("does allow setMinimumBalance when contract has been upgraded", async function() {
       await cst1.upgradeTo(cst2.address, { from: admin });
-      await cst1.setMinimumEthBalance(web3.toWei(0.1, "ether"));
+      await cst1.setMinimumBalance(web3.toWei(0.1, "ether"));
 
-      let resultingMinEthBalance = await cst1.minimumEthBalance();
+      let resultingMinBalance = await cst1.minimumBalance();
 
-      assert.equal(resultingMinEthBalance.toNumber(), web3.toWei(0.1, "ether"), "the minimumEthBalance is correct");
+      assert.equal(resultingMinBalance.toNumber(), web3.toWei(0.1, "ether"), "the minimumBalance is correct");
     });
 
     // yes we intentionally allow this to change after contract has been upgraded so foundation can recoup all ethers for the deprecated contract
@@ -850,18 +861,33 @@ contract('CardStackToken', function(accounts) {
 
     it("does not allow adding a rewards contract when contract has been upgraded", async function() {
       let rewards = await CstRewards.new();
+      await registry.register("rewards", rewards.address, false);
       await cst1.upgradeTo(cst2.address, { from: admin });
       let exceptionThrown;
       try {
-        await cst1.setRewardsContract(rewards.address, { from: admin });
+        await cst1.setRewardsContractName("rewards", { from: admin });
       } catch (err) {
         exceptionThrown = true;
       }
 
       assert.ok(exceptionThrown, "Exception was thrown");
-      let observedRewards = await cst1.rewardsContract();
+    });
 
-      assert.equal(observedRewards, NULL_ADDRESS, "the rewards contract is correct");
+    it("does not allow rewardsContract when contract has been upgraaded", async function() {
+      let rewards = await CstRewards.new();
+      await registry.register("rewards", rewards.address, false);
+      await cst1.setRewardsContractName("rewards", { from: admin });
+
+      await cst1.upgradeTo(cst2.address, { from: admin });
+
+      let exceptionThrown;
+      try {
+        await cst1.rewardsContract();
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
     xit("does not allow approving allowance when contract has been upgraded", async function() {

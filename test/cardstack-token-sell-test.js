@@ -37,17 +37,26 @@ contract('CardStackToken', function(accounts) {
         let account = accounts[i];
 
         await checkBalance(account, 1);
-
-        await cst.buy({
-          from: account,
-          value: web3.toWei(1, "ether"),
-          gasPrice: GAS_PRICE
-        });
       }
+    });
+
+    // be kind and return ethers to the root account
+    afterEach(async function() {
+      let cstEth = await web3.eth.getBalance(cst.address);
+
+      await cst.setFoundation(accounts[0]);
+      await cst.setMinimumBalance(0);
+      await cst.foundationWithdraw(cstEth.toNumber());
     });
 
     it("should be able to sell CST", async function() {
       let sellerAccount = accounts[2];
+      await cst.buy({
+        from: sellerAccount,
+        value: web3.toWei(1, "ether"),
+        gasPrice: GAS_PRICE
+      });
+
       let startWalletBalance = await web3.eth.getBalance(sellerAccount);
       let sellAmount = 10;
       startWalletBalance = asInt(startWalletBalance);
@@ -71,7 +80,7 @@ contract('CardStackToken', function(accounts) {
       assert.ok(cumulativeGasUsed < 50000, "Less than 50000 gas was used for the txn");
       assert.ok(Math.abs(startWalletBalance + (sellAmount * web3.toWei(0.1, "ether")) - (GAS_PRICE * cumulativeGasUsed) - endWalletBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet balance is correct");
       assert.equal(asInt(endCstBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 90, "The CST total in circulation was updated correctly");
+      assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was updated correctly");
 
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
 
@@ -85,6 +94,12 @@ contract('CardStackToken', function(accounts) {
 
     it("should not be able to sell more CST than in sellers account", async function() {
       let sellerAccount = accounts[2];
+      await cst.buy({
+        from: sellerAccount,
+        value: web3.toWei(1, "ether"),
+        gasPrice: GAS_PRICE
+      });
+
       let startBalance = await web3.eth.getBalance(sellerAccount);
       let sellAmount = 11;
       startBalance = asInt(startBalance);
@@ -108,10 +123,50 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The seller's account was changed for just gas");
       assert.equal(cstBalance, 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 100, "The CST total in circulation was not updated");
+      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation was not updated");
     });
 
-    xit("should not be able to sell more CST that would cause CST eth to be below minimumEthBalance", async function() {
+    it("should not be able to sell more CST that would cause CST eth to be below minimumBalance", async function() {
+      let sellerAccount = accounts[2];
+      await cst.buy({
+        from: sellerAccount,
+        value: web3.toWei(1, "ether"),
+        gasPrice: GAS_PRICE
+      });
+
+      let startBalance = await web3.eth.getBalance(sellerAccount);
+      let sellAmount = 6;
+      let minimumBalance = web3.toWei(0.5, "ether");
+      let cstEth = await web3.eth.getBalance(cst.address);
+      startBalance = asInt(startBalance);
+
+      await cst.setFoundation(accounts[0]);
+      await cst.foundationWithdraw(cstEth.toNumber() - minimumBalance);
+
+      await cst.setMinimumBalance(web3.toWei(0.5, "ether"));
+
+      let exceptionThrown;
+      try {
+        await cst.sell(sellAmount, {
+          from: sellerAccount,
+          gasPrice: GAS_PRICE
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      cstEth = await web3.eth.getBalance(cst.address);
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let endBalance = await web3.eth.getBalance(sellerAccount);
+      let cstBalance = await cst.balanceOf(sellerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+
+      endBalance = asInt(endBalance);
+
+      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The seller's account was changed for just gas");
+      assert.equal(cstBalance, 10, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation was not updated");
+      assert.equal(cstEth.toNumber(), minimumBalance, "The CST ether balance is correct");
     });
   });
 });

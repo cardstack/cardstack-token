@@ -35,6 +35,15 @@ contract('CardStackToken', function(accounts) {
       }
     });
 
+    // be kind and return ethers to the root account
+    afterEach(async function() {
+      let cstEth = await web3.eth.getBalance(cst.address);
+
+      await cst.setFoundation(accounts[0]);
+      await cst.setMinimumBalance(0);
+      await cst.foundationWithdraw(cstEth.toNumber());
+    });
+
     it("should be able to purchase CST", async function() {
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, NULL_ADDRESS);
       await ledger.mintTokens(10);

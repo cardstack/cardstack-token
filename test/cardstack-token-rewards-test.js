@@ -28,6 +28,7 @@ contract('CardStackToken', function(accounts) {
       await ledger.addSuperAdmin(registry.address);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address, false);
+      await registry.register("rewards", rewards.address, false);
 
       await ledger.mintTokens(100);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(1, "ether"), 100, NULL_ADDRESS);
@@ -35,7 +36,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("allows a super admin to add a rewards contract", async function() {
-      await cst.setRewardsContract(rewards.address, { from: superAdmin });
+      await cst.setRewardsContractName("rewards", { from: superAdmin });
 
       let observedRewards = await cst.rewardsContract();
 
@@ -46,7 +47,7 @@ contract('CardStackToken', function(accounts) {
       let nonSuperAdmin = accounts[7];
       let exceptionThrown;
       try {
-        await cst.setRewardsContract(rewards.address, { from: nonSuperAdmin });
+        await cst.setRewardsContractName("rewards", { from: nonSuperAdmin });
       } catch (err) {
         exceptionThrown = true;
       }
@@ -79,7 +80,7 @@ contract('CardStackToken', function(accounts) {
         let sender = accounts[8];
         let recipient = accounts[9];
 
-        await cst.setRewardsContract(rewards.address, { from: superAdmin });
+        await cst.setRewardsContractName("rewards", { from: superAdmin });
 
         await ledger.debitAccount(sender, 10);
 
@@ -95,7 +96,7 @@ contract('CardStackToken', function(accounts) {
         let spender = accounts[8];
         let recipient = accounts[9];
 
-        await cst.setRewardsContract(rewards.address, { from: superAdmin });
+        await cst.setRewardsContractName("rewards", { from: superAdmin });
 
         await ledger.debitAccount(grantor, 10);
         await cst.approve(spender, 10, { from: grantor });
@@ -114,7 +115,7 @@ contract('CardStackToken', function(accounts) {
 
         let txnValue = web3.toWei(0.1, "ether");
 
-        await cst.setRewardsContract(rewards.address, { from: superAdmin });
+        await cst.setRewardsContractName("rewards", { from: superAdmin });
 
         await cst.buy({
           from: buyerAccount,
@@ -133,7 +134,7 @@ contract('CardStackToken', function(accounts) {
         await checkBalance(foundation, 1);
         await ledger.debitAccount(sellerAccount, 10);
 
-        await cst.setRewardsContract(rewards.address, { from: superAdmin });
+        await cst.setRewardsContractName("rewards", { from: superAdmin });
 
         await cst.foundationDeposit({
           from: foundation,
@@ -153,7 +154,7 @@ contract('CardStackToken', function(accounts) {
       it("cst grantToken triggers reward contract processReward", async function() {
         let recipient = accounts[9];
 
-        await cst.setRewardsContract(rewards.address, { from: superAdmin });
+        await cst.setRewardsContractName("rewards", { from: superAdmin });
 
         await cst.grantTokens(recipient, 10);
 
