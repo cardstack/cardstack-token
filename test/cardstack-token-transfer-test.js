@@ -41,6 +41,15 @@ contract('CardStackToken', function(accounts) {
       });
     });
 
+    // be kind and return ethers to the root account
+    afterEach(async function() {
+      let cstEth = await web3.eth.getBalance(cst.address);
+
+      await cst.setFoundation(accounts[0]);
+      await cst.setMinimumBalance(0);
+      await cst.foundationWithdraw(cstEth.toNumber());
+    });
+
     it("should be able to transfer CST to another account", async function() {
       let transferAmount = 10;
 

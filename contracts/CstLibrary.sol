@@ -42,12 +42,12 @@ library CstLibrary {
     ExternalStorage(_storage).setUIntValue("cstSellCap", value);
   }
 
-  function getMinimumEthBalance(address _storage) constant returns(uint) {
-    return ExternalStorage(_storage).getUIntValue("cstMinimumEthBalance");
+  function getMinimumBalance(address _storage) constant returns(uint) {
+    return ExternalStorage(_storage).getUIntValue("cstMinimumBalance");
   }
 
-  function setMinimumEthBalance(address _storage, uint value) {
-    ExternalStorage(_storage).setUIntValue("cstMinimumEthBalance", value);
+  function setMinimumBalance(address _storage, uint value) {
+    ExternalStorage(_storage).setUIntValue("cstMinimumBalance", value);
   }
 
   function getFoundation(address _storage) constant returns(address) {
@@ -64,6 +64,14 @@ library CstLibrary {
 
   function setAllowance(address _storage, address account, address spender, uint allowance) {
     ExternalStorage(_storage).setMultiLedgerValue("cstAllowance", account, spender, allowance);
+  }
+
+  function getRewardsContractHash(address _storage) constant returns (bytes32) {
+    return ExternalStorage(_storage).getBytes32Value("cstRewardsContractHash");
+  }
+
+  function setRewardsContractHash(address _storage, bytes32 rewardsContractHash) {
+    ExternalStorage(_storage).setBytes32Value("cstRewardsContractHash", rewardsContractHash);
   }
 
 }
