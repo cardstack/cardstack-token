@@ -195,19 +195,90 @@ contract('CardStackToken', function(accounts) {
       assert.equal(unfreezeEvent.logs[0].args.frozen, false, 'the frozen value is correct');
     });
 
-    xit("does not allow approving allowance when spender account has been frozen", async function() {
+    it("does not allow approving allowance when spender account has been frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst.freezeAccount(spender, true);
+
+      let exceptionThrown;
+      try {
+        await cst.approve(spender, 10, { from: grantor });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("does not allow approving allowance when grantor account has been frozen", async function() {
+    it("does not allow approving allowance when grantor account has been frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst.freezeAccount(grantor, true);
+
+      let exceptionThrown;
+      try {
+        await cst.approve(spender, 10, { from: grantor });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("does not allow transferFrom when sender account has been frozen", async function() {
+    it("does not allow transferFrom when sender account has been frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+      let recipient = accounts[7];
+
+      await cst.approve(spender, 10, { from: grantor });
+      await cst.freezeAccount(spender, true);
+
+      let exceptionThrown;
+      try {
+        await cst.transferFrom(grantor, recipient, 10, { from: spender });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("does not allow transferFrom when 'from' account has been frozen", async function() {
+    it("does not allow transferFrom when 'from' account has been frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+      let recipient = accounts[7];
+
+      await cst.approve(spender, 10, { from: grantor });
+      await cst.freezeAccount(grantor, true);
+
+      let exceptionThrown;
+      try {
+        await cst.transferFrom(grantor, recipient, 10, { from: spender });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("does not allow transferFrom when 'to' account has been frozen", async function() {
+    it("does not allow transferFrom when 'to' account has been frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+      let recipient = accounts[7];
+
+      await cst.approve(spender, 10, { from: grantor });
+      await cst.freezeAccount(recipient, true);
+
+      let exceptionThrown;
+      try {
+        await cst.transferFrom(grantor, recipient, 10, { from: spender });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
   });
 
@@ -432,21 +503,85 @@ contract('CardStackToken', function(accounts) {
       assert.equal(unfreezeEvent.logs[0].args.frozen, false, 'the frozen value is correct');
     });
 
-    xit("does not allow setting allowance when token frozen", async function() {
+    it("does not allow approving allowance when token frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst.freezeToken(true);
+
+      let exceptionThrown;
+      try {
+        await cst.approve(spender, 10, { from: grantor });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("does not allow transferFrom when token frozen", async function() {
+    it("does not allow transferFrom when token frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+      let recipient = accounts[7];
+
+      await cst.approve(spender, 10, { from: grantor });
+      await cst.freezeToken(true);
+
+      let exceptionThrown;
+      try {
+        await cst.transferFrom(grantor, recipient, 10, { from: spender });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("cannot invoke balanceOf when token frozen", async function() {
+    it("cannot invoke balanceOf when token frozen", async function() {
+      let grantor = accounts[3];
+
+      await ledger.debitAccount(grantor, 50);
+
+      let grantorBalance = await cst.balanceOf(grantor);
+
+      assert.equal(asInt(grantorBalance), 50, "the balance is correct");
+
+      await cst.freezeToken(true);
+
+      let exceptionThrown;
+      try {
+        await cst.balanceOf(grantor);
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("cannot invoke totalInCirculation when token frozen", async function() {
+    it("cannot invoke totalInCirculation when token frozen", async function() {
+      await cst.freezeToken(true);
+
+      let exceptionThrown;
+      try {
+        await cst.totalInCirculation();
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    xit("cannot invoke totalTokens when token frozen", async function() {
-    });
+    it("cannot invoke totalTokens when token frozen", async function() {
+      await cst.freezeToken(true);
 
+      let exceptionThrown;
+      try {
+        await cst.totalTokens();
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
+    });
   });
-
 });
