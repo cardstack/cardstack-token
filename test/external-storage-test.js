@@ -248,40 +248,166 @@ contract('ExternalStorage', function(accounts) {
       assert.equal(storageSomeint, 37, "int value was getted by non-admin");
     });
 
-    xit("allows admin to set ledger value", async function () {
+    it("allows admin to set ledger value", async function () {
+      let someUser = [12];
+
+      await storage.addAdmin(admin);
+      await storage.setLedgerValue("someledger", someUser, 37, { from: admin });
+
+      let storageSomevalue = await storage.getLedgerValue("someledger", someUser);
+      assert.equal(storageSomevalue, 37, "ledger value was set by admin");
     });
 
-    xit("does not allow non-admin to set ledger value", async function() {
+    it("does not allow non-admin to set ledger value", async function() {
+      let someUser = accounts[12];
+      let nonAdmin = accounts[14];
+      let exceptionThrown;
+
+      try {
+        await storage.setLedgerValue("someledger", someUser, 37, { from: nonAdmin });
+      } catch(e) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "exception was thrown");
+      let storageSomevalue = await storage.getLedgerValue("someledger", someUser);
+      assert.equal(storageSomevalue, 0, "ledger value was not set by non-admin");
     });
 
-    xit("gets ledger value", async function () {
+    it("gets ledger value", async function () {
+      let someUser = accounts[12];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setLedgerValue("someledger", someUser, 37, { from: admin });
+
+      let storageSomevalue = await storage.getLedgerValue("someledger", someUser, { from: nonAdmin });
+      assert.equal(storageSomevalue, 37, "ledger value was getted by non-admin");
     });
 
-    xit("gets ledger count", async function() {
+    it("gets ledger count", async function() {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setLedgerValue("someledger", someUser, 37, { from: admin });
+      await storage.setLedgerValue("someledger", otherUser, 73, { from: admin });
+
+      let ledgerCount = await storage.getLedgerCount("someledger", { from: nonAdmin });
+      assert.equal(ledgerCount, 2, "ledger count was getted");
     });
 
-    xit("gets ledger address by index", async function() {
+    it("gets ledger address by index", async function() {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setLedgerValue("someledger", someUser, 37, { from: admin });
+      await storage.setLedgerValue("someledger", otherUser, 73, { from: admin });
+
+      let ledgerEntry = await storage.ledgerEntryForIndex(web3.sha3("someledger"), 0, { from: nonAdmin });
+      assert.equal(ledgerEntry, someUser, "ledger entry was getted by index");
     });
 
-    xit("allows admin to set multi-ledger value", async function () {
+    it("allows admin to set multi-ledger value", async function () {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+
+      await storage.addAdmin(admin);
+      await storage.setMultiLedgerValue("allowance", someUser, otherUser, 10, { from: admin });
+
+      let storageSomevalue = await storage.getMultiLedgerValue("allowance", someUser, otherUser);
+      assert.equal(storageSomevalue, 10, "multi-ledger value was set by admin");
     });
 
-    xit("does not allow non-admin to set multi-ledger value", async function() {
+    it("does not allow non-admin to set multi-ledger value", async function() {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let nonAdmin = accounts[19];
+      let exceptionThrown;
+
+      let storageSomevalue = await storage.getMultiLedgerValue("allowance", someUser, otherUser);
+      assert.equal(storageSomevalue, 0, "multi-ledger value is 0");
+
+      try {
+        await storage.setMultiLedgerValue("allowance", someUser, otherUser, 10, { from: nonAdmin });
+      } catch(e) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "exception was thrown");
+      storageSomevalue = await storage.getMultiLedgerValue("allowance", someUser, otherUser);
+      assert.equal(storageSomevalue, 0, "multi-ledger value is still 0");
     });
 
-    xit("gets multi-ledger value", async function () {
+    it("gets multi-ledger value", async function () {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let nonAdmin = accounts[19];
+
+      await storage.addAdmin(admin);
+      await storage.setMultiLedgerValue("allowance", someUser, otherUser, 10, { from: admin });
+
+      let storageSomevalue = await storage.getMultiLedgerValue("allowance", someUser, otherUser, { from: nonAdmin });
+      assert.equal(storageSomevalue, 10, "multi-ledger value was getted by non-admin");
     });
 
-    xit("gets multi-ledger primary address count", async function() {
+    it("gets multi-ledger primary address count", async function() {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let anotherUser = accounts[23];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setMultiLedgerValue("someledger", someUser, anotherUser, 37, { from: admin });
+      await storage.setMultiLedgerValue("someledger", otherUser, anotherUser, 73, { from: admin });
+
+      let ledgerCount = await storage.primaryLedgerCount(web3.sha3("someledger"), { from: nonAdmin });
+      assert.equal(ledgerCount, 2, "primary ledger count was getted");
     });
 
-    xit("gets multi-ledger primary address by index", async function() {
+    it("gets multi-ledger primary address by index", async function() {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let anotherUser = accounts[23];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setMultiLedgerValue("someledger", someUser, anotherUser, 37, { from: admin });
+      await storage.setMultiLedgerValue("someledger", otherUser, anotherUser, 73, { from: admin });
+
+      let ledgerEntry = await storage.primaryLedgerEntryForIndex(web3.sha3("someledger"), 1, { from: nonAdmin });
+      assert.equal(ledgerEntry, otherUser, "primary ledger entry was getted");
     });
 
-    xit("gets multi-ledger secondary address count", async function() {
+    it("gets multi-ledger secondary address count", async function() {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let anotherUser = accounts[23];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setMultiLedgerValue("someledger", someUser, otherUser, 37, { from: admin });
+      await storage.setMultiLedgerValue("someledger", someUser, anotherUser, 73, { from: admin });
+
+      let ledgerCount = await storage.secondaryLedgerCount(web3.sha3("someledger"), someUser, { from: nonAdmin });
+      assert.equal(ledgerCount, 2, "secondary ledger count was getted");
     });
 
-    xit("gets multi-ledger secondary address by index", async function() {
+    it("gets multi-ledger secondary address by index", async function() {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let anotherUser = accounts[23];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setMultiLedgerValue("someledger", someUser, anotherUser, 37, { from: admin });
+      await storage.setMultiLedgerValue("someledger", someUser, otherUser, 73, { from: admin });
+
+      let ledgerEntry = await storage.secondaryLedgerEntryForIndex(web3.sha3("someledger"), someUser, 1, { from: nonAdmin });
+      assert.equal(ledgerEntry, otherUser, "secondary ledger entry was getted");
     });
   });
 });

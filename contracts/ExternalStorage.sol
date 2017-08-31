@@ -7,12 +7,12 @@ contract ExternalStorage is administratable {
   using SafeMath for uint256;
 
   mapping(bytes32 => mapping(address => mapping(address => uint))) MultiLedgerStorage;
-  mapping(bytes32 => uint) primaryLedgerCount;
-  mapping(bytes32 => mapping(address => bool)) ledgerPrimaryEntries;
-  mapping(bytes32 => mapping(uint => address)) primaryLedgerEntryForIndex;
-  mapping(bytes32 => mapping(address => uint)) secondaryLedgerCount;
-  mapping(bytes32 => mapping(address => mapping(address => bool))) ledgerSecondaryEntries;
-  mapping(bytes32 => mapping(address => mapping(uint => address))) secondaryLedgerEntryForIndex;
+  mapping(bytes32 => uint) public primaryLedgerCount;
+  mapping(bytes32 => mapping(address => bool)) public ledgerPrimaryEntries;
+  mapping(bytes32 => mapping(uint => address)) public primaryLedgerEntryForIndex;
+  mapping(bytes32 => mapping(address => uint)) public secondaryLedgerCount;
+  mapping(bytes32 => mapping(address => mapping(address => bool))) public ledgerSecondaryEntries;
+  mapping(bytes32 => mapping(address => mapping(uint => address))) public secondaryLedgerEntryForIndex;
 
   function getMultiLedgerValue(string record, address primaryAddress, address secondaryAddress) constant returns (uint) {
     return MultiLedgerStorage[sha3(record)][primaryAddress][secondaryAddress];
@@ -38,9 +38,9 @@ contract ExternalStorage is administratable {
   }
 
   mapping(bytes32 => mapping(address => uint)) LedgerStorage;
-  mapping(bytes32 => uint) ledgerCount;
-  mapping(bytes32 => mapping(address => bool)) ledgerAccounts;
-  mapping(bytes32 => mapping(uint => address)) ledgerEntryForIndex;
+  mapping(bytes32 => uint) public ledgerCount;
+  mapping(bytes32 => mapping(address => bool)) public ledgerAccounts;
+  mapping(bytes32 => mapping(uint => address)) public ledgerEntryForIndex;
 
   function getLedgerValue(string record, address _address) constant returns (uint) {
     return LedgerStorage[sha3(record)][_address];
