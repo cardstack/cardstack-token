@@ -217,17 +217,56 @@ contract('CstLedger', function(accounts) {
       assert.ok(exceptionThrown, "exception was thrown trying to transfer as non-admin");
     });
 
-    xit("returns ledgerCount correctly when transfer to a new account", async function() {
+    it("returns ledgerCount correctly when debit to a new account", async function() {
+      let senderAccount = accounts[5];
+
+      await ledger.addAdmin(admin);
+      await ledger.debitAccount(senderAccount, 100);
+
+      let ledgerCount = await ledger.ledgerCount();
+
+      assert.equal(ledgerCount.toNumber(), 1, "the ledgerCount is correct");
     });
 
-    xit("returns accountForIndex correctly when transfer to a new account", async function() {
+    it("returns accountForIndex correctly when debit to a new account", async function() {
+      let senderAccount = accounts[5];
+
+      await ledger.addAdmin(admin);
+      await ledger.debitAccount(senderAccount, 100);
+
+      let firstAccount = await ledger.accountForIndex(0);
+
+      assert.equal(firstAccount, senderAccount, "account is correct");
     });
 
-    xit("returns ledgerCount correctly when debit to a new account", async function() {
+    it("returns ledgerCount correctly when transfer to a new account", async function() {
+      let senderAccount = accounts[5];
+      let recipientAccount = accounts[9];
+
+      await ledger.addAdmin(admin);
+      await ledger.debitAccount(senderAccount, 100);
+
+      await ledger.transfer(senderAccount, recipientAccount, 37, { from: admin });
+
+      let ledgerCount = await ledger.ledgerCount();
+
+      assert.equal(ledgerCount.toNumber(), 2, "the ledgerCount is correct");
     });
 
-    xit("returns accountForIndex correctly when debit to a new account", async function() {
-    });
+    it("returns accountForIndex correctly when transfer to a new account", async function() {
+      let senderAccount = accounts[5];
+      let recipientAccount = accounts[9];
 
+      await ledger.addAdmin(admin);
+      await ledger.debitAccount(senderAccount, 100);
+
+      await ledger.transfer(senderAccount, recipientAccount, 37, { from: admin });
+
+      let firstAccount = await ledger.accountForIndex(0);
+      let secondAccount = await ledger.accountForIndex(1);
+
+      assert.equal(firstAccount, senderAccount, "account is correct");
+      assert.equal(secondAccount, recipientAccount, "account is correct");
+    });
   });
 });
