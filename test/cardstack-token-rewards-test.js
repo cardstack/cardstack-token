@@ -32,7 +32,7 @@ contract('CardStackToken', function(accounts) {
 
       await ledger.mintTokens(100);
       await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(1, "ether"), 100, NULL_ADDRESS);
-      cst.addSuperAdmin(superAdmin);
+      await cst.addSuperAdmin(superAdmin);
     });
 
     it("allows a super admin to add a rewards contract", async function() {
@@ -62,106 +62,104 @@ contract('CardStackToken', function(accounts) {
     // to test that it was actually called. When this is implemented for real,
     // we need to adjust these tests to use some real reward contract state to
     //  test that it was actually called
-    describe("trigger rewards", async function() {
-      it("does not trigger reward contract's processReward when contract not set", async function() {
-        let sender = accounts[8];
-        let recipient = accounts[9];
+    it("does not trigger reward contract's processReward when contract not set", async function() {
+      let sender = accounts[8];
+      let recipient = accounts[9];
 
-        await ledger.debitAccount(sender, 10);
+      await ledger.debitAccount(sender, 10);
 
-        await cst.transfer(recipient, 10, { from: sender });
+      await cst.transfer(recipient, 10, { from: sender });
 
-        let processingRewards = await rewards.processingRewards();
+      let processingRewards = await rewards.processingRewards();
 
-        assert.notOk(processingRewards, "rewards processing was not triggered");
+      assert.notOk(processingRewards, "rewards processing was not triggered");
+    });
+
+    it("cst transfer triggers reward contract processReward", async function() {
+      let sender = accounts[8];
+      let recipient = accounts[9];
+
+      await cst.setRewardsContractName("rewards", { from: superAdmin });
+
+      await ledger.debitAccount(sender, 10);
+
+      await cst.transfer(recipient, 10, { from: sender });
+
+      let processingRewards = await rewards.processingRewards();
+
+      assert.ok(processingRewards, "rewards processing was not triggered");
+    });
+
+    it("cst transferFrom triggers reward contract processReward", async function() {
+      let grantor = accounts[7];
+      let spender = accounts[8];
+      let recipient = accounts[9];
+
+      await cst.setRewardsContractName("rewards", { from: superAdmin });
+
+      await ledger.debitAccount(grantor, 10);
+      await cst.approve(spender, 10, { from: grantor });
+
+      await cst.transferFrom(grantor, recipient, 10, { from: spender });
+
+      let processingRewards = await rewards.processingRewards();
+
+      assert.ok(processingRewards, "rewards processing was not triggered");
+    });
+
+    it("cst buy triggers reward contract processReward", async function() {
+      let buyerAccount = accounts[8];
+
+      await checkBalance(buyerAccount, 0.1);
+
+      let txnValue = web3.toWei(0.1, "ether");
+
+      await cst.setRewardsContractName("rewards", { from: superAdmin });
+
+      await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
       });
 
-      it("cst transfer triggers reward contract processReward", async function() {
-        let sender = accounts[8];
-        let recipient = accounts[9];
+      let processingRewards = await rewards.processingRewards();
 
-        await cst.setRewardsContractName("rewards", { from: superAdmin });
+      assert.ok(processingRewards, "rewards processing was not triggered");
+    });
 
-        await ledger.debitAccount(sender, 10);
+    it("cst sell triggers reward contract processReward", async function() {
+      let sellerAccount = accounts[8];
+      let foundation = accounts[10];
+      await checkBalance(foundation, 1);
+      await ledger.debitAccount(sellerAccount, 10);
 
-        await cst.transfer(recipient, 10, { from: sender });
+      await cst.setRewardsContractName("rewards", { from: superAdmin });
 
-        let processingRewards = await rewards.processingRewards();
-
-        assert.ok(processingRewards, "rewards processing was not triggered");
+      await cst.foundationDeposit({
+        from: foundation,
+        value: web3.toWei(1, "ether")
       });
 
-      it("cst transferFrom triggers reward contract processReward", async function() {
-        let grantor = accounts[7];
-        let spender = accounts[8];
-        let recipient = accounts[9];
-
-        await cst.setRewardsContractName("rewards", { from: superAdmin });
-
-        await ledger.debitAccount(grantor, 10);
-        await cst.approve(spender, 10, { from: grantor });
-
-        await cst.transferFrom(grantor, recipient, 10, { from: spender });
-
-        let processingRewards = await rewards.processingRewards();
-
-        assert.ok(processingRewards, "rewards processing was not triggered");
+      await cst.sell(1, {
+        from: sellerAccount,
+        gasPrice: GAS_PRICE
       });
 
-      it("cst buy triggers reward contract processReward", async function() {
-        let buyerAccount = accounts[8];
+      let processingRewards = await rewards.processingRewards();
 
-        await checkBalance(buyerAccount, 0.1);
+      assert.ok(processingRewards, "rewards processing was not triggered");
+    });
 
-        let txnValue = web3.toWei(0.1, "ether");
+    it("cst grantToken triggers reward contract processReward", async function() {
+      let recipient = accounts[9];
 
-        await cst.setRewardsContractName("rewards", { from: superAdmin });
+      await cst.setRewardsContractName("rewards", { from: superAdmin });
 
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
+      await cst.grantTokens(recipient, 10);
 
-        let processingRewards = await rewards.processingRewards();
+      let processingRewards = await rewards.processingRewards();
 
-        assert.ok(processingRewards, "rewards processing was not triggered");
-      });
-
-      it("cst sell triggers reward contract processReward", async function() {
-        let sellerAccount = accounts[8];
-        let foundation = accounts[10];
-        await checkBalance(foundation, 1);
-        await ledger.debitAccount(sellerAccount, 10);
-
-        await cst.setRewardsContractName("rewards", { from: superAdmin });
-
-        await cst.foundationDeposit({
-          from: foundation,
-          value: web3.toWei(1, "ether")
-        });
-
-        await cst.sell(1, {
-          from: sellerAccount,
-          gasPrice: GAS_PRICE
-        });
-
-        let processingRewards = await rewards.processingRewards();
-
-        assert.ok(processingRewards, "rewards processing was not triggered");
-      });
-
-      it("cst grantToken triggers reward contract processReward", async function() {
-        let recipient = accounts[9];
-
-        await cst.setRewardsContractName("rewards", { from: superAdmin });
-
-        await cst.grantTokens(recipient, 10);
-
-        let processingRewards = await rewards.processingRewards();
-
-        assert.ok(processingRewards, "rewards processing was not triggered");
-      });
+      assert.ok(processingRewards, "rewards processing was not triggered");
     });
   });
 });
