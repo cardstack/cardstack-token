@@ -9,7 +9,7 @@ const {
 
 contract('CardStackToken', function(accounts) {
 
-  describe("allowance", function() {
+  describe.only("allowance", function() {
     let cst;
     let ledger;
     let storage;
