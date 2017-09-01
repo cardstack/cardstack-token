@@ -4,6 +4,7 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract freezable is Ownable {
   bool public frozenToken;
+  // TODO move this into external storage
   mapping (address => bool) public frozenAccount;
 
   event FrozenFunds(address target, bool frozen);

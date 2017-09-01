@@ -26,6 +26,7 @@ module.exports = async function(callback) {
   let foundation = await cst.foundation();
   let balanceWei = await web3.eth.getBalance(cst.address);
   let minBalanceWei = await cst.minimumBalance();
+  let cstAvailableToBuy = await cst.cstAvailableToBuy();
 
   let storageAddress = await registry.storageForHash(web3.sha3(cstStorageName.toString()));
   let ledgerAddress = await registry.storageForHash(web3.sha3(cstLedgerName.toString()));
@@ -33,6 +34,12 @@ module.exports = async function(callback) {
   let storage = await ExternalStorage.at(storageAddress);
   let ledger = await CstLedger.at(ledgerAddress);
 
+  let totalTokens = await ledger.totalTokens();
+  let totalInCirculation = await ledger.totalInCirculation();
+  let numAccounts = await ledger.ledgerCount();
+  let isCstAdminOfLedger = await ledger.admins(cst.address);
+
+  let isCstAdminOfStorage = await storage.admins(cst.address);
 
   console.log(`
 Contracts:
@@ -58,9 +65,20 @@ Cardstack Token (${cst.address}):
   buyPrice (ETH): ${web3.fromWei(buyPriceWei, "ether")}
   sellPrice (ETH): ${web3.fromWei(sellPriceWei, "ether")}
   sellCap: ${sellCap}
+  cstAvailableToBuy: ${cstAvailableToBuy}
   balance (ETH): ${web3.fromWei(balanceWei, "ether")}
   minimumBalance (ETH): ${web3.fromWei(minBalanceWei, "ether")}
   foundation: ${foundation}
+
+Ledger (${ledger.address})
+  admin ${cst.address}: ${isCstAdminOfLedger}
+  totalTokens: ${totalTokens}
+  totalInCirculation: ${totalInCirculation}
+  number of accounts: ${numAccounts}
+
+Storage (${storage.address})
+  admin ${cst.address}: ${isCstAdminOfStorage}
   `);
 
+  callback();
 };

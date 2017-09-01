@@ -5,7 +5,7 @@ const cstRegistryName = 'cst';
 
 module.exports = async function(callback) {
   if (process.argv.length < 10) {
-    console.error("USAGE: truffle exec ./scripts/initialize.js <token name> <token symbol> <buy price in ETH> <sell price in ETH> <sell cap> <foundation address>");
+    console.error("USAGE: truffle exec ./scripts/cst-initialize.js <token name> <token symbol> <buy price in ETH> <sell price in ETH> <sell cap> <foundation address>");
     callback();
     return;
   }
@@ -34,7 +34,7 @@ module.exports = async function(callback) {
                          foundation ? foundation : NULL_ADDRESS);
     console.log(`\nCST token is live at ${cst.address}`);
   } catch (err) {
-    console.error(`\nError encountered initializing CST, ${err.message}`);
+    console.error(`\nError encountered initializing CST (${cst.address}), ${err.message}`);
   }
 
   callback();
