@@ -15,6 +15,11 @@ module.exports = async function(deployer) {
 
     let cst = await CardStackToken.deployed();
 
+    // There is some kind of race condition in the CST deploy that these
+    // promises solve, such that the register works correctly
+    await cst.getLedgerNameHash();
+    await cst.getStorageNameHash();
+
     await registry.register("cst", cst.address, true);
   }
 };
