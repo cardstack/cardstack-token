@@ -1,3 +1,5 @@
+const commandLineArgs = require('command-line-args');
+const getUsage = require('command-line-usage');
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 let RegistryContract = artifacts.require("./Registry.sol");
 let ExternalStorage = artifacts.require("./ExternalStorage.sol");
@@ -5,8 +7,47 @@ let CstLedger = artifacts.require("./CstLedger.sol");
 
 const cstRegistryName = 'cst';
 
+const optionsDefs = [
+  { name: "help", alias: "h", type: Boolean },
+  { name: "network", type: String },
+  { name: "registry", alias: "r", type: String }
+];
+
+const usage = [
+  {
+    header: "system-info",
+    content: "This script displays an overview of the Cardstack smart contracts."
+  },{
+    header: "Options",
+    optionList: [{
+      name: "help",
+      alias: "h",
+      description: "Print this usage guide."
+    },{
+      name: "network",
+      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
+    },{
+      name: "registry",
+      alias: "r",
+      description: "(Optional) The address of the registry. The script will attempt to detect the registry if none is supplied."
+    }]
+  }
+];
+
 module.exports = async function(callback) {
-  let registry = await RegistryContract.deployed();
+  const options = commandLineArgs(optionsDefs);
+
+  if (!options.network || options.help) {
+    console.log(getUsage(usage));
+    callback();
+    return;
+  }
+
+  let registryAddress = options.registry;
+
+  let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
+
+  console.log(`Using registry at ${registry.address}`);
   let cstAddress = await registry.contractForHash(web3.sha3(cstRegistryName));
 
   let cst = await CardStackToken.at(cstAddress);

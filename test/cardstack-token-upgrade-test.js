@@ -278,7 +278,8 @@ contract('CardStackToken', function(accounts) {
       assert.equal(totalInCirculation, 2, "The CST total in circulation was updated correctly");
     });
 
-    it("allows selling of CST for successor contract", async function() {
+    /* removing sell until after phase 2 */
+    xit("allows selling of CST for successor contract", async function() {
       let sellerAccount = accounts[2];
       await cst2.upgradedFrom(cst1.address, { from: admin });
       await cst2.buy({
@@ -546,7 +547,8 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
     });
 
-    it("does not allow selling of CST when the contract has been upgraded", async function() {
+    /* removing sell until after phase 2*/
+    xit("does not allow selling of CST when the contract has been upgraded", async function() {
       await cst1.upgradeTo(cst2.address, { from: admin });
 
       let sellerAccount = accounts[2];

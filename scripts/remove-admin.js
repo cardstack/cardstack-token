@@ -20,8 +20,8 @@ const optionsDefs = [
 
 const usage = [
   {
-    header: "add-admin",
-    content: "This script adds an admin to a contract"
+    header: "remove-admin",
+    content: "This script removes an admin from a contract"
   },{
     header: "Options",
     optionList: [{
@@ -34,11 +34,11 @@ const usage = [
     },{
       name: "address",
       alias: "a",
-      description: "The address to grant admin permissions"
+      description: "The address of the revoked admin"
     },{
       name: "name",
       alias: "n",
-      description: "The registered name of the contract/storage to grant admin permissions"
+      description: "The registered name of the contract/storage to revoke admin permissions from"
     },{
       name: "registry",
       alias: "r",
@@ -90,11 +90,11 @@ module.exports = async function(callback) {
   }
 
   try {
-    console.log(`Adding "${address}" as admin for ${name} (${contract.address})...`);
-    await contract.addAdmin(address);
+    console.log(`Removing "${address}" as admin for ${name} (${contract.address})...`);
+    await contract.removeAdmin(address);
     console.log('done');
   } catch (err) {
-    console.error(`Error encountered adding admin for ${name} (${contract.address}), ${err.message}`);
+    console.error(`Error encountered removing admin for ${name} (${contract.address}), ${err.message}`);
   }
 
   callback();

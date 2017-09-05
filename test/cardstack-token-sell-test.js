@@ -18,7 +18,14 @@ contract('CardStackToken', function(accounts) {
   let cst;
   let registry;
 
-  describe("sell()", function() {
+  xdescribe("sell()", function() {
+
+    /*
+     * Chris wants to disable sell() until after phase 2
+     * and then replace with a foundation approval mechanism
+     * to approve a sell of CST back to the smart contrac to
+     * prevent arbitrage
+     */
 
     beforeEach(async function() {
       ledger = await CstLedger.new();

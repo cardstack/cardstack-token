@@ -1,22 +1,19 @@
 const { CST_NAME } = require("../lib/utils");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
-
 let RegistryContract = artifacts.require("./Registry.sol");
-let CardStackToken = artifacts.require("./CardStackToken.sol");
 
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
-  { name: "address", type: String },
-  { name: "amount", type: Number },
-  { name: "registry", alias: "r", type: String }
+  { name: "registry", type: String, alias: "r" },
+  { name: "cst", type: String, alias: "c" }
 ];
 
 const usage = [
   {
-    header: "cst-grant-tokens",
-    content: "This script grants tokens to the specified address"
+    header: "cst-register",
+    content: "This script registers a CST contract with the registry."
   },{
     header: "Options",
     optionList: [{
@@ -27,11 +24,9 @@ const usage = [
       name: "network",
       description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
     },{
-      name: "address",
-      description: "The address to receive the granted tokens."
-    },{
-      name: "amount",
-      description: "The amount of CST tokens to grant."
+      name: "cst",
+      alias: "c",
+      description: "The address of the CST contract that you wish to register"
     },{
       name: "registry",
       alias: "r",
@@ -43,7 +38,7 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (!options.address || !options.amount || !options.network || options.help) {
+  if (!options.cst || !options.network || options.help) {
     console.log(getUsage(usage));
     callback();
     return;
@@ -52,20 +47,16 @@ module.exports = async function(callback) {
   let registryAddress = options.registry;
 
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
+  let cstAddress = options.cst;
 
   console.log(`Using registry at ${registry.address}`);
-  let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
-
-  let cst = await CardStackToken.at(cstAddress);
-
-  let { address, amount } = options;
+  console.log(`Registering contract ${cstAddress}...`);
 
   try {
-    console.log(`Granting ${amount} CST to ${address} for CST (${cst.address})...`);
-    await cst.grantTokens(address, amount);
-    console.log('done');
+    await registry.register(CST_NAME, cstAddress, true);
+    console.log(`\nRegistered CST (${cstAddress}) as contract "${CST_NAME}" with registry (${registry.address})`);
   } catch (err) {
-    console.error(`Error granting tokens for CST (${cst.address}, ${err.message}`);
+    console.error(`\nError registering CST contract with registry (${registry.address}, ${err.message}`);
   }
 
   callback();

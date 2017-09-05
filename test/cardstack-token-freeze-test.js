@@ -46,7 +46,8 @@ contract('CardStackToken', function(accounts) {
       freezeEvent = await cst.freezeAccount(frozenAccount, true);
     });
 
-    it("cannot sell CST when frozen", async function() {
+    /* removing sell until after phase 2 */
+    xit("cannot sell CST when frozen", async function() {
       let sellerAccount = frozenAccount;
       let startBalance = await web3.eth.getBalance(sellerAccount);
       let sellAmount = 1;
@@ -346,7 +347,8 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(recipientBalance), 10, "The balance is correct");
     });
 
-    it("cannot sell CST when frozen", async function() {
+    /* removing sell() until after phase 2 */
+    xit("cannot sell CST when frozen", async function() {
       freezeEvent = await cst.freezeToken(true);
 
       let sellerAccount = frozenAccount;
