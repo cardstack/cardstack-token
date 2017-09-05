@@ -1,22 +1,21 @@
 const { CST_NAME } = require("../lib/utils");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
-
 let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
+const cstRegistryName = CST_NAME;
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
-  { name: "address", type: String },
-  { name: "amount", type: Number },
+  { name: "address", alias: "a", type: String },
   { name: "registry", alias: "r", type: String }
 ];
 
 const usage = [
   {
-    header: "cst-grant-tokens",
-    content: "This script grants tokens to the specified address"
+    header: "remove-super-admin",
+    content: "This script removes a super admin from the CST and Registry."
   },{
     header: "Options",
     optionList: [{
@@ -28,10 +27,8 @@ const usage = [
       description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
     },{
       name: "address",
-      description: "The address to receive the granted tokens."
-    },{
-      name: "amount",
-      description: "The amount of CST tokens to grant."
+      alias: "a",
+      description: "The address of the revoked super admin"
     },{
       name: "registry",
       alias: "r",
@@ -43,7 +40,7 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (!options.address || !options.amount || !options.network || options.help) {
+  if (!options.address || !options.network || options.help) {
     console.log(getUsage(usage));
     callback();
     return;
@@ -58,14 +55,16 @@ module.exports = async function(callback) {
 
   let cst = await CardStackToken.at(cstAddress);
 
-  let { address, amount } = options;
+  let address = options.address;
 
   try {
-    console.log(`Granting ${amount} CST to ${address} for CST (${cst.address})...`);
-    await cst.grantTokens(address, amount);
+    console.log(`Removing "${address}" as super admin for CST ${cst.address}...`);
+    await cst.removeSuperAdmin(address);
+    console.log(`Removing "${address}" as super admin for Registry ${registry.address}...`);
+    await registry.addSuperAdmin(address);
     console.log('done');
   } catch (err) {
-    console.error(`Error granting tokens for CST (${cst.address}, ${err.message}`);
+    console.error(`Error encountered removing super admin, ${err.message}`);
   }
 
   callback();

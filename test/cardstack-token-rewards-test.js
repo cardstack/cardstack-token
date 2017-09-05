@@ -127,7 +127,8 @@ contract('CardStackToken', function(accounts) {
       assert.ok(processingRewards, "rewards processing was not triggered");
     });
 
-    it("cst sell triggers reward contract processReward", async function() {
+    /* removing sell until after phase 2 */
+    xit("cst sell triggers reward contract processReward", async function() {
       let sellerAccount = accounts[8];
       let foundation = accounts[10];
       await checkBalance(foundation, 1);

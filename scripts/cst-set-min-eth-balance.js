@@ -1,24 +1,65 @@
+const { CST_NAME } = require("../lib/utils");
+const commandLineArgs = require('command-line-args');
+const getUsage = require('command-line-usage');
 
 let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
-const cstRegistryName = 'cst';
+const optionsDefs = [
+  { name: "help", alias: "h", type: Boolean },
+  { name: "network", type: String },
+  { name: "amount", type: Number },
+  { name: "registry", alias: "r", type: String }
+];
+
+const usage = [
+  {
+    header: "cst-set-min-eth-balance",
+    content: "This script specifies the minimum balance to maintain in ETH in the CST contract."
+  },{
+    header: "Options",
+    optionList: [{
+      name: "help",
+      alias: "h",
+      description: "Print this usage guide."
+    },{
+      name: "network",
+      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
+    },{
+      name: "amount",
+      description: "The minimum amount of ETH (in units of ETH) to maintain in the CST contract."
+    },{
+      name: "registry",
+      alias: "r",
+      description: "(Optional) The address of the registry. The script will attempt to detect the registry if none is supplied."
+    }]
+  }
+];
 
 module.exports = async function(callback) {
-  if (process.argv.length < 5) {
-    console.error("USAGE: truffle exec ./scripts/cst-set-min-eth-balance.js <minimum balance (ETH) in CST contract>");
+  const options = commandLineArgs(optionsDefs);
+
+  if (options.amount === undefined || options.amount === null || !options.network || options.help) {
+    console.log(getUsage(usage));
     callback();
     return;
   }
 
-  let minimumBalance = parseInt(process.argv[4], 10);
-  let registry = await RegistryContract.deployed();
-  let cstAddress = await registry.contractForHash(web3.sha3(cstRegistryName));
+  let registryAddress = options.registry;
+
+  let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
+
+  console.log(`Using registry at ${registry.address}`);
+  let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
+
   let cst = await CardStackToken.at(cstAddress);
 
+  let minimumBalance = options.amount;
+
   try {
+    console.log(`Setting minimum balance to ${minimumBalance} ETH for CST (${cst.address})...`);
     await cst.setMinimumBalance(web3.toWei(minimumBalance, "ether"));
-    console.log(`Set minimum balance to ${minimumBalance} ETH for CST (${cst.address})`);
+    console.log('done');
   } catch (err) {
     console.error(`Error setting minimum balance for CST (${cst.address}, ${err.message}`);
   }

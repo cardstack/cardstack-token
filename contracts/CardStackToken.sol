@@ -82,7 +82,7 @@ contract CardStackToken is Ownable,
     }
   }
 
-  function CardStackToken(address _registry, string _storageName, string _ledgerName) {
+  function CardStackToken(address _registry, string _storageName, string _ledgerName) payable {
     frozenToken = true;
 
     storageName = _storageName;
@@ -248,19 +248,6 @@ contract CardStackToken is Ownable,
     Buy(msg.sender, msg.sender, amount, msg.value);
 
     return amount;
-  }
-
-  function sell(uint amount) unlessFrozen unlessUpgraded triggersRewards returns (uint) {
-    uint value = amount.mul(sellPrice);
-    require(value <= this.balance.sub(minimumBalance));
-
-    tokenLedger.creditAccount(msg.sender, amount);
-
-    // always send only after changing state of contract to guard against re-entry attacks
-    msg.sender.transfer(value);
-    Sell(msg.sender, msg.sender, amount, value);
-
-    return value;
   }
 
   function setFoundation(address _foundation) onlySuperAdmins unlessUpgraded returns (bool) {
