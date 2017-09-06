@@ -31,9 +31,7 @@ contract('SoftwareAndServiceCredit', function(accounts) {
 
       assert.equal(event.event, "SSCIssued", "The event type is correct");
       assert.equal(event.args.recipient, recipient, "The recipient is correct");
-      assert.equal(event.args.recipientAddress, recipient, "The recipientAddress is correct");
       assert.equal(event.args.admin, owner, "The admin is correct");
-      assert.equal(event.args.adminAddress, owner, "The adminAddress is correct");
       assert.equal(event.args.amount, "10", "The amount is correct");
     });
 
@@ -54,9 +52,7 @@ contract('SoftwareAndServiceCredit', function(accounts) {
 
       assert.equal(event.event, "SSCIssued", "The event type is correct");
       assert.equal(event.args.recipient, recipient, "The recipient is correct");
-      assert.equal(event.args.recipientAddress, recipient, "The recipientAddress is correct");
       assert.equal(event.args.admin, admin, "The admin is correct");
-      assert.equal(event.args.adminAddress, admin, "The adminAddress is correct");
       assert.equal(event.args.amount, "10", "The amount is correct");
     });
 
@@ -231,9 +227,7 @@ contract('SoftwareAndServiceCredit', function(accounts) {
 
       assert.equal(event.event, "SSCBurned", "the event type is correct");
       assert.equal(event.args.appContract, appContract, "the appContract is correct");
-      assert.equal(event.args.appContractAddress, appContract, "the appContractAddress is correct");
       assert.equal(event.args.account, user, "the account is correct");
-      assert.equal(event.args.accountAddress, user, "the accountAddress is correct");
       assert.equal(event.args.amount, "90", "the amount is correct");
     });
 
@@ -256,9 +250,7 @@ contract('SoftwareAndServiceCredit', function(accounts) {
 
       assert.equal(event.event, "SSCExpired", "the event type is correct");
       assert.equal(event.args.appContract, appContract, "the appContract is correct");
-      assert.equal(event.args.appContractAddress, appContract, "the appContractAddress is correct");
       assert.equal(event.args.account, user, "the account is correct");
-      assert.equal(event.args.accountAddress, user, "the accountAddress is correct");
       assert.equal(event.args.amount, "100", "the amount is correct");
     });
 

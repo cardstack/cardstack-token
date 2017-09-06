@@ -58,8 +58,8 @@ contract('Registry', function(accounts) {
       assert.equal(hash, web3.sha3("CardStack Token"), "The contract hash is correct");
 
       assert.equal(txn.logs[0].event, "ContractRegistered");
-      assert.equal(txn.logs[0].args.contractAddress, cst1.address, "the contract address is correct");
-      assert.equal(txn.logs[0].args.name, "CardStack Token", "the contract name is correct");
+      assert.equal(txn.logs[0].args._contract, cst1.address, "the contract address is correct");
+      assert.equal(txn.logs[0].args._name, "CardStack Token", "the contract name is correct");
     });
 
     it("does not allow a non-owner to register a contract", async function() {

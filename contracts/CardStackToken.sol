@@ -14,9 +14,6 @@ import "./startable.sol";
 import "./storable.sol";
 import "./IRewards.sol";
 
-// TODO add additional ERC20 Token standard functions for approving spends on your behalf and setting an allowance
-// https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/token/StandardToken.sol
-
 contract CardStackToken is Ownable,
                            freezable,
                            displayable,
@@ -42,22 +39,17 @@ contract CardStackToken is Ownable,
   uint public minimumBalance;
   address public foundation;
 
+  uint public decimals = 0;
+
   event SellCapChange(uint newSellCap);
   event PriceChange(uint newSellPrice, uint newBuyPrice);
-  event Grant(address indexed recipient, address recipientAccount, uint value);
   event Mint(uint amountMinted, uint totalTokens, uint sellCap);
-  event Buy(address indexed buyer, address buyerAccount, uint value, uint purchasePrice);
-  event Sell(address indexed seller, address sellerAccount, uint value, uint sellPrice);
-  event Approval(address indexed grantor,
-                 address grantorAccount,
-                 address indexed spender,
-                 address spenderAccount,
-                 uint256 value);
-  event Transfer(address indexed sender,
-                 address senderAccount,
-                 address indexed recipient,
-                 address recipientAccount,
-                 uint value);
+  event Approval(address indexed _owner,
+                 address indexed _spender,
+                 uint256 _value);
+  event Transfer(address indexed _from,
+                 address indexed _to,
+                 uint _value);
 
   modifier onlyFoundation {
     if (msg.sender != owner && msg.sender != foundation) throw;
@@ -166,11 +158,14 @@ contract CardStackToken is Ownable,
     return tokenLedger.totalInCirculation();
   }
 
-  function totalTokens() constant unlessFrozen unlessUpgraded returns(uint) {
+  function totalSupply() constant unlessFrozen unlessUpgraded returns(uint) {
     return tokenLedger.totalTokens();
   }
 
   function balanceOf(address account) constant unlessUpgraded unlessFrozen returns (uint) {
+    if (this == account) {
+      return tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation());
+    }
     return tokenLedger.balanceOf(account);
   }
 
@@ -178,7 +173,7 @@ contract CardStackToken is Ownable,
     require(!frozenAccount[recipient]);
 
     tokenLedger.transfer(msg.sender, recipient, amount);
-    Transfer(msg.sender, msg.sender, recipient, recipient, amount);
+    Transfer(msg.sender, recipient, amount);
 
     return true;
   }
@@ -194,7 +189,7 @@ contract CardStackToken is Ownable,
     require(amount <= tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation()));           // make sure there are enough tokens to grant
 
     tokenLedger.debitAccount(recipient, amount);
-    Grant(recipient, recipient, amount);
+    Transfer(this, recipient, amount);
 
     return true;
   }
@@ -232,7 +227,7 @@ contract CardStackToken is Ownable,
   }
 
   function cstAvailableToBuy() constant unlessUpgraded returns (bool) {
-    return sellCap > tokenLedger.totalInCirculation();
+    return sellCap > tokenLedger.totalInCirculation() && tokenLedger.totalTokens() > 0;
   }
 
   function buy() payable unlessFrozen unlessUpgraded triggersRewards returns (uint) {
@@ -245,7 +240,7 @@ contract CardStackToken is Ownable,
     assert(amount <= supply);
 
     tokenLedger.debitAccount(msg.sender, amount);
-    Buy(msg.sender, msg.sender, amount, msg.value);
+    Transfer(this, msg.sender, amount);
 
     return amount;
   }
@@ -281,7 +276,7 @@ contract CardStackToken is Ownable,
     tokenLedger.transfer(from, to, value);
     externalStorage.setAllowance(from, msg.sender, allowanceValue.sub(value));
 
-    Transfer(from, from, to, to, value);
+    Transfer(from, to, value);
     return true;
   }
 
@@ -290,7 +285,7 @@ contract CardStackToken is Ownable,
 
     externalStorage.setAllowance(msg.sender, spender, value);
 
-    Approval(msg.sender, msg.sender, spender, spender, value);
+    Approval(msg.sender, spender, value);
     return true;
   }
 

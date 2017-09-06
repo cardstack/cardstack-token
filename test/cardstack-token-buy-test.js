@@ -70,23 +70,24 @@ contract('CardStackToken', function(accounts) {
       let endCstEth = await web3.eth.getBalance(cst.address);
       let cstBalance = await cst.balanceOf(buyerAccount);
       let totalInCirculation = await cst.totalInCirculation();
+      let balanceOfCstContract = await cst.balanceOf(cst.address);
 
       endBalance = asInt(endBalance);
 
-      assert.ok(cumulativeGasUsed < 150000, "Less than 150000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
       assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 2, 'the ether balance for the CST contract is correct');
       assert.equal(cstBalance, 2, "The CST balance is correct");
       assert.equal(totalInCirculation, 2, "The CST total in circulation was updated correctly");
+      assert.equal(asInt(balanceOfCstContract), 8, "The balanceOf the cst contract is correct");
 
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
 
       let event = txn.logs[0];
-      assert.equal(event.event, "Buy", "The event type is correct");
-      assert.equal(event.args.purchasePrice.toString(), txnValue, "The purchase price is correct");
-      assert.equal(event.args.value.toString(), "2", "The CST amount is correct");
-      assert.equal(event.args.buyer, buyerAccount, "The CST buyer is correct");
-      assert.equal(event.args.buyerAccount, buyerAccount, "The CST buyerAccount is correct");
+      assert.equal(event.event, "Transfer", "The event type is correct");
+      assert.equal(event.args._value.toNumber(), 2, "The CST amount is correct");
+      assert.equal(event.args._from, cst.address, "The sender is correct");
+      assert.equal(event.args._to, buyerAccount, "The recipient is correct");
     });
 
     it("can not purchase more CST than the amount of ethers in the buyers wallet", async function() {

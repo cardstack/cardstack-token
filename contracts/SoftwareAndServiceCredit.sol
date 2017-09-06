@@ -14,9 +14,9 @@ contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
   mapping (address => uint) public balanceOf;
   mapping (address => uint) public lastActiveTime;
 
-  event SSCIssued(address indexed admin, address adminAddress, address indexed recipient, address recipientAddress, uint amount);
-  event SSCBurned(address indexed appContract, address appContractAddress, address indexed account, address accountAddress, uint amount);
-  event SSCExpired(address indexed appContract, address appContractAddress, address indexed account, address accountAddress, uint amount);
+  event SSCIssued(address indexed admin, address indexed recipient, uint amount);
+  event SSCBurned(address indexed appContract, address indexed account, uint amount);
+  event SSCExpired(address indexed appContract, address indexed account, uint amount);
 
   modifier onlyApplicationContracts {
     if (msg.sender != owner && !admins[msg.sender] && !applicationContracts[msg.sender]) throw;
@@ -37,7 +37,7 @@ contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
       uint expiredAmount = balanceOf[account];
       balanceOf[account] = 0;
 
-      SSCExpired(msg.sender, msg.sender, account, account, expiredAmount);
+      SSCExpired(msg.sender, account, expiredAmount);
       return false;
     } else {
       require(balanceOf[account] >= amount);
@@ -45,7 +45,7 @@ contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
       balanceOf[account] = balanceOf[account].sub(amount);
       lastActiveTime[account] = block.timestamp;
 
-      SSCBurned(msg.sender, msg.sender, account, account, amount);
+      SSCBurned(msg.sender, account, amount);
       return true;
     }
   }
@@ -56,7 +56,7 @@ contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
     balanceOf[recipient] = balanceOf[recipient].add(amount);
     lastActiveTime[recipient] = block.timestamp;
 
-    SSCIssued(msg.sender, msg.sender, recipient, recipient, amount);
+    SSCIssued( msg.sender, recipient, amount);
   }
 
   // TODO we should look up application contracts from the genesis contract instead of holding all those addresses here
