@@ -70,6 +70,7 @@ module.exports = async function(callback) {
   let balanceWei = await web3.eth.getBalance(cst.address);
   let minBalanceWei = await cst.minimumBalance();
   let cstAvailableToBuy = await cst.cstAvailableToBuy();
+  let totalSupply = await cst.totalSupply();
   let cstFrozenCount = await cst.totalFrozenAccounts();
   let cstAdminCount = await cst.totalAdmins();
   let cstSuperAdminCount = await cst.totalSuperAdmins();
@@ -83,11 +84,9 @@ module.exports = async function(callback) {
   let totalTokens = await ledger.totalTokens();
   let totalInCirculation = await ledger.totalInCirculation();
   let numAccounts = await ledger.ledgerCount();
-  let isCstAdminOfLedger = await ledger.admins(cst.address);
   let ledgerAdminCount = await ledger.totalAdmins();
   let ledgerSuperAdminCount = await ledger.totalSuperAdmins();
 
-  let isCstAdminOfStorage = await storage.admins(cst.address);
   let storageAdminCount = await storage.totalAdmins();
   let storageSuperAdminCount = await storage.totalSuperAdmins();
 
@@ -150,6 +149,7 @@ Cardstack Token (${cst.address}):
   sellPrice (ETH): ${web3.fromWei(sellPriceWei, "ether")}
   sellCap: ${sellCap}
   cstAvailableToBuy: ${cstAvailableToBuy}
+  totalSupply: ${totalSupply}
   balance (ETH): ${web3.fromWei(balanceWei, "ether")}
   minimumBalance (ETH): ${web3.fromWei(minBalanceWei, "ether")}
   foundation: ${foundation}

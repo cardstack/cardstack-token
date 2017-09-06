@@ -42,11 +42,9 @@ contract('CardStackToken', function(accounts) {
       let event = txn.logs[0];
 
       assert.equal(event.event, "Approval", "The event type is correct");
-      assert.equal(event.args.value.toNumber(), 10, "The value is correct");
-      assert.equal(event.args.grantor, grantor, "The grantor is correct");
-      assert.equal(event.args.grantorAccount, grantor, "The grantorAccount is correct");
-      assert.equal(event.args.spender, spender, "The spendor is correct");
-      assert.equal(event.args.spenderAccount, spender, "The spenderAccount is correct");
+      assert.equal(event.args._value.toNumber(), 10, "The value is correct");
+      assert.equal(event.args._owner, grantor, "The grantor is correct");
+      assert.equal(event.args._spender, spender, "The spendor is correct");
     });
 
     it("allows spender to transferFrom their approved account, and allowance is updated correctly", async function() {
@@ -64,11 +62,9 @@ contract('CardStackToken', function(accounts) {
 
       let event = txn.logs[0];
       assert.equal(event.event, "Transfer", "The event type is correct");
-      assert.equal(event.args.value, 10, "The CST amount is correct");
-      assert.equal(event.args.sender, grantor, "The sender is correct");
-      assert.equal(event.args.senderAccount, grantor, "The senderAccount is correct");
-      assert.equal(event.args.recipient, recipient, "The recipient is correct");
-      assert.equal(event.args.recipientAccount, recipient, "The recipientAccount is correct");
+      assert.equal(event.args._value, 10, "The CST amount is correct");
+      assert.equal(event.args._from, grantor, "The sender is correct");
+      assert.equal(event.args._to, recipient, "The recipient is correct");
     });
 
     it("does not allow a spender to transferFrom an account that they have not been approved for", async function() {

@@ -84,7 +84,7 @@ contract('CardStackToken', function(accounts) {
 
       endWalletBalance = asInt(endWalletBalance);
 
-      assert.ok(cumulativeGasUsed < 50000, "Less than 50000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 60000, "Less than 60000 gas was used for the txn");
       assert.ok(Math.abs(startWalletBalance + (sellAmount * web3.toWei(0.1, "ether")) - (GAS_PRICE * cumulativeGasUsed) - endWalletBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet balance is correct");
       assert.equal(asInt(endCstBalance), 0, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was updated correctly");
@@ -92,11 +92,10 @@ contract('CardStackToken', function(accounts) {
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
 
       let event = txn.logs[0];
-      assert.equal(event.event, "Sell", "The event type is correct");
-      assert.equal(event.args.sellPrice.toString(), (sellAmount * web3.toWei(0.1, "ether")), "The sell price is correct");
-      assert.equal(event.args.value.toString(), "10", "The CST amount is correct");
-      assert.equal(event.args.seller, sellerAccount, "The CST seller is correct");
-      assert.equal(event.args.sellerAccount, sellerAccount, "The CST seller account is correct");
+      assert.equal(event.event, "Transfer", "The event type is correct");
+      assert.equal(event.args._value, 10, "The CST amount is correct");
+      assert.equal(event.args._from, sellerAccount, "The sender is correct");
+      assert.equal(event.args._to, cst.address, "The recipient is correct");
     });
 
     it("should not be able to sell more CST than in sellers account", async function() {

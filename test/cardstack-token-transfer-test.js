@@ -73,11 +73,9 @@ contract('CardStackToken', function(accounts) {
 
       let event = txn.logs[0];
       assert.equal(event.event, "Transfer", "The event type is correct");
-      assert.equal(event.args.value.toString(), "10", "The CST amount is correct");
-      assert.equal(event.args.sender, senderAccount, "The sender is correct");
-      assert.equal(event.args.senderAccount, senderAccount, "The senderAccount is correct");
-      assert.equal(event.args.recipient, recipientAccount, "The recipient is correct");
-      assert.equal(event.args.recipientAccount, recipientAccount, "The recipientAccount is correct");
+      assert.equal(event.args._value.toString(), "10", "The CST amount is correct");
+      assert.equal(event.args._from, senderAccount, "The sender is correct");
+      assert.equal(event.args._to, recipientAccount, "The recipient is correct");
     });
 
     it("should not be able to transfer more CST than is in the sender's account", async function() {

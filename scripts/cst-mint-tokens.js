@@ -57,7 +57,7 @@ module.exports = async function(callback) {
   let numOfTokens = options.amount;
 
   try {
-    console.log(`Minting ${numOfTokens} for CST (${cst.address}...`);
+    console.log(`Minting ${numOfTokens} for CST (${cst.address})...`);
     await cst.mintTokens(numOfTokens);
     console.log('done');
   } catch (err) {

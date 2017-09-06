@@ -10,7 +10,7 @@ contract freezable is Ownable {
   mapping (uint => address) public frozenAccountForIndex;
   mapping (address => bool) processedAccount;
 
-  event FrozenFunds(address target, bool frozen);
+  event FrozenFunds(address indexed target, bool frozen);
   event FrozenToken(bool frozen);
 
   modifier unlessFrozen {

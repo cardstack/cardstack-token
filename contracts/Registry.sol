@@ -18,7 +18,7 @@ contract Registry is Ownable, administratable, upgradeable {
   mapping(bytes32 => address) public contractForHash;
   mapping(uint => string) public contractNameForIndex;
 
-  event ContractRegistered(address indexed _contract, address contractAddress, string name);
+  event ContractRegistered(address indexed _contract, string _name);
   event ContractUpgraded(address indexed successor, address indexed predecessor, string name);
 
   function getContractHash(string name) constant unlessUpgraded returns (bytes32) {
@@ -52,7 +52,7 @@ contract Registry is Ownable, administratable, upgradeable {
       startable(contractAddress).start();
     }
 
-    ContractRegistered(contractAddress, contractAddress, name);
+    ContractRegistered(contractAddress, name);
     return hash;
   }
 

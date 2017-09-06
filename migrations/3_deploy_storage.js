@@ -1,3 +1,4 @@
+const { CST_STORAGE_NAME, CST_LEDGER_NAME } = require("../lib/constants");
 let RegistryContract = artifacts.require("./Registry.sol");
 let ExternalStorage = artifacts.require("./ExternalStorage.sol");
 let CstLedger = artifacts.require("./CstLedger.sol");
@@ -13,6 +14,6 @@ module.exports = async function(deployer) {
   await storage.addSuperAdmin(registry.address);
   await ledger.addSuperAdmin(registry.address);
 
-  await registry.addStorage("cstStorage", storage.address);
-  await registry.addStorage("cstLedger", ledger.address);
+  await registry.addStorage(CST_STORAGE_NAME, storage.address);
+  await registry.addStorage(CST_LEDGER_NAME, ledger.address);
 };

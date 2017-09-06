@@ -271,7 +271,7 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.ok(cumulativeGasUsed < 150000, "Less than 150000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
       assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 2, 'the ether balance for the CST contract is correct');
       assert.equal(cstBalance, 2, "The CST balance is correct");
@@ -341,7 +341,7 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(txn.receipt);
 
-      let totalTokens = await cst2.totalTokens();
+      let totalTokens = await cst2.totalSupply();
       let sellCap = await cst2.sellCap();
       let totalInCirculation = await cst2.totalInCirculation();
 
@@ -358,7 +358,7 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(txn.receipt);
 
-      let totalTokens = await cst2.totalTokens();
+      let totalTokens = await cst2.totalSupply();
       let totalInCirculation = await cst2.totalInCirculation();
       let recipientBalance = await cst2.balanceOf(recipientAccount);
 

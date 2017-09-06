@@ -63,7 +63,7 @@ contract('CardStackToken', function(accounts) {
 
       let name = await cst.name();
       let symbol = await cst.symbol();
-      let totalTokens = await cst.totalTokens();
+      let totalTokens = await cst.totalSupply();
       let buyPrice = await cst.buyPrice();
       let sellPrice = await cst.sellPrice();
       let sellCap = await cst.sellCap();
@@ -270,7 +270,7 @@ contract('CardStackToken', function(accounts) {
       let buyPrice = await cst.buyPrice();
       let sellPrice = await cst.sellPrice();
       let sellCap = await cst.sellCap();
-      let totalTokens = await cst.totalTokens();
+      let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
       let balance = await cst.balanceOf(tokenHolder);
 
@@ -323,7 +323,7 @@ contract('CardStackToken', function(accounts) {
       let buyPrice = await cst.buyPrice();
       let sellPrice = await cst.sellPrice();
       let sellCap = await cst.sellCap();
-      let totalTokens = await cst.totalTokens();
+      let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
       let balance = await cst.balanceOf(tokenHolder);
 
@@ -364,10 +364,12 @@ contract('CardStackToken', function(accounts) {
       assert.ok(txn.receipt);
       assert.ok(txn.logs);
 
-      let totalTokens = await cst.totalTokens();
+      let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
+      let balanceOfCstContract = await cst.balanceOf(cst.address);
 
       assert.equal(asInt(totalTokens), 200, "The totalTokens is correct");
+      assert.equal(asInt(balanceOfCstContract), 200, "The balanceOf cst contract is correct");
       assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
 
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
@@ -392,7 +394,7 @@ contract('CardStackToken', function(accounts) {
       }
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let totalTokens = await cst.totalTokens();
+      let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
 
       assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
@@ -426,21 +428,23 @@ contract('CardStackToken', function(accounts) {
       assert.ok(txn.receipt);
       assert.ok(txn.logs);
 
-      let totalTokens = await cst.totalTokens();
+      let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
       let recipientBalance = await cst.balanceOf(recipientAccount);
+      let balanceOfCstContract = await cst.balanceOf(cst.address);
 
       assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
       assert.equal(asInt(totalInCirculation), 20, "The totalInCirculation is correct");
       assert.equal(asInt(recipientBalance), 20, "The recipientBalance is correct");
+      assert.equal(asInt(balanceOfCstContract), 80, "The balanceOf the cst contract is correct");
 
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
 
       let event = txn.logs[0];
-      assert.equal(event.event, "Grant", "The event type is correct");
-      assert.equal(event.args.recipient, recipientAccount, "The recipient is correct");
-      assert.equal(event.args.recipientAccount, recipientAccount, "The recipientAccount is correct");
-      assert.equal(asInt(event.args.value), 20, "The amount granted is correct");
+      assert.equal(event.event, "Transfer", "The event type is correct");
+      assert.equal(event.args._value, 20, "The CST amount is correct");
+      assert.equal(event.args._from, cst.address, "The sender is correct");
+      assert.equal(event.args._to, recipientAccount, "The recipient is correct");
     });
 
     it("cannot grant more tokens than exist", async function() {
@@ -457,7 +461,7 @@ contract('CardStackToken', function(accounts) {
       }
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let totalTokens = await cst.totalTokens();
+      let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
       let recipientBalance = await cst.balanceOf(recipientAccount);
 
@@ -480,7 +484,7 @@ contract('CardStackToken', function(accounts) {
       }
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let totalTokens = await cst.totalTokens();
+      let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
       let recipientBalance = await cst.balanceOf(recipientAccount);
 
@@ -639,6 +643,12 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
+      let availableToBuy = await cst.cstAvailableToBuy();
+
+      assert.equal(availableToBuy, false, 'CST are not available to buy');
+    });
+
+    it("indicates that cst are not available to buy when no CST have been minted", async function() {
       let availableToBuy = await cst.cstAvailableToBuy();
 
       assert.equal(availableToBuy, false, 'CST are not available to buy');
