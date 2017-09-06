@@ -15,13 +15,19 @@ contract('ExternalStorage', function(accounts) {
     it("allows owner to add an admin", async function() {
       await storage.addAdmin(admin);
       let isAdmin = await storage.admins(admin);
+      let adminCount = await storage.totalAdmins();
+      let firstAdminAddress = await storage.adminsForIndex(0);
 
       assert.ok(isAdmin, "admin was added");
+      assert.equal(adminCount, 1, 'the admin count is correct');
+      assert.equal(firstAdminAddress, admin, 'the admin address is correct');
     });
 
     it("allows owner to remove an admin", async function() {
       await storage.addAdmin(admin);
       let isAdmin = await storage.admins(admin);
+      let adminCount = await storage.totalAdmins();
+      let firstAdminAddress = await storage.adminsForIndex(0);
 
       assert.ok(isAdmin, "admin was added");
 
@@ -29,6 +35,8 @@ contract('ExternalStorage', function(accounts) {
       isAdmin = await storage.admins(admin);
 
       assert.notOk(isAdmin, "admin was removed");
+      assert.equal(adminCount, 1, 'the admin count is correct');
+      assert.equal(firstAdminAddress, admin, 'the admin address is correct');
     });
 
     it("non-owner cannot add admins", async function() {
@@ -42,9 +50,13 @@ contract('ExternalStorage', function(accounts) {
       }
 
       let isAdmin = await storage.admins(admin);
+      let adminCount = await storage.totalAdmins();
+      let firstAdminAddress = await storage.adminsForIndex(0);
 
       assert.ok(exceptionThrown, "Exception was thrown");
       assert.notOk(isAdmin, "admin was not added");
+      assert.equal(adminCount, 0, 'the admin count is correct');
+      assert.equal(firstAdminAddress, NULL_ADDRESS, 'the admin address is correct');
     });
 
     it("allows admin to set uint value", async function () {

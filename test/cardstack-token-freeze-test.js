@@ -43,6 +43,15 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
+
+      let frozenCount = await cst.totalFrozenAccounts();
+      let firstFrozenAccount = await cst.frozenAccountForIndex(0);
+      let isFrozen = await cst.frozenAccount(frozenAccount);
+
+      assert.notOk(isFrozen, "the account is not frozen");
+      assert.equal(frozenCount, 0, "the frozenCount is correct");
+      assert.equal(firstFrozenAccount, NULL_ADDRESS, "the frozenAccountForIndex is correct");
+
       freezeEvent = await cst.freezeAccount(frozenAccount, true);
     });
 
@@ -168,7 +177,23 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("can unfreeze an account", async function() {
+      let frozenCount = await cst.totalFrozenAccounts();
+      let firstFrozenAccount = await cst.frozenAccountForIndex(0);
+      let isFrozen = await cst.frozenAccount(frozenAccount);
+
+      assert.ok(isFrozen, "the account is frozen");
+      assert.equal(frozenCount, 1, "the frozenCount is correct");
+      assert.equal(firstFrozenAccount, frozenAccount, "the frozenAccountForIndex is correct");
+
       let unfreezeEvent = await cst.freezeAccount(frozenAccount, false);
+
+      frozenCount = await cst.totalFrozenAccounts();
+      firstFrozenAccount = await cst.frozenAccountForIndex(0);
+      isFrozen = await cst.frozenAccount(frozenAccount);
+
+      assert.notOk(isFrozen, "the account is not frozen");
+      assert.equal(frozenCount, 1, "the frozenCount is correct");
+      assert.equal(firstFrozenAccount, frozenAccount, "the frozenAccountForIndex is correct");
 
       let senderAccount = frozenAccount;
       let recipientAccount = accounts[6];

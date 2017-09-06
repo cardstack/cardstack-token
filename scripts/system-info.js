@@ -5,7 +5,7 @@ let RegistryContract = artifacts.require("./Registry.sol");
 let ExternalStorage = artifacts.require("./ExternalStorage.sol");
 let CstLedger = artifacts.require("./CstLedger.sol");
 
-const cstRegistryName = 'cst';
+const { CST_NAME } = require("../lib/constants");
 
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
@@ -29,7 +29,7 @@ const usage = [
     },{
       name: "registry",
       alias: "r",
-      description: "(Optional) The address of the registry. The script will attempt to detect the registry if none is supplied."
+      description: "The address of the registry."
     }]
   }
 ];
@@ -37,7 +37,7 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (!options.network || options.help) {
+  if (!options.network || options.help || !options.registry) {
     console.log(getUsage(usage));
     callback();
     return;
@@ -48,7 +48,9 @@ module.exports = async function(callback) {
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
 
   console.log(`Using registry at ${registry.address}`);
-  let cstAddress = await registry.contractForHash(web3.sha3(cstRegistryName));
+  let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
+  let registryAdminCount = await registry.totalAdmins();
+  let registrySuperAdminCount = await registry.totalSuperAdmins();
 
   let cst = await CardStackToken.at(cstAddress);
 
@@ -68,6 +70,9 @@ module.exports = async function(callback) {
   let balanceWei = await web3.eth.getBalance(cst.address);
   let minBalanceWei = await cst.minimumBalance();
   let cstAvailableToBuy = await cst.cstAvailableToBuy();
+  let cstFrozenCount = await cst.totalFrozenAccounts();
+  let cstAdminCount = await cst.totalAdmins();
+  let cstSuperAdminCount = await cst.totalSuperAdmins();
 
   let storageAddress = await registry.storageForHash(web3.sha3(cstStorageName.toString()));
   let ledgerAddress = await registry.storageForHash(web3.sha3(cstLedgerName.toString()));
@@ -79,20 +84,58 @@ module.exports = async function(callback) {
   let totalInCirculation = await ledger.totalInCirculation();
   let numAccounts = await ledger.ledgerCount();
   let isCstAdminOfLedger = await ledger.admins(cst.address);
+  let ledgerAdminCount = await ledger.totalAdmins();
+  let ledgerSuperAdminCount = await ledger.totalSuperAdmins();
 
   let isCstAdminOfStorage = await storage.admins(cst.address);
+  let storageAdminCount = await storage.totalAdmins();
+  let storageSuperAdminCount = await storage.totalSuperAdmins();
+
+  function prettyAddress(address) {
+    if (address === registry.address) {
+      return `${address} (registry)`;
+    } else if (address === cst.address) {
+      return `${address} (cst)`;
+    } else if (address === ledger.address) {
+      return `${address} (ledger)`;
+    } else if (address === storage.address) {
+      return `${address} (storage)`;
+    }
+
+    return address;
+  }
 
   console.log(`
 Contracts:
-  Registry: ${registry.address}
-  Storage: ${storage.address}
-  Ledger: ${ledger.address}
-  CST contract: ${cst.address}
+  Registry: ${prettyAddress(registry.address)}
+  Storage: ${prettyAddress(storage.address)}
+  Ledger: ${prettyAddress(ledger.address)}
+  CST contract: ${prettyAddress(cst.address)}
 
 Registry (${registry.address}):
-  ${cstRegistryName}: ${cstAddress}
-  ${cstStorageName.toString()}: ${storageAddress}
-  ${cstLedgerName.toString()}: ${ledgerAddress}
+  ${CST_NAME}: ${prettyAddress(cstAddress)}
+  ${cstStorageName.toString()}: ${prettyAddress(storageAddress)}
+  ${cstLedgerName.toString()}: ${prettyAddress(ledgerAddress)}
+
+  Registry super admins:`);
+  for (let i = 0; i < registrySuperAdminCount; i++) {
+    let address = await registry.superAdminsForIndex(i);
+    let isAdmin = await registry.superAdmins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+  console.log(`
+  Registry admins:`);
+  for (let i = 0; i < registryAdminCount; i++) {
+    let address = await registry.adminsForIndex(i);
+    let isAdmin = await registry.admins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+
+  console.log(`
 
 Cardstack Token (${cst.address}):
   registry: ${cstRegistry}
@@ -111,15 +154,79 @@ Cardstack Token (${cst.address}):
   minimumBalance (ETH): ${web3.fromWei(minBalanceWei, "ether")}
   foundation: ${foundation}
 
+  CST super admins:`);
+  for (let i = 0; i < cstSuperAdminCount; i++) {
+    let address = await cst.superAdminsForIndex(i);
+    let isAdmin = await cst.superAdmins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+  console.log(`
+  CST admins:`);
+  for (let i = 0; i < cstAdminCount; i++) {
+    let address = await cst.adminsForIndex(i);
+    let isAdmin = await cst.admins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+
+  console.log(`
+  Frozen Accounts:`);
+  for (let i = 0; i < cstFrozenCount; i++) {
+    let address = await cst.frozenAccountForIndex(i);
+    let isFrozen = await cst.frozenAccount(address);
+    if (isFrozen) {
+      console.log(`    ${address}`);
+    }
+  }
+
+  console.log(`
+
 Ledger (${ledger.address})
-  admin ${cst.address}: ${isCstAdminOfLedger}
   totalTokens: ${totalTokens}
   totalInCirculation: ${totalInCirculation}
   number of accounts: ${numAccounts}
 
+  Ledger super admins:`);
+  for (let i = 0; i < ledgerSuperAdminCount; i++) {
+    let address = await ledger.superAdminsForIndex(i);
+    let isAdmin = await ledger.superAdmins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+  console.log(`
+  Ledger admins:`);
+  for (let i = 0; i < ledgerAdminCount; i++) {
+    let address = await ledger.adminsForIndex(i);
+    let isAdmin = await ledger.admins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+
+  console.log(`
+
 Storage (${storage.address})
-  admin ${cst.address}: ${isCstAdminOfStorage}
-  `);
+  Storage super admins:`);
+  for (let i = 0; i < storageSuperAdminCount; i++) {
+    let address = await storage.superAdminsForIndex(i);
+    let isAdmin = await storage.superAdmins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+  console.log(`
+  Storage admins:`);
+  for (let i = 0; i < storageAdminCount; i++) {
+    let address = await storage.adminsForIndex(i);
+    let isAdmin = await storage.admins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
 
   callback();
 };

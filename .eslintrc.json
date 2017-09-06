@@ -12,5 +12,10 @@
     "contract": true,
     "artifacts": true,
     "assert": true
+  },
+  "rules": {
+    "no-console": "warn",
+    "semi": "error"
   }
+
 }
