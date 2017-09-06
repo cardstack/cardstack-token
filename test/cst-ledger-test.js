@@ -1,32 +1,32 @@
-const CardStackToken = artifacts.require("./CardStackToken.sol");
 const CstLedger = artifacts.require("./CstLedger.sol");
-const Storage = artifacts.require("./ExternalStorage.sol");
+const { NULL_ADDRESS } = require("../lib/utils");
 
 contract('CstLedger', function(accounts) {
   let ledger;
-  let cst;
-  let storage;
-  let owner = accounts[0];
   let admin = accounts[3];
 
   describe("ledger", function() {
     beforeEach(async function() {
       ledger = await CstLedger.new();
-      storage = await Storage.new();
-      cst = await CardStackToken.new(ledger.address, storage.address);
     });
 
     it("allows owner to add an admin", async function() {
       await ledger.addAdmin(admin);
       let isAdmin = await ledger.admins(admin);
+      let adminCount = await ledger.totalAdmins();
+      let firstAdminAddress = await ledger.adminsForIndex(0);
 
       assert.ok(isAdmin, "admin was added");
+      assert.equal(adminCount, 1, 'the admin count is correct');
+      assert.equal(firstAdminAddress, admin, 'the admin address is correct');
     });
 
     it("allows owner to remove an admin", async function() {
       await ledger.addAdmin(admin);
 
       let isAdmin = await ledger.admins(admin);
+      let adminCount = await ledger.totalAdmins();
+      let firstAdminAddress = await ledger.adminsForIndex(0);
 
       assert.ok(isAdmin, "admin was added");
 
@@ -34,6 +34,8 @@ contract('CstLedger', function(accounts) {
       isAdmin = await ledger.admins(admin);
 
       assert.notOk(isAdmin, "admin was removed");
+      assert.equal(adminCount, 1, 'the admin count is correct');
+      assert.equal(firstAdminAddress, admin, 'the admin address is correct');
     });
 
     it("non-owner cannot add admins", async function() {
@@ -46,10 +48,14 @@ contract('CstLedger', function(accounts) {
         exceptionThrown = true;
       }
 
-      isAdmin = await ledger.admins(admin);
+      let isAdmin = await ledger.admins(admin);
+      let adminCount = await ledger.totalAdmins();
+      let firstAdminAddress = await ledger.adminsForIndex(0);
 
       assert.ok(exceptionThrown, "Exception was thrown");
       assert.notOk(isAdmin, "admin was not added");
+      assert.equal(adminCount, 0, 'the admin count is correct');
+      assert.equal(firstAdminAddress, NULL_ADDRESS, 'the admin address is correct');
     });
 
     it("allows admin to mint tokens", async function() {
@@ -147,10 +153,10 @@ contract('CstLedger', function(accounts) {
       try {
         await ledger.creditAccount(otherAccount, 150, { from: admin });
       } catch(e) {
-        exceptionThrown = true
+        exceptionThrown = true;
       }
 
-      otherBalance = await ledger.balanceOf(otherAccount);
+      let otherBalance = await ledger.balanceOf(otherAccount);
       assert.equal(otherBalance, 100, "account balance is 100");
       assert.ok(exceptionThrown, "exception was thrown trying to credit more than was in account");
     });

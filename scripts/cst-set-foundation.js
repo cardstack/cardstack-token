@@ -1,4 +1,4 @@
-const { CST_NAME } = require("../lib/utils");
+const { CST_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 
@@ -32,7 +32,7 @@ const usage = [
     },{
       name: "registry",
       alias: "r",
-      description: "(Optional) The address of the registry. The script will attempt to detect the registry if none is supplied."
+      description: "The address of the registry."
     }]
   }
 ];
@@ -40,7 +40,7 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (!options.address || !options.network || options.help) {
+  if (!options.address || !options.network || options.help || !options.registry) {
     console.log(getUsage(usage));
     callback();
     return;

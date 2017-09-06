@@ -4,8 +4,11 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract freezable is Ownable {
   bool public frozenToken;
+  uint public totalFrozenAccounts;
   // TODO move this into external storage
   mapping (address => bool) public frozenAccount;
+  mapping (uint => address) public frozenAccountForIndex;
+  mapping (address => bool) processedAccount;
 
   event FrozenFunds(address target, bool frozen);
   event FrozenToken(bool frozen);
@@ -18,6 +21,11 @@ contract freezable is Ownable {
 
   function freezeAccount(address target, bool freeze) onlyOwner {
     frozenAccount[target] = freeze;
+    if (!processedAccount[target]) {
+      processedAccount[target] = true;
+      frozenAccountForIndex[totalFrozenAccounts] = target;
+      totalFrozenAccounts += 1;
+    }
     FrozenFunds(target, freeze);
   }
 

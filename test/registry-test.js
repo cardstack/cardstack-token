@@ -100,10 +100,16 @@ contract('Registry', function(accounts) {
       let count = await registry.numContracts();
       let contractName = await registry.contractNameForIndex(0);
       let contractAddress = await registry.contractForHash(hash);
+      let isRegistrySuperAdmin = await cst1.superAdmins(registry.address);
+      let superAdminCount = await cst1.totalSuperAdmins();
+      let firstSuperAdmin = await cst1.superAdminsForIndex(0);
 
       assert.equal(count, 1, "contract count is correct");
       assert.equal(contractName.toString(), "CardStack Token", "contract name is correct");
       assert.equal(contractAddress.toString(), cst1.address, "The contract address is correct");
+      assert.ok(isRegistrySuperAdmin, "the registry is the super admin for the cst contract");
+      assert.equal(superAdminCount, 1, "the super admin count is correct for the cst contract");
+      assert.equal(firstSuperAdmin, registry.address, "the super admin by index is correct for the cst contract");
     });
 
     it("allows the registry superAdmin to upgrade a contract", async function() {

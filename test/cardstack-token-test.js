@@ -34,6 +34,15 @@ contract('CardStackToken', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.1, "ether"));
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 100);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+
+      let isRegistrySuperAdmin = await cst.superAdmins(registry.address);
+      let superAdminCount = await cst.totalSuperAdmins();
+      let firstSuperAdmin = await cst.superAdminsForIndex(0);
+
+      assert.ok(isRegistrySuperAdmin, "the registry is the super admin for the cst contract");
+      assert.equal(superAdminCount, 1, "the super admin count is correct for the cst contract");
+      assert.equal(firstSuperAdmin, registry.address, "the super admin by index is correct for the cst contract");
+
       await registry.register("CST", cst.address, true);
       await cst.addSuperAdmin(superAdmin);
     });

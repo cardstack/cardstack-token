@@ -2,12 +2,15 @@ pragma solidity ^0.4.2;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-// TODO a nice feature might be a mechanism to
-// facilitate iteration over the admins for auditing purposes
-
 contract administratable is Ownable {
+  uint public totalAdmins;
+  uint public totalSuperAdmins;
+  mapping (uint => address) public adminsForIndex;
+  mapping (uint => address) public superAdminsForIndex;
   mapping (address => bool) public admins;
   mapping (address => bool) public superAdmins;
+  mapping (address => bool) processedAdmin;
+  mapping (address => bool) processedSuperAdmin;
 
   modifier onlyAdmins {
     if (msg.sender != owner && !superAdmins[msg.sender] && !admins[msg.sender]) throw;
@@ -21,17 +24,27 @@ contract administratable is Ownable {
 
   function addSuperAdmin(address admin) onlyOwner {
     superAdmins[admin] = true;
+    if (!processedSuperAdmin[admin]) {
+      processedSuperAdmin[admin] = true;
+      superAdminsForIndex[totalSuperAdmins] = admin;
+      totalSuperAdmins += 1;
+    }
   }
 
   function removeSuperAdmin(address admin) onlyOwner {
-    delete superAdmins[admin];
+    superAdmins[admin] = false;
   }
 
   function addAdmin(address admin) onlySuperAdmins {
     admins[admin] = true;
+    if (!processedAdmin[admin]) {
+      processedAdmin[admin] = true;
+      adminsForIndex[totalAdmins] = admin;
+      totalAdmins += 1;
+    }
   }
 
   function removeAdmin(address admin) onlySuperAdmins {
-    delete admins[admin];
+    admins[admin] = false;
   }
 }

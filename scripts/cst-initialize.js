@@ -1,4 +1,4 @@
-const { CST_NAME } = require("../lib/utils");
+const { CST_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 let RegistryContract = artifacts.require("./Registry.sol");
@@ -50,7 +50,7 @@ const usage = [
     },{
       name: "registry",
       alias: "r",
-      description: "(Optional) The address of the registry. The script will attempt to detect the registry if none is supplied."
+      description: "The address of the registry."
     }]
   }
 ];
@@ -70,7 +70,8 @@ module.exports = async function(callback) {
       !sellCap ||
       !foundation ||
       !options.network ||
-      options.help) {
+      options.help ||
+      !options.registry) {
     console.log(getUsage(usage));
     callback();
     return;
@@ -84,12 +85,6 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
-
-  if (process.argv.length < 10) {
-    console.error("USAGE: truffle exec ./scripts/cst-initialize.js <token name> <token symbol> <buy price in ETH> <sell price in ETH> <sell cap> <foundation address>");
-    callback();
-    return;
-  }
 
   console.log(`Initializing CST token:
   token name: ${tokenName}
@@ -106,7 +101,7 @@ module.exports = async function(callback) {
                          web3.toWei(parseFloat(buyPriceEth), "ether"),
                          web3.toWei(parseFloat(sellPriceEth), "ether"),
                          parseInt(sellCap, 10),
-                         foundation ? foundation : NULL_ADDRESS);
+                         foundation);
     console.log(`\nCST token is live at ${cst.address}`);
   } catch (err) {
     console.error(`\nError encountered initializing CST (${cst.address}), ${err.message}`);

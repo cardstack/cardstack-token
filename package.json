@@ -6,6 +6,7 @@
     "test": "test"
   },
   "scripts": {
+    "build": "rm -rf build && truffle compile",
     "test": "rm -rf build && ./node_modules/.bin/truffle test",
     "testrpc": "rm -f ./node_modules/ethereum-bridge/config/instance/*.json && ./node_modules/.bin/testrpc --mnemonic='gooches are never the answer' --accounts 50",
     "oraclize": "./bin/oraclize.sh",
