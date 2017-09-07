@@ -6,6 +6,7 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 contract ITokenLedger {
   function totalTokens() constant returns (uint);
   function totalInCirculation() constant returns (uint);
+  function tokensAvailable() constant returns (uint);
   function balanceOf(address account) constant returns (uint);
   function mintTokens(uint amount);
   function transfer(address sender, address reciever, uint amount);
@@ -32,6 +33,10 @@ contract CstLedger is ITokenLedger, administratable {
 
   function totalInCirculation() constant returns (uint) {
     return _totalInCirculation;
+  }
+
+  function tokensAvailable() constant returns (uint) {
+    return _totalTokens.sub(_totalInCirculation);
   }
 
   function balanceOf(address account) constant returns (uint) {

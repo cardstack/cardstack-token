@@ -1,12 +1,11 @@
 pragma solidity ^0.4.2;
 
 import "./IRewards.sol";
-import "./startable.sol";
-import "./initializable.sol";
+import "./configurable.sol";
 import "./storable.sol";
 
 // This is just a placeholder now for testing purposes
-contract CstRewards is IRewards, startable, initializable, storable {
+contract CstRewards is IRewards, configurable, storable {
 
   // This is just some dummy state that we are using
   // from the tests to assert that processRewards was invoked.
@@ -28,11 +27,7 @@ contract CstRewards is IRewards, startable, initializable, storable {
     return sha3("");
   }
 
-  function initializeFromStorage() returns (bool) {
-    return true;
-  }
-
-  function start() returns (bool) {
+  function configureFromStorage() returns (bool) {
     return true;
   }
 }

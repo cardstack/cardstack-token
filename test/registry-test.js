@@ -43,7 +43,7 @@ contract('Registry', function(accounts) {
     });
 
     it("allows the registry superadmin to add a contract to the registry", async function() {
-      let txn = await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      let txn = await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
       let hash = await registry.getContractHash("CardStack Token");
       let count = await registry.numContracts();
@@ -67,7 +67,7 @@ contract('Registry', function(accounts) {
       let exceptionThrown;
 
       try {
-        await registry.register("CardStack Token", cst1.address, false, { from: nonOwner });
+        await registry.register("CardStack Token", cst1.address, { from: nonOwner });
       } catch(err) {
         exceptionThrown = true;
       }
@@ -85,11 +85,11 @@ contract('Registry', function(accounts) {
     });
 
     it("does not allow a contract to be registered more than once", async function() {
-      await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      await registry.register("CardStack Token", cst1.address, { from: superAdmin });
       let exceptionThrown;
 
       try {
-        await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+        await registry.register("CardStack Token", cst1.address, { from: superAdmin });
       } catch(err) {
         exceptionThrown = true;
       }
@@ -113,7 +113,7 @@ contract('Registry', function(accounts) {
     });
 
     it("allows the registry superAdmin to upgrade a contract", async function() {
-      await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
       let txn = await registry.upgradeContract("CardStack Token", cst2.address, false, { from: superAdmin });
 
@@ -149,7 +149,7 @@ contract('Registry', function(accounts) {
     });
 
     it("does not allow a non-owner to upgrade a contract", async function()  {
-      await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
       let nonOwner = accounts[3];
       let exceptionThrown;
@@ -183,7 +183,7 @@ contract('Registry', function(accounts) {
     });
 
     it("does not allow a non-super-admin to upgrade a contract", async function()  {
-      await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
       let nonSuperAdmin = accounts[11];
       let exceptionThrown;
@@ -248,7 +248,7 @@ contract('Registry', function(accounts) {
     });
 
     it("can preserve contract state through a contract upgrade", async function() {
-      await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
       let buyerAccount = accounts[8];
       let recipientAccount = accounts[4];
@@ -308,7 +308,7 @@ contract('Registry', function(accounts) {
       let recipient = accounts[37];
 
       await ledger.debitAccount(grantor, 50);
-      await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      await registry.register("CardStack Token", cst1.address, { from: superAdmin });
       await cst1.approve(spender, 10, { from: grantor });
 
       let allowance = await cst1.allowance(grantor, spender);
@@ -344,16 +344,6 @@ contract('Registry', function(accounts) {
       assert.equal(asInt(grantorBalance), 40, "the balance is correct");
       assert.equal(asInt(spenderBalance), 0, "the balance is correct");
       assert.equal(asInt(recipientBalance), 10, "the balance is correct");
-    });
-
-    it("allows token to be paused after registration so that storage can be changed before token is live", async function() {
-      let isFrozen = await cst1.frozenToken();
-      assert.ok(isFrozen, "CST is frozen");
-
-      await registry.register("CardStack Token", cst1.address, true, { from: superAdmin });
-
-      isFrozen = await cst1.frozenToken();
-      assert.ok(isFrozen, "CST is still frozen");
     });
 
     it("allows superAdmin to delete storage", async function() {
@@ -403,17 +393,17 @@ contract('Registry', function(accounts) {
       let exceptionThrown;
 
       let numContracts = await registry.numContracts();
-      assert.equal(numContracts, 0, "there are no contracts")
+      assert.equal(numContracts, 0, "there are no contracts");
 
       try {
-        await registry.register("Stanley Nickel", cst1.address, false, { from: nonSuperAdmin });
+        await registry.register("Stanley Nickel", cst1.address, { from: nonSuperAdmin });
       } catch(e) {
         exceptionThrown = true;
       }
 
       assert.ok(exceptionThrown, "exception is thrown");
       numContracts = await registry.numContracts();
-      assert.equal(numContracts, 0, "there are still no contracts")
+      assert.equal(numContracts, 0, "there are still no contracts");
     });
 
     it("allows registry owner to add a new version of the registry", async function() {
@@ -459,9 +449,9 @@ contract('Registry', function(accounts) {
     });
 
     it("allows superAdmin to set uint value", async function () {
-      await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      await registry.register("CardStack Token", cst1.address, { from: superAdmin });
       await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.2, "ether"), { from: superAdmin });
-      await cst1.initializeFromStorage();
+      await cst1.configureFromStorage();
 
       let sellPrice = await cst1.sellPrice();
       assert.equal(sellPrice.toNumber(), web3.toWei(0.2, "ether"), "uint value was set by super admin");
@@ -471,7 +461,7 @@ contract('Registry', function(accounts) {
       let nonSuperAdmin = accounts[8];
       let exceptionThrown;
 
-      await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+      await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
       try {
         await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.2, "ether"), { from: nonSuperAdmin });
@@ -481,7 +471,7 @@ contract('Registry', function(accounts) {
 
       assert.ok(exceptionThrown, "exception is thrown");
 
-      await cst1.initializeFromStorage();
+      await cst1.configureFromStorage();
       let sellPrice = await cst1.sellPrice();
       assert.equal(sellPrice.toNumber(), web3.toWei(0.1, "ether"), "sell price did not change");
     });
@@ -673,7 +663,7 @@ contract('Registry', function(accounts) {
         let newRegistry = await Registry.new();
 
         // we do this so that we can test upgradeContract
-        await registry.register("CardStack Token", cst1.address, false, { from: superAdmin });
+        await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
         await registry.upgradeTo(newRegistry.address);
         await newRegistry.upgradedFrom(registry.address);
@@ -683,10 +673,10 @@ contract('Registry', function(accounts) {
         let exceptionThrown;
 
         let numContracts = await registry.numContracts();
-        assert.equal(numContracts, 1, "there is one contract")
+        assert.equal(numContracts, 1, "there is one contract");
 
         try {
-          await registry.register("Stanley Nickel", cst2.address, false, { from: superAdmin });
+          await registry.register("Stanley Nickel", cst2.address, { from: superAdmin });
         } catch(e) {
           exceptionThrown = true;
         }
