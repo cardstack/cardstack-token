@@ -96,12 +96,12 @@ module.exports = async function(callback) {
   console.log("\n...\n");
 
   try {
-    await cst.initialize(web3.toHex(tokenName),
-                         web3.toHex(tokenSymbol),
-                         web3.toWei(parseFloat(buyPriceEth), "ether"),
-                         web3.toWei(parseFloat(sellPriceEth), "ether"),
-                         parseInt(sellCap, 10),
-                         foundation);
+    await cst.configure(web3.toHex(tokenName),
+                        web3.toHex(tokenSymbol),
+                        web3.toWei(parseFloat(buyPriceEth), "ether"),
+                        web3.toWei(parseFloat(sellPriceEth), "ether"),
+                        parseInt(sellCap, 10),
+                        foundation);
     console.log("done");
   } catch (err) {
     console.error(`\nError encountered initializing CST (${cst.address}), ${err.message}`);
