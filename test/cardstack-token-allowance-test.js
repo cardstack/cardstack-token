@@ -27,10 +27,10 @@ contract('CardStackToken', function(accounts) {
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
-      await registry.register("CST", cst.address, false);
+      await registry.register("CST", cst.address);
       await ledger.mintTokens(100);
       await ledger.debitAccount(grantor, 50);
-      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
     });
 
     it("allows account to approve an allowance for a spender", async function() {

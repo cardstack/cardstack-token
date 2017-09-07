@@ -9,8 +9,7 @@ import "./Registry.sol";
 import "./CstLibrary.sol";
 import "./displayable.sol";
 import "./upgradeable.sol";
-import "./initializable.sol";
-import "./startable.sol";
+import "./configurable.sol";
 import "./storable.sol";
 import "./IRewards.sol";
 
@@ -18,8 +17,7 @@ contract CardStackToken is Ownable,
                            freezable,
                            displayable,
                            upgradeable,
-                           initializable,
-                           startable,
+                           configurable,
                            storable {
 
   using SafeMath for uint256;
@@ -75,8 +73,6 @@ contract CardStackToken is Ownable,
   }
 
   function CardStackToken(address _registry, string _storageName, string _ledgerName) payable {
-    frozenToken = true;
-
     storageName = _storageName;
     ledgerName = _ledgerName;
     registry = _registry;
@@ -97,12 +93,12 @@ contract CardStackToken is Ownable,
     return sha3(storageName);
   }
 
-  function initialize(bytes32 _tokenName,
-                      bytes32 _tokenSymbol,
-                      uint _buyPrice,
-                      uint _sellPrice,
-                      uint _sellCap,
-                      address _foundation) onlySuperAdmins unlessUpgraded initStorage returns (bool) {
+  function configure(bytes32 _tokenName,
+                     bytes32 _tokenSymbol,
+                     uint _buyPrice,
+                     uint _sellPrice,
+                     uint _sellCap,
+                     address _foundation) onlySuperAdmins unlessUpgraded initStorage returns (bool) {
 
     externalStorage.setTokenName(_tokenName);
     externalStorage.setTokenSymbol(_tokenSymbol);
@@ -116,12 +112,10 @@ contract CardStackToken is Ownable,
     sellCap = _sellCap;
     foundation = _foundation;
 
-    frozenToken = false;
-
     return true;
   }
 
-  function initializeFromStorage() onlySuperAdmins unlessUpgraded initStorage returns (bool) {
+  function configureFromStorage() onlySuperAdmins unlessUpgraded initStorage returns (bool) {
     buyPrice = externalStorage.getBuyPrice();
     sellPrice = externalStorage.getSellPrice();
     sellCap = externalStorage.getSellCap();
@@ -131,17 +125,11 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function start() onlySuperAdmins unlessUpgraded returns (bool) {
-    frozenToken = false;
-
-    return true;
-  }
-
   function updateStorage(string newStorageName, string newLedgerName) onlySuperAdmins unlessUpgraded returns (bool) {
     storageName = newStorageName;
     ledgerName = newLedgerName;
 
-    initializeFromStorage();
+    configureFromStorage();
 
     return true;
   }
@@ -163,10 +151,12 @@ contract CardStackToken is Ownable,
   }
 
   function balanceOf(address account) constant unlessUpgraded unlessFrozen returns (uint) {
-    if (this == account) {
-      return tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation());
+    address thisAddress = this;
+    if (thisAddress == account) {
+      return tokenLedger.tokensAvailable();
+    } else {
+      return tokenLedger.balanceOf(account);
     }
-    return tokenLedger.balanceOf(account);
   }
 
   function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded triggersRewards returns (bool) {
@@ -194,40 +184,12 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function setPrices(uint newSellPrice, uint newBuyPrice) onlySuperAdmins unlessUpgraded returns (bool) {
-    require(newSellPrice > 0);
-    require(newBuyPrice > 0);
-
-    sellPrice = newSellPrice;
-    buyPrice = newBuyPrice;
-
-    externalStorage.setBuyPrice(newBuyPrice);
-    externalStorage.setSellPrice(newSellPrice);
-
-    PriceChange(newSellPrice, newBuyPrice);
-
-    return true;
-  }
-
-  function setSellCap(uint newSellCap) onlySuperAdmins unlessUpgraded returns (bool) {
-    sellCap = newSellCap;
-    externalStorage.setSellCap(newSellCap);
-
-    SellCapChange(newSellCap);
-
-    return true;
-  }
-
   function setMinimumBalance(uint newMinimumBalance) onlySuperAdmins  returns (bool) {
     minimumBalance = newMinimumBalance;
 
     externalStorage.setMinimumBalance(newMinimumBalance);
 
     return true;
-  }
-
-  function cstAvailableToBuy() constant unlessUpgraded returns (bool) {
-    return sellCap > tokenLedger.totalInCirculation() && tokenLedger.totalTokens() > 0;
   }
 
   function buy() payable unlessFrozen unlessUpgraded triggersRewards returns (uint) {
@@ -243,10 +205,6 @@ contract CardStackToken is Ownable,
     Transfer(this, msg.sender, amount);
 
     return amount;
-  }
-
-  function setFoundation(address _foundation) onlySuperAdmins unlessUpgraded returns (bool) {
-    foundation = _foundation;
   }
 
   function foundationWithdraw(uint amount) onlyFoundation returns (bool) {

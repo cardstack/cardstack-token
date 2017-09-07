@@ -30,10 +30,10 @@ contract('CardStackToken', function(accounts) {
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
-      await registry.register("CST", cst.address, false);
+      await registry.register("CST", cst.address);
 
       await ledger.mintTokens(100);
-      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(1, "ether"), 100, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(1, "ether"), 100, NULL_ADDRESS);
 
       await checkBalance(frozenAccount, 1);
 
@@ -322,9 +322,9 @@ contract('CardStackToken', function(accounts) {
       await ledger.addSuperAdmin(registry.address);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
 
-      await registry.register("CST", cst.address, false);
+      await registry.register("CST", cst.address);
       await ledger.mintTokens(100);
-      await cst.initialize(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
 
       await checkBalance(frozenAccount, 1);
 
@@ -598,12 +598,12 @@ contract('CardStackToken', function(accounts) {
       assert.ok(exceptionThrown, "Exception was thrown");
     });
 
-    it("cannot invoke totalTokens when token frozen", async function() {
+    it("cannot invoke totalSupply when token frozen", async function() {
       await cst.freezeToken(true);
 
       let exceptionThrown;
       try {
-        await cst.totalTokens();
+        await cst.totalSupply();
       } catch (err) {
         exceptionThrown = true;
       }

@@ -6,9 +6,9 @@ import "./upgradeable.sol";
 import "./ExternalStorage.sol";
 import "./CstLedger.sol";
 import "./administratable.sol";
-import "./initializable.sol";
-import "./startable.sol";
+import "./configurable.sol";
 import "./storable.sol";
+import "./freezable.sol";
 
 contract Registry is Ownable, administratable, upgradeable {
   using SafeMath for uint256;
@@ -25,7 +25,7 @@ contract Registry is Ownable, administratable, upgradeable {
     return sha3(name);
   }
 
-  function register(string name, address contractAddress, bool pauseToken) onlySuperAdmins unlessUpgraded returns (bytes32) {
+  function register(string name, address contractAddress) onlySuperAdmins unlessUpgraded returns (bytes32) {
     bytes32 hash = sha3(name);
     require(bytes(name).length > 0);
     require(contractAddress != 0x0);
@@ -46,17 +46,13 @@ contract Registry is Ownable, administratable, upgradeable {
       CstLedger(ledgerAddress).addAdmin(contractAddress);
     }
 
-    initializable(contractAddress).initializeFromStorage();
-
-    if (!pauseToken) {
-      startable(contractAddress).start();
-    }
+    configurable(contractAddress).configureFromStorage();
 
     ContractRegistered(contractAddress, name);
     return hash;
   }
 
-  function upgradeContract(string name, address successor, bool pauseToken) onlySuperAdmins unlessUpgraded returns (bytes32) {
+  function upgradeContract(string name, address successor) onlySuperAdmins unlessUpgraded returns (bytes32) {
     bytes32 hash = sha3(name);
     require(successor != 0x0);
     require(contractForHash[hash] != 0x0);
@@ -86,10 +82,7 @@ contract Registry is Ownable, administratable, upgradeable {
       CstLedger(predecessorLedgerAddress).removeAdmin(predecessor);
     }
 
-    initializable(successor).initializeFromStorage();
-    if (!pauseToken) {
-      startable(successor).start();
-    }
+    configurable(successor).configureFromStorage();
 
     ContractUpgraded(successor, predecessor, name);
     return hash;

@@ -53,7 +53,7 @@ module.exports = async function(callback) {
   console.log(`Registering contract ${cstAddress}...`);
 
   try {
-    await registry.register(CST_NAME, cstAddress, true);
+    await registry.register(CST_NAME, cstAddress);
     console.log(`\nRegistered CST (${cstAddress}) as contract "${CST_NAME}" with registry (${registry.address})`);
   } catch (err) {
     console.error(`\nError registering CST contract with registry (${registry.address}, ${err.message}`);

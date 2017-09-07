@@ -18,8 +18,8 @@ const optionsDefs = [
 
 const usage = [
   {
-    header: "cst-initialize",
-    content: "This script initializes the CST token and makes it available for purchase."
+    header: "cst-configure",
+    content: "This script configures the CST token and makes it available for purchase."
   },{
     header: "Options",
     optionList: [{
@@ -93,7 +93,7 @@ module.exports = async function(callback) {
   sell price: (ETH): ${sellPriceEth}
   sell cap: ${sellCap}
   foundation address: ${foundation}`);
-  console.log("...");
+  console.log("\n...\n");
 
   try {
     await cst.initialize(web3.toHex(tokenName),
@@ -102,7 +102,7 @@ module.exports = async function(callback) {
                          web3.toWei(parseFloat(sellPriceEth), "ether"),
                          parseInt(sellCap, 10),
                          foundation);
-    console.log(`\nCST token is live at ${cst.address}`);
+    console.log("done");
   } catch (err) {
     console.error(`\nError encountered initializing CST (${cst.address}), ${err.message}`);
   }
