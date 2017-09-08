@@ -62,6 +62,8 @@ A couple items to note about the CST contract where it extends beyond the ERC-20
 
 This contract is an abtraction around the ledger that the CST ERC-20 uses. The idea being that we can plug this ledger into different token sale contract vehicles, from reverse dutch auction contracts to improved future versions of the current CST ERC-20 contracts. By spearating out our ledger from the main ERC-20 contract we provide more future flexibility while maintaining the CST ledger state in a consistent fashion. This contract has the notion of "admins" which are contracts that are able to manipulate the ledger. When a token contract is registered with the registry, the registry will grant a token contract admin capabilities for a ledger.
 
+For our ledger, we use an iterable mapping approach so that we can easily introspect all the accounts that have CST.
+
 ### CstLibrary.sol
 
 This is a library of functions that are used by the CST ERC-20 contract, that follows the "colony" approach for contract design. This library is primarily concered with interfacing business logic to the external storage contract.
@@ -69,6 +71,8 @@ This is a library of functions that are used by the CST ERC-20 contract, that fo
 ### ExternalStorage.sol
 
 This contract is a bucket of key-value storage. The idea is that this contract can hold any type of data value, which is assigned a key (including multidimensinoal ledgers which we use for the ERC-20 allowance mappings). I envision that contract may actualy take the place of the CstLedger in the future, as it can act as a ledger, in addition to other types of structured data.
+
+Additionally, for all the ledger-type structures, we actually use an iterable mapping approach so that we can introspect these data structures.
 
 ### Migrations.sol
 
@@ -84,13 +88,27 @@ Additionally, the registry provides an `upgrade()` function which allows a succe
 
 ### administratable.sol
 
+This is a parent contract that is inherited by many of the contracts in the CST ecosystem. This contract provides 2 levels of adminisrative users: "admin" and "super admin". This contract provides the ability to add and remove admins and super admins, as well as, modifiers to lock down functions to only admins or super admins. 
+
+Additionally, for our admins and super admins we use an iterable mapping approach so that we cna introspect all the addresses that have admin and super-admin capabilities for each contract.
+
 ### configurable.sol
+
+This is an abstract contract that we use to allow a contract to configure itself from storage that it is assigned to from the registry.
 
 ### displayable.sol
 
+This is a parent contract that provides a function that converts bytes32 to strings in the scenarios where we want to show strings for values that are stored as bytes32 within our storage structures.
+
 ### freezable.sol
+
+This is a parent contract that provides capabilities that allow us to freeze/unfreeze a specific CST account or the entire CST token in the case of emergencies. We also use an iterable mapping approach so that we can introspect all the accounts that have been frozen. 
 
 ### storable.sol
 
+This is an abstract contract that we use from the registry that allows a contract being registered to declare the name of the storage and ledger that it requires.
+
 ### upgradeable.sol
+
+This is a parent contract that provides upgrade capabilities. Namely it provides functions that describe the predecessor and successor contracts, as well as, providing modifiers that easily allow us to turn off functions after a contract has been upgraded.
 
