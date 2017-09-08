@@ -13,7 +13,8 @@ const optionsDefs = [
   { name: "sellPriceEth", type: Number },
   { name: "sellCap", type: Number },
   { name: "foundation", type: String },
-  { name: "registry", alias: "r", type: String }
+  { name: "registry", alias: "r", type: String },
+  { name: "data", alias: "d", type: Boolean }
 ];
 
 const usage = [
@@ -51,6 +52,10 @@ const usage = [
       name: "registry",
       alias: "r",
       description: "The address of the registry."
+    },{
+      name: "data",
+      alias: "d",
+      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
     }]
   }
 ];
@@ -93,8 +98,27 @@ module.exports = async function(callback) {
   sell price: (ETH): ${sellPriceEth}
   sell cap: ${sellCap}
   foundation address: ${foundation}`);
-  console.log("\n...\n");
 
+  if (options.data) {
+    let data = cst.contract.configure(web3.toHex(tokenName),
+                                      web3.toHex(tokenSymbol),
+                                      web3.toWei(parseFloat(buyPriceEth), "ether"),
+                                      web3.toWei(parseFloat(sellPriceEth), "ether"),
+                                      parseInt(sellCap, 10),
+                                      foundation);
+    let estimatedGas = web3.eth.estimateGas({
+      to: cst.address,
+      data
+    });
+    console.log(`\nData for configuring token CST(${cst.address}):`);
+    console.log(`\nAddress: ${cst.address}`);
+    console.log(`Data: ${data}`);
+    console.log(`Estimated gas: ${estimatedGas}`);
+    callback();
+    return;
+  }
+
+  console.log("\n...\n");
   try {
     await cst.configure(web3.toHex(tokenName),
                         web3.toHex(tokenSymbol),

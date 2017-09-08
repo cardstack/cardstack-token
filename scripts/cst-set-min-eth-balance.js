@@ -9,7 +9,8 @@ const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
   { name: "amount", type: Number },
-  { name: "registry", alias: "r", type: String }
+  { name: "registry", alias: "r", type: String },
+  { name: "data", alias: "d", type: Boolean }
 ];
 
 const usage = [
@@ -32,6 +33,10 @@ const usage = [
       name: "registry",
       alias: "r",
       description: "The address of the registry."
+    },{
+      name: "data",
+      alias: "d",
+      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
     }]
   }
 ];
@@ -39,7 +44,7 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (options.amount === undefined || options.amount === null || !options.network || options.help || !options.registry) {
+  if (options.amount === undefined || options.amount === null || !options.registry || options.help || (!options.network && !options.data)) {
     console.log(getUsage(usage));
     callback();
     return;
@@ -55,6 +60,20 @@ module.exports = async function(callback) {
   let cst = await CardStackToken.at(cstAddress);
 
   let minimumBalance = options.amount;
+
+  if (options.data) {
+    let data = cst.contract.setMinimumBalance.getData(web3.toWei(minimumBalance, "ether"));
+    let estimatedGas = web3.eth.estimateGas({
+      to: cst.address,
+      data
+    });
+    console.log(`Data for setting minimum balance to ${minimumBalance} ETH for CST (${cst.address}):`);
+    console.log(`\nAddress: ${cst.address}`);
+    console.log(`Data: ${data}`);
+    console.log(`Estimated gas: ${estimatedGas}`);
+    callback();
+    return;
+  }
 
   try {
     console.log(`Setting minimum balance to ${minimumBalance} ETH for CST (${cst.address})...`);

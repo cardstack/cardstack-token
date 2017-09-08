@@ -8,7 +8,8 @@ const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
   { name: "address", alias: "a", type: String },
-  { name: "registry", alias: "r", type: String }
+  { name: "registry", alias: "r", type: String },
+  { name: "data", alias: "d", type: Boolean }
 ];
 
 const usage = [
@@ -32,6 +33,10 @@ const usage = [
       name: "registry",
       alias: "r",
       description: "The address of the registry."
+    },{
+      name: "data",
+      alias: "d",
+      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
     }]
   }
 ];
@@ -39,7 +44,7 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (!options.address || !options.network || options.help || !options.registry) {
+  if (!options.address || (!options.network && !options.data) || options.help || !options.registry) {
     console.log(getUsage(usage));
     callback();
     return;
@@ -56,6 +61,19 @@ module.exports = async function(callback) {
 
   let address = options.address;
 
+  if (options.data) {
+    let data = cst.contract.freezeAccount(address, true);
+    let estimatedGas = web3.eth.estimateGas({
+      to: cst.address,
+      data
+    });
+    console.log(`Data for freezing account ${address} for CST (${cst.address}):`);
+    console.log(`\nAddress: ${cst.address}`);
+    console.log(`Data: ${data}`);
+    console.log(`Estimated gas: ${estimatedGas}`);
+    callback();
+    return;
+  }
   try {
     console.log(`Freezing account ${address} for CST (${cst.address})...`);
     await cst.freezeAccount(address, true);
