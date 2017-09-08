@@ -61,8 +61,24 @@ Then execute:
 truffle migrate --reset --network=testrpc
 ```
 
-Make a note of the address of the Registry and of the CardStackToken contract
+Make a note of the address of the `Registry` and of the `CardStackToken` contract. Make sure not to lose the address of the Registry, the registry address is specified as a parameter for all contract ops commands.
 
+Register the `CardStackToken` contract with the `Registry`:
+```
+truffle exec ./scripts/cst-register.js --cst=<CardStackToken's address> --registry=<Registry's address> --network=testrpc
+```
+
+You can view the CST system info by executing:
+```
+truffle exec ./scripts/system-info.js --network=testrpc -r <Registry's address> 
+```
+
+You can execute this script to get the purchase information for CST:
+```
+truffle exec ./scripts/cst-buy-info.js --network=testrpc -r <Registry's address>
+```
+
+From there you can execute other scripts to configure the CST contract and/or mint tokens, etc.
 
 ### Rinkeby
 To deploy the CST contracts on Rinkeby, make sure that your wallet's main account has at least 1.25 ETH (which is how much it currently costs to deploy the CST contracts as of 9/8/2017). Copy your wallet's main account address into the clipboard. Close the Mist or Ethereum wallet apps if they are open (geth cannot run when Mist is running and vice versa). Then from the commandline execute:
@@ -71,12 +87,35 @@ geth --rinkeby --rpc --rpcapi db,eth,net,web3,personal --unlock="main account's 
 ```
 
 Enter the password for your wallet when prompted, and then wait for the latest block in Rinkeby to download (you can double check the block number here at https://www.rinkeby.io/). After you see that the latest blocks have downloaded execute the following:
+
+Then from the commandline remove any previously created build artifacts so that you can trigger a full build:
+```
+rm -rf ./build
+```
+
+Then execute:
 ```
 truffle migrate --reset --network=rinkeby
 ```
 The deploy will make many minutes to run depending on Rinkeby network stats.
 
-Make a note of the address of the Registry and of the CardStackToken contract
+Make a note of the address of the Registry and of the CardStackToken contract. Make sure not to lose the address of the Registry, the registry address is specified as a parameter for all contract ops commands.
+Register the `CardStackToken` contract with the `Registry`:
+```
+truffle exec ./scripts/cst-register.js --cst=<CardStackToken's address> --registry=<Registry's address> --network=testrpc
+```
+
+You can view the CST system info by executing:
+```
+truffle exec ./scripts/system-info.js --network=testrpc -r <Registry's address> 
+```
+
+You can execute this script to get the purchase information for CST (make sure to set the price and mint tokens first before sharing this information, though):
+```
+truffle exec ./scripts/cst-buy-info.js --network=testrpc -r <Registry's address>
+```
+
+From there you can execute other scripts to configure the CST contract and/or mint tokens, etc.
 
 ### mainnet
- 
+See CONTRACT-OP.md for details on deploying to mainnet. 
