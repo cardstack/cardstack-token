@@ -102,17 +102,17 @@ The deploy will make many minutes to run depending on Rinkeby network stats.
 Make a note of the address of the Registry and of the CardStackToken contract. Make sure not to lose the address of the Registry, the registry address is specified as a parameter for all contract ops commands.
 Register the `CardStackToken` contract with the `Registry`:
 ```
-truffle exec ./scripts/cst-register.js --cst=<CardStackToken's address> --registry=<Registry's address> --network=testrpc
+truffle exec ./scripts/cst-register.js --cst=<CardStackToken's address> --registry=<Registry's address> --network=rinkeby
 ```
 
 You can view the CST system info by executing:
 ```
-truffle exec ./scripts/system-info.js --network=testrpc -r <Registry's address> 
+truffle exec ./scripts/system-info.js --network=rinkeby -r <Registry's address> 
 ```
 
 You can execute this script to get the purchase information for CST (make sure to set the price and mint tokens first before sharing this information, though):
 ```
-truffle exec ./scripts/cst-buy-info.js --network=testrpc -r <Registry's address>
+truffle exec ./scripts/cst-buy-info.js --network=rinkeby -r <Registry's address>
 ```
 
 From there you can execute other scripts to configure the CST contract and/or mint tokens, etc.
