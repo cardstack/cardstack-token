@@ -118,4 +118,4 @@ truffle exec ./scripts/cst-buy-info.js --network=rinkeby -r <Registry's address>
 From there you can execute other scripts to configure the CST contract and/or mint tokens, etc.
 
 ### mainnet
-See CONTRACT-OP.md for details on deploying to mainnet. 
+See CONTRACT-OPS.md for details on deploying to mainnet. 
