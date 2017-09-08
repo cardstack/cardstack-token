@@ -10,7 +10,7 @@ The CST token project leverages Truffle as our framework. We additionally have a
 
 Additionally, we've written scripts that are executed via `truffle exec` in the `scripts/` folder for performing contract operations on CST token, including: configuring the token, minting tokens, granting CST, freezing accounts, getting contract/ledger status, managing admins, etc.
 
-A current version of the CST ERC-20 token has been deployed to Rinkeby. To purchase send ethers to:
+A current version of the CST ERC-20 token has been deployed to Rinkeby. To purchase CST send ethers to:
 
 **Address:**
 ```
@@ -60,13 +60,27 @@ A couple items to note about the CST contract where it extends beyond the ERC-20
 
 ### CstLedger.sol
 
+This contract is an abtraction around the ledger that the CST ERC-20 uses. The idea being that we can plug this ledger into different token sale contract vehicles, from reverse dutch auction contracts to improved future versions of the current CST ERC-20 contracts. By spearating out our ledger from the main ERC-20 contract we provide more future flexibility while maintaining the CST ledger state in a consistent fashion. This contract has the notion of "admins" which are contracts that are able to manipulate the ledger. When a token contract is registered with the registry, the registry will grant a token contract admin capabilities for a ledger.
+
 ### CstLibrary.sol
+
+This is a library of functions that are used by the CST ERC-20 contract, that follows the "colony" approach for contract design. This library is primarily concered with interfacing business logic to the external storage contract.
 
 ### ExternalStorage.sol
 
+This contract is a bucket of key-value storage. The idea is that this contract can hold any type of data value, which is assigned a key (including multidimensinoal ledgers which we use for the ERC-20 allowance mappings). I envision that contract may actualy take the place of the CstLedger in the future, as it can act as a ledger, in addition to other types of structured data.
+
 ### Migrations.sol
 
+This contract is a boilerplate truffle contract used for contract deployments.
+
 ### Registry.sol
+
+The Registry is the primary contract in the CST ecosystem. The registry's main purpose is to create an abstraction for the address of contracts that are used in the CST ecosystem. The idea being that contracts in the CST ecosystem use the Registry to discover other contracts in the CST ecosystem that they need to interact with. By decoupling contracts from addresses of other contracts we can provide a means by which contracts can be upgraded, as well to have their state seemlessly be shared with future versions and alternate version of the contracts managed by the registry.
+
+Each contract in the CST ecosystem need to be registered with the registry. The registration process declares to the registry the name to use for the contract, as well to describe if the contract can act as a storage vehicle (by invoking `addStorage()`). As part of the registration process, the registry discovers what dependencies the contract being registered requires, and provides the contract being registered the addresses of the contracts that it needs, as well as to set/revoke administrative permissions appropriately on any contracts that it needs.
+
+Additionally, the registry provides an `upgrade()` function which allows a successor contract to inherit the ledger and storage of its predecessor contract, and to become primary contract for the "name" of the contract being updated. Likewise, the predecessor contract is deprecated, its permissions are revoked from the storage it previously used, and all of its functions are disabled, except for functions that inform users where to find its successor contract.
 
 ### administratable.sol
 
