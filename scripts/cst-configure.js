@@ -100,12 +100,12 @@ module.exports = async function(callback) {
   foundation address: ${foundation}`);
 
   if (options.data) {
-    let data = cst.contract.configure(web3.toHex(tokenName),
-                                      web3.toHex(tokenSymbol),
-                                      web3.toWei(parseFloat(buyPriceEth), "ether"),
-                                      web3.toWei(parseFloat(sellPriceEth), "ether"),
-                                      parseInt(sellCap, 10),
-                                      foundation);
+    let data = cst.contract.configure.getData(web3.toHex(tokenName),
+                                              web3.toHex(tokenSymbol),
+                                              web3.toWei(parseFloat(buyPriceEth), "ether"),
+                                              web3.toWei(parseFloat(sellPriceEth), "ether"),
+                                              parseInt(sellCap, 10),
+                                              foundation);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
       data

@@ -57,7 +57,7 @@ module.exports = async function(callback) {
   console.log(`Using registry at ${registry.address}`);
 
   if (options.data) {
-    let data = registry.contract.register(CST_NAME, cstAddress);
+    let data = registry.contract.register.getData(CST_NAME, cstAddress);
     let estimatedGas = web3.eth.estimateGas({
       to: registry.address,
       data

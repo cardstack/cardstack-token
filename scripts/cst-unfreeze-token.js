@@ -55,7 +55,7 @@ module.exports = async function(callback) {
   let cst = await CardStackToken.at(cstAddress);
 
   if (options.data) {
-    let data = cst.contract.freezeToken(false);
+    let data = cst.contract.freezeToken.getData(false);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
       data

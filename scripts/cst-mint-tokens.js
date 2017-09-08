@@ -62,7 +62,7 @@ module.exports = async function(callback) {
   let numOfTokens = options.amount;
 
   if (options.data) {
-    let data = cst.contract.mintTokens(numOfTokens);
+    let data = cst.contract.mintTokens.getData(numOfTokens);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
       data

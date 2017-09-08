@@ -49,6 +49,15 @@ module.exports = async function(callback) {
 
   let cst = await CardStackToken.at(cstAddress);
 
+  let data = cst.contract.buy.getData();
+  let estimatedGas = web3.eth.estimateGas({
+    to: cst.address,
+    data
+  });
+  console.log(`\nTo purchase CST send ETH to the following address with the following data:`);
+  console.log(`Address: ${cst.address}`);
+  console.log(`Data: ${data}`);
+  console.log(`Estimated gas: ${estimatedGas}`);
 
   callback();
 };
