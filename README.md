@@ -11,6 +11,13 @@ This project contains the smart contracts that govern the CardStack token.
 yarn global add truffle
 ```
 
+* [geth](https://github.com/ethereum/go-ethereum/wiki/Installation-Instructions-for-Mac) to use as CLI ethereum wallet that truffle can manipulate.
+```
+brew tap ethereum/ethereum
+brew install ethereum
+```
+After installing, run `geth account new` to create an account on your node.
+
 ## Installing
 This project leverages node 7.6+, please make sure to install node 7.6+ (or use nvm to manage your node versions). Additionally, this project leverages yarn.
 
@@ -37,4 +44,39 @@ npm test
 
 
 ## Deploying
-TODO
+
+### testrpc
+To deploy the CST contracts to testrpc, start the testrpc blockchain. Make sure to not run the Mist client or Ethereum wallet connected to the testrpc when you perform the migration--testrpc is not good at walking and chewing gum at the same time.
+```
+npm run testrpc
+```
+
+Then from the commandline remove any previously created build artifacts so that you can trigger a full build:
+```
+rm -rf ./build
+```
+
+Then execute:
+```
+truffle migrate --reset --network=testrpc
+```
+
+Make a note of the address of the Registry and of the CardStackToken contract
+
+
+### Rinkeby
+To deploy the CST contracts on Rinkeby, make sure that your wallet's main account has at least 1.25 ETH (which is how much it currently costs to deploy the CST contracts as of 9/8/2017). Copy your wallet's main account address into the clipboard. Close the Mist or Ethereum wallet apps if they are open (geth cannot run when Mist is running and vice versa). Then from the commandline execute:
+```
+geth --rinkeby --rpc --rpcapi db,eth,net,web3,personal --unlock="main account's address"
+```
+
+Enter the password for your wallet when prompted, and then wait for the latest block in Rinkeby to download (you can double check the block number here at https://www.rinkeby.io/). After you see that the latest blocks have downloaded execute the following:
+```
+truffle migrate --reset --network=rinkeby
+```
+The deploy will make many minutes to run depending on Rinkeby network stats.
+
+Make a note of the address of the Registry and of the CardStackToken contract
+
+### mainnet
+ 
