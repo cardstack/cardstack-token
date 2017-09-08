@@ -7,7 +7,8 @@ const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
   { name: "registry", type: String, alias: "r" },
-  { name: "cst", type: String, alias: "c" }
+  { name: "cst", type: String, alias: "c" },
+  { name: "data", alias: "d", type: Boolean }
 ];
 
 const usage = [
@@ -31,6 +32,10 @@ const usage = [
       name: "registry",
       alias: "r",
       description: "The address of the registry."
+    },{
+      name: "data",
+      alias: "d",
+      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
     }]
   }
 ];
@@ -38,7 +43,7 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (!options.cst || !options.network || options.help || !options.registry) {
+  if (!options.cst || (!options.network && !options.data) || options.help || !options.registry) {
     console.log(getUsage(usage));
     callback();
     return;
@@ -50,6 +55,21 @@ module.exports = async function(callback) {
   let cstAddress = options.cst;
 
   console.log(`Using registry at ${registry.address}`);
+
+  if (options.data) {
+    let data = registry.contract.register(CST_NAME, cstAddress);
+    let estimatedGas = web3.eth.estimateGas({
+      to: registry.address,
+      data
+    });
+    console.log(`Data for registering CST (${cstAddress}) as contract "${CST_NAME}" with registry (${registry.address}):`);
+    console.log(`\nAddress: ${registry.address}`);
+    console.log(`Data: ${data}`);
+    console.log(`Estimated gas: ${estimatedGas}`);
+    callback();
+    return;
+  }
+
   console.log(`Registering contract ${cstAddress}...`);
 
   try {

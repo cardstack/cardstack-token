@@ -8,7 +8,8 @@ let CardStackToken = artifacts.require("./CardStackToken.sol");
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
-  { name: "registry", alias: "r", type: String }
+  { name: "registry", alias: "r", type: String },
+  { name: "data", alias: "d", type: Boolean }
 ];
 
 const usage = [
@@ -28,13 +29,17 @@ const usage = [
       name: "registry",
       alias: "r",
       description: "The address of the registry."
+    },{
+      name: "data",
+      alias: "d",
+      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
     }]
   }
 ];
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (!options.network || options.help || !options.registry) {
+  if ((!options.network && !options.data) || options.help || !options.registry) {
     console.log(getUsage(usage));
     callback();
     return;
@@ -48,6 +53,20 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
+
+  if (options.data) {
+    let data = cst.contract.freezeToken(true);
+    let estimatedGas = web3.eth.estimateGas({
+      to: cst.address,
+      data
+    });
+    console.log(`Data for freezing token for CST (${cst.address}):`);
+    console.log(`\nAddress: ${cst.address}`);
+    console.log(`Data: ${data}`);
+    console.log(`Estimated gas: ${estimatedGas}`);
+    callback();
+    return;
+  }
 
   try {
     console.log(`Freezing token for CST (${cst.address})...`);
