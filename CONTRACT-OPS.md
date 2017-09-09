@@ -23,6 +23,7 @@ The following physical materials need to be acquired in perparation for the cere
 * Paper & Pen
 * Opaque envelopes
 * At least 10 _(?)_ safety deposit boxes from mulitple banks throughout the city. 1 should box that is large enough to hold the MacBook Pro. Boxes used for cold wallets and cold wallet passwords need to be available 24/7 365 days a year in relative proximity to the base of our operations so that they are readily available in the event of emergency contract operation procedures (aka token freeze).
+* Cardstack Foundation Ethereum address has been established
 
 ### T-minus 3 days
 #### Cold Wallet Setup
@@ -61,13 +62,14 @@ The following physical materials need to be acquired in perparation for the cere
 * Perform OS X software update
 * Install the latest official Ethereum Wallet App
 * Launch the Ethereum Wallet App. The Ethereum wallet will begin to download the mainnet block chain. This will take about 8-12 hours. You can click on "Launch Application" to perform the next steps while the blocks are downloading.
-* You will be prompted to create an account with a password, do this.
+* You will be prompted to create an account with a password, do this. The password you select should be at least 12 random words that you and your partner(s) contribute.
 * Write down the password that you create the account with on 3 different pieces of paper.
 * Place those pieces of paper in separate opaque envelopes
 * From the ethereum wallet select File -> Backup -> Accounts from teh file menu. This will open your finder to a `keystore` folder.
 * Put a USB stick in the MacBook and format the USB Stick (repeat for each USB stick)
 * Copy the file in the `keystore` folder on to each USB stick (it will be named something like `UTC--2017-07-11T16-12-35.585181429Z--48ed71f1ec9c`).
-* Copy the Ethereum main address of the wallet and paste into the `cardstack-token` GitHub project  contract-ops/secure-terminal.md (this address is the public key and will be public knowledge after the contract is created, so it is ok to display this address in the clear and not locked down).
+* Copy the Ethereum main address of the wallet and paste into the `cardstack-token` GitHub project contract-ops/secure-terminal.md (this address is the public key and will be public knowledge after the contract is created, so it is ok to display this address in the clear and not locked down).
+* Update the `cardstack-token` GitHub project `./truffle.json` file `mainnet.from` entry with the Ethereum wallet's main address from the previous setp.
 * Wait for the blocks to complete downloading. If you leave the clean room, lock the door and post a different pair of people to monitor the entrance to the clean room while the blocks are downloading.
 * Now would be a good time to deposit the secure terminal's ethereum wallet passwords and macbook's user password (assuming you can use Touch ID now to unlock the computer) and USB sticks in separate safety deposit boxes, while the bocks are downloading. Make sure to not save the Ethereum wallet passwords in the same safety deposit box as the USB sticks.
 * Wait until all the blocks have completed downloading. It is probabaly evening now. Regardless if the blocks have completed downloading or not, power-off the secure terminal _(the secure terminal should never be powered on outside of the clean room)_
@@ -132,11 +134,109 @@ npm run build
 * From the safety deposit box retrieve the cold wallet used to purchase ethers for operations gas fees and its PIN.
 * Go to the clean room with a partner, bring an unsecured computer with tape over the camera 
 * Using the cold wallet and www.myetherwallet.com transfer ETH to the Ethereum addresses you recorded for the cold wallets and the secure terminal's wallet main account.
-** Transfer at 2 ETH to the secure terminal's wallet main account address that was recorded in `cardstack-token` GitHub project  contract-ops/secure-terminal.md
-** Transfer 0.3 ETH to each of the cold wallet's primary addresses that you recorded in `cardstack-token` GitHub project  contract-ops/cold-wallets.md
+** Transfer at 2 ETH to the secure terminal's wallet main account address that was recorded in `cardstack-token` GitHub project contract-ops/secure-terminal.md
+** Transfer 0.3 ETH to each of the cold wallet's primary addresses that you recorded in `cardstack-token` GitHub project contract-ops/cold-wallets.md
+* Return the cold wallet and PIN to the safety deposit box.
 
 ### T-minus 3 hours
 
 #### Contract Creation
+* From the safety deposit box retrieve:
+  * The secure terminal
+  * login password to the secure terminal
+  * password of the secure terminal's Ethereum wallet
+  * One cold wallet and it's PIN
+* Enter the clean room with no electronic devices, tape on the secure terminal's camera, and a partner
+* Power on the secure terminal and login
+* From the terminal start `geth` and unlock the wallet's main address (recorded in `cardstack-token` GitHub project  contract-ops/secure-terminal.md):
+```
+geth --rpc --rpcapi db,eth,net,web3,personal --unlock="secure terminal wallet's main address"
+```
+  * you will be prompted for the password to the secure terminal's Ethereum wallet, enter it
+* Wait for the current block to be downloaded. Use https://ethstats.net/ to see the current block number.
+* From the terminal, go to the cardstack-token cloned github project
+* Make sure to `nvm use 7.6` in the terminal
+* perform a clean build
+```
+rm -rf && npm run build
+```
+* Create the contracts in mainnet:
+```
+truffle migrate --reset --network=mainnet
+```
+The contracts will take 5-10 minutes to be created depending on network conditions _(TODO: need to see how we can adjust the gas price for contract deploys and truffle execs to get our blocks to be mined faster)_
+* When the contracts have completed deploying copy the output from the `truffle migrate` command to `cardstack-token` GitHub project `contract-ops/deploys/<current date timestamp>.txt` and commit the file. The addresses included in the output from `truffle migrate` are very important. Note the `Registry` address and the `CardStackToken` address.
+* Register the CST contract with the registry by executing:
+```
+truffle exec ./scripts/cst-register.js --cst="<CardStackToken address>" --registry="<Registry Address>" --network=mainnet
+```
+* Run the system info command to confirm the CST contract was registered correctly:
+```
+truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+```
+* Grant super admin permissions to each of the cold wallet addresses. Using the `cardstack-token` GitHub project `contract-ops/cold-wallets.md` file, for each address execute the following command:
+```
+truffle exec ./scripts/add-super-admin.js --address="<cold wallet address>" --network=mainnet -r <registry address>
+```
+* Run the system info command to confirm the super admins were added correctly:
+```
+truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+```
+* Power down the secure terminal and return the secure terminal, secure terminal user password and secure terminal's wallet password to safety deposit. At this point the CST contract exists in mainnet, but it has not been configured as an ERC-20 token and no tokens have been minted yet. At this point the contract will not allow anyone to obtain CST yet.
+
+### T-minus 30 minutes
+* Bring an unsecure termimal that has the cardstack token GH project installed and configured into the clean room with tape across the camera.
+* Go to www.myetherwallet.com and plug in cold wallet into the unsecure terminal
+* From the terminal, in the cardstack token project directory execute this command to create the contract confugration transaction (note that you can't actually sell CST back to the contract, but the contract still needs to have a sellPriceEth set):
+```
+truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d
+```
+(These numbers are examples, use the real values when the time comes)
+_(TODO: can we use a null address if the foundation address has not been set yet?)_
+* The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide. The gas limit describes the units of gas that this transaction will allow to be consumed. You are not penalized for using a larger value than the estimated gas. You are only charged for gas that your transaction actually uses. Also, increasing this particular value does not make your tranaction process faster (that is a different field).
+* adjust the gas price slider in the upper right to reflect the speed that you want the transaction to be processed with.
+* click the button to confirm the transaction
+* enter the PIN for the cold wallet
+* confirm the transaction on the cold wallet
+* send the signed transaction
+* monitor the completion of the transaction.
+* after the transaction is complete view the CST system info and confirm that the configuration has updated correctly: 
+```
+truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+```
+* Now mint the CST tokens, this should represent the total eventual amount of tokens after the final phase of the CST token sale.
+```
+truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry address> -d
+```
+* The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide. The gas limit describes the units of gas that this transaction will allow to be consumed. You are not penalized for using a larger value than the estimated gas. You are only charged for gas that your transaction actually uses. Also, increasing this particular value does not make your tranaction process faster (that is a different field).
+* adjust the gas price slider in the upper right to reflect the speed that you want the transaction to be processed with.
+* click the button to confirm the transaction
+* enter the PIN for the cold wallet
+* confirm the transaction on the cold wallet
+* send the signed transaction
+* monitor the completion of the transaction.
+* after the transaction is complete view the CST system info and confirm that the configuration has updated correctly: 
+```
+truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+```
+* Next, generate the information that you need to share with the outside world on how to buy a CST token:
+```
+truffle exec ./scripts/cst-buy-info.js --network=mainnet -r <registry address>
+``` 
+* The result will be an Ethereum address, data, and estimated gas to purchase CST tokens. Share this information as necessary.
+* The CST is now available for purchase and the CST contract will disable the `buy()` function as soon as the amount of CST tokens sold reaches the `sellCap` specified during the CST configuration.
+* Finally we should perform a test purchase of CST on mainnet to confirm that everything is in working order.
+* Return the cold wallet and PIN to safety deposit
+* Congratulations the CST token sale is live 🎉🎊
+
+
+
+
+
 
 ## Cardstack Token Contuing Operations
+### Monitoring CST Token Sale
+### Monitoring CST Ledger
+### Withdrawing ETH from CST contract for Cardstack Foundation
+### Freezing CST Token
+### Freezing CST Account
