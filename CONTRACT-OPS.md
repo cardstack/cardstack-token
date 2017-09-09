@@ -6,7 +6,7 @@ The following terms are used in this guide:
 
 * **Cold Wallet** Also referred to as _hardware wallet_; this refers to the Trezor and Nano S wallet devices that maintain the private key used to sign transactions for Ethereum addresses derived from these devices. These devices are used in combination with www.myetherwallet.com to sign transactions used to manipulate the CST contracts. These devices allow the private key to exist completely separate from the computer used to initiate the Ethereum transactions, thus allowing us to send transactions from clients that are not secured, as the private key used to sign the transactions to manipulate the CST contracts never leave the cold wallet device, and are unknown to the human performing the transaction as well as to the computer that is issuing the transaction.
 
-* **Funding Wallet** This is the wallet(s) that provides ETH that is used to pay for the gas required to perform the contract operations. Prior to the issuance of the Ethereum transactions to manipulate the CST contracts, the funds necessary to cover the gas charges is transfered from teh funding wallet(s) to the various wold wallets and secure terminal. The gas required for the cold wallets is of nominal value (generally 0.001 ETH or less is all that is required for most contract operations). Contract creation, however does require more significant funds (> 1 ETH). Before contracts are created, the necessary gas charges and transferred from the funding wallet(s) to the wallet used by the secure terminal.
+* **Funding Wallet** This is the wallet(s) that provides ETH that is used to pay for the gas required to perform the contract operations. Prior to the issuance of the Ethereum transactions to manipulate the CST contracts, the funds necessary to cover the gas charges is transfered from the funding wallet(s) to the various cold wallets and secure terminal. The gas required for the cold wallets is of nominal value (generally 0.001 ETH or less is all that is required for most contract operations). Contract creation, however does require more significant funds (> 1 ETH). Before contracts are created, the necessary gas charges and transferred from the funding wallet(s) to the wallet used by the secure terminal.
 
 * **Secure Terminal** The secure terminal is the computer that is used to create the CST contracts. The CST contract creation process is complex enough, that we are unable to leverage the cold wallet and must use truffle to orchestrate the `geth` Ethereum CLI client to create our CST contracts. The secure terminal is a computer that is only used expressely for the purposes of creating CST contracts. When it is not being used to create CST contracts it is turned off and stored in a safety deposit box. The secure terminal is only ever allowed to be powered on in the clean room. The secure terminal's camera has tape applied to the camera. More details on the secure terminal is described in the sections below.
 
@@ -237,7 +237,7 @@ truffle exec ./scripts/cst-buy-info.js --network=mainnet -r <registry address>
 
 
 
-## Cardstack Token Contuing Operations
+## Cardstack Token Continuing Operations
 ### Monitoring CST Token Sale
 ### Monitoring CST Ledger
 ### Withdrawing ETH from CST contract for Cardstack Foundation
