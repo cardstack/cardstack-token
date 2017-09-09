@@ -226,6 +226,8 @@ truffle exec ./scripts/cst-buy-info.js --network=mainnet -r <registry address>
 * The result will be an Ethereum address, data, and estimated gas to purchase CST tokens.
 * The CST is now available for purchase and the CST contract will disable the `buy()` function as soon as the amount of CST tokens sold reaches the `sellCap` specified during the CST configuration.
 * Finally we should perform a test purchase of CST on mainnet to confirm that everything is in working order.
+
+### T-minus 0
 * Share the CST purchase information publically.
 * Return the cold wallet and PIN to safety deposit
 * Congratulations the CST token sale is live 🎉🎊
