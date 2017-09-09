@@ -21,6 +21,7 @@ The following physical materials need to be acquired in perparation for the cere
 * At least 3 cold wallets
 * A brand new (not refurbished), sealed in the box, MacBook Pro purchased in person at an Apple Store. Buy the smallest physical size computer so that it does not require a lot of space in the safety deposit box _(purchased with cash?)_
 * Paper & Pen
+* Opaque Tape
 * Opaque envelopes
 * At least 10 _(?)_ safety deposit boxes from mulitple banks throughout the city. 1 should box that is large enough to hold the MacBook Pro. Boxes used for cold wallets and cold wallet passwords need to be available 24/7 365 days a year in relative proximity to the base of our operations so that they are readily available in the event of emergency contract operation procedures (aka token freeze).
 * Cardstack Foundation Ethereum address has been established
@@ -43,7 +44,7 @@ The following physical materials need to be acquired in perparation for the cere
 * Congratulations you have completed the cold wallet setup 🎉🎊.
 
 #### Contract Ops Funding
-* Withdraw one of the cold wallets and its PIN (if you have not commited the PIN to memory).
+* Retreive one of the cold wallets and its PIN (if you have not commited the PIN to memory) from the safety deposit box.
 * Purchase at least 3 ETH from the funding accounts (may need to wait a day or two for the purchases to clear) using a brand new address on one of the cold wallets. If you have not memorized the PIN for the cold wallet, go to the clean room with the cold wallet PIN (and a another person) along with an unsecure terminal and perform the purchase.
 * Note the Ethereum account that you have used to purchase the ethers and the cold wallet name that you have used in `cardstack-token` GitHub project add the cold wallet ethereum address to the file contract-ops/cold-wallets.md.
 * Return cold wallet and PIN to safety deposit box.
@@ -76,7 +77,7 @@ The following physical materials need to be acquired in perparation for the cere
 * Bring the secure terminal to the safety deposit box, and continue tomorrow morning.
 
 ##### Day 2
-* Next day, withdraw the secure terminal and the user password for the secure terminal from the safety deposit box (no need for the Ethereum wallet passwords or the USB sticks, we are done with that for now).
+* Next day, retreive the secure terminal and the user password for the secure terminal from the safety deposit box (no need for the Ethereum wallet passwords or the USB sticks, we are done with that for now).
 * Go to the clean room with the secure terminal and a partner
 * Power on the secure terminal and login
 * Launch the Ethereum client and complete the block download
@@ -134,8 +135,8 @@ npm run build
 * From the safety deposit box retrieve the cold wallet used to purchase ethers for operations gas fees and its PIN.
 * Go to the clean room with a partner, bring an unsecured computer with tape over the camera 
 * Using the cold wallet and www.myetherwallet.com transfer ETH to the Ethereum addresses you recorded for the cold wallets and the secure terminal's wallet main account.
-** Transfer at 2 ETH to the secure terminal's wallet main account address that was recorded in `cardstack-token` GitHub project contract-ops/secure-terminal.md
-** Transfer 0.3 ETH to each of the cold wallet's primary addresses that you recorded in `cardstack-token` GitHub project contract-ops/cold-wallets.md
+  * Transfer at 2 ETH to the secure terminal's wallet main account address that was recorded in `cardstack-token` GitHub project contract-ops/secure-terminal.md
+  * Transfer 0.3 ETH to each of the cold wallet's primary addresses that you recorded in `cardstack-token` GitHub project contract-ops/cold-wallets.md
 * Return the cold wallet and PIN to the safety deposit box.
 
 ### T-minus 3 hours
@@ -182,11 +183,16 @@ truffle exec ./scripts/add-super-admin.js --address="<cold wallet address>" --ne
 ```
 truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
-* Power down the secure terminal and return the secure terminal, secure terminal user password and secure terminal's wallet password to safety deposit. At this point the CST contract exists in mainnet, but it has not been configured as an ERC-20 token and no tokens have been minted yet. At this point the contract will not allow anyone to obtain CST yet.
+* Power down the secure terminal and return the secure terminal, secure terminal user password and secure terminal's wallet password to safety deposit (or if you don't wanna run back to the bank, power-down the secure terminal and remove from clean room, assign a pair to watch over the secure terminal while the final steps are performed). 
+* At this point the CST contract exists in mainnet, but it has not been configured as an ERC-20 token and no tokens have been minted yet. The contract will not allow anyone to obtain CST yet.
 
 ### T-minus 30 minutes
 * Bring an unsecure termimal that has the cardstack token GH project installed and configured into the clean room with tape across the camera.
 * Go to www.myetherwallet.com and plug in cold wallet into the unsecure terminal
+* Start `geth` (no need to unlock any accounts, as the cold wallet will be doing all the signing)
+```
+geth --rpc --rpcapi db,eth,net,web3,personal
+```
 * From the terminal, in the cardstack token project directory execute this command to create the contract confugration transaction (note that you can't actually sell CST back to the contract, but the contract still needs to have a sellPriceEth set):
 ```
 truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d
@@ -208,7 +214,7 @@ truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
 truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry address> -d
 ```
-* The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide. The gas limit describes the units of gas that this transaction will allow to be consumed. You are not penalized for using a larger value than the estimated gas. You are only charged for gas that your transaction actually uses. Also, increasing this particular value does not make your tranaction process faster (that is a different field).
+* The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide.
 * adjust the gas price slider in the upper right to reflect the speed that you want the transaction to be processed with.
 * click the button to confirm the transaction
 * enter the PIN for the cold wallet
