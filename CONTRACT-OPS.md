@@ -159,7 +159,7 @@ geth --rpc --rpcapi db,eth,net,web3,personal --unlock="secure terminal wallet's 
 * Make sure to `nvm use 7.6` in the terminal
 * perform a clean build
 ```
-rm -rf && npm run build
+rm -rf ./build && npm run build
 ```
 * Create the contracts in mainnet:
 ```
