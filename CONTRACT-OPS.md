@@ -39,7 +39,7 @@ The following physical materials need to be acquired in perparation for the cere
 * Deposit the cold wallets in separate highly available 24/7 safety deposit boxes.
 * Deposit the cold wallet PINs in separate in separate highly available 24/7 safety deposit boxes, dont place the PINs in the same box as their cold wallet conterpart. (It should be ok to mix cold wallet #1 in the same box as PIN #2).
 * Deposit the 24 word backup pass phrases in separate safety deposit boxes, dont place the pass phrases in the same box as their cold wallet conterpart. (It should be ok to mix cold wallet #1 in the same box as pass phrases #2). These do not need to be highly available as they are only needed if the PIN's are lost.
-* Congratulations you have completed the cold wallet setup.
+* Congratulations you have completed the cold wallet setup 🎉🎊.
 
 #### Contract Ops Funding
 * Withdraw one of the cold wallets and its PIN (if you have not commited the PIN to memory).
@@ -49,7 +49,7 @@ The following physical materials need to be acquired in perparation for the cere
 * Wait for the transaction to clear (may need to take a couple days).
 
 #### Secure Terminal Setup
-**Day 1**
+##### Day 1
 * Purchase a brand new (not refurbished), sealed in box, MacBook pro in person at an Apple store _(in cash?)_ (choose a smaller model to fit in a safety deposit box).
 * Purchase at least 3 USB sticks in person from a reputable vendor (e.g. Apple Store) that are in their original packaging and have not been tampered with. 
 * Go to the clean room with at least one other person, make sure to do this early in the morning, as this task will take all day. Make sure that *absolutely* no other electronic devices are in the clean room (this is the most sensitive clean room operation).
@@ -73,7 +73,7 @@ The following physical materials need to be acquired in perparation for the cere
 * Wait until all the blocks have completed downloading. It is probabaly evening now. Regardless if the blocks have completed downloading or not, power-off the secure terminal _(the secure terminal should never be powered on outside of the clean room)_
 * Bring the secure terminal to the safety deposit box, and continue tomorrow morning.
 
-**Day 2**
+##### Day 2
 * Next day, withdraw the secure terminal and the user password for the secure terminal from the safety deposit box (no need for the Ethereum wallet passwords or the USB sticks, we are done with that for now).
 * Go to the clean room with the secure terminal and a partner
 * Power on the secure terminal and login
@@ -123,12 +123,19 @@ npm run build
 * For shits and grins you can run the tests as well (see the README.md)
 * Power off the secure terminal
 * Deposit the secure terminal and the user password back in the safety deposit box
-* Congratulations you have completed the setup of the secure terminal
+* Congratulations you have completed the setup of the secure terminal 🎉🎊.
 
 
-### T-minus 3 hours
+### T-minus 1 day
 
 #### Fund Operations Wallets for Gas Fees
+* From the safety deposit box retrieve the cold wallet used to purchase ethers for operations gas fees and its PIN.
+* Go to the clean room with a partner, bring an unsecured computer with tape over the camera 
+* Using the cold wallet and www.myetherwallet.com transfer ETH to the Ethereum addresses you recorded for the cold wallets and the secure terminal's wallet main account.
+** Transfer at 2 ETH to the secure terminal's wallet main account address that was recorded in `cardstack-token` GitHub project  contract-ops/secure-terminal.md
+** Transfer 0.3 ETH to each of the cold wallet's primary addresses that you recorded in `cardstack-token` GitHub project  contract-ops/cold-wallets.md
+
+### T-minus 3 hours
 
 #### Contract Creation
 
