@@ -43,7 +43,10 @@ The following physical materials need to be acquired in perparation for the cere
 
 #### Contract Ops Funding
 * Withdraw one of the cold wallets and its PIN (if you have not commited the PIN to memory).
-* Purchase at least 3 ETH from the funding accounts (may need to wait a day or two for the purchases to clear) using one of the cold wallets. If you have not memorized the PIN for the cold wallet, go to the clean room with the 
+* Purchase at least 3 ETH from the funding accounts (may need to wait a day or two for the purchases to clear) using a brand new address on one of the cold wallets. If you have not memorized the PIN for the cold wallet, go to the clean room with the cold wallet PIN (and a another person) along with an unsecure terminal and perform the purchase.
+* Note the Ethereum account that you have used to purchase the ethers and the cold wallet name that you have used in `cardstack-token` GitHub project add the cold wallet ethereum address to the file contract-ops/cold-wallets.md.
+* Return cold wallet and PIN to safety deposit box.
+* Wait for the transaction to clear (may need to take a couple days).
 
 #### Secure Terminal Setup
 
