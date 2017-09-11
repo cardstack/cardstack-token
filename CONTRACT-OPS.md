@@ -340,6 +340,46 @@ Accounts:
   0xd481b3ebd3b8109778631f6d276e3ae47ece9b5f: 200
 ```
 ### Withdrawing ETH from CST contract for Cardstack Foundation
+In order to withdraw ETH from the CST contract, first ensure that the Cardstack Foundation's Ethereum wallet address is set on the CST contract using the `scripts/system-info.js` script. If the Cardstack Foundation address has not been set or is incorrect, then use the `scripts/cst-configure.js` script to set the foundation address:
+
+```
+truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d
+```
+
+Then use the `scripts/cst-withdraw-info.js` to formulate the request that will be issued from the Cardstack Foundation, where the amount to withdraw is in units of ETH:
+```
+truffle exec ./scripts/cst-withdraw-info.js --amount=0.2 --network=rinkeby -r "<registry address>"
+```
+This will return instructions that can be sent to the Cardstack Foundation for how to perform their withdrawal:
+```
+truffle exec ./scripts/cst-withdraw-info.js --amount=0.2 --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Using network 'rinkeby'.
+
+Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
+
+To withdraw ETH from the CST contract, send 0 ETH to the following address with the following data from the wallet with the address 0x395d155505432d55a8d8ba9c6c49f8211b65d609:
+Address: 0xf96f2ca367e194ce82b1cb86d4bb495241cac93e
+Data: 0xcedcd77000000000000000000000000000000000000000000000000002c68af0bb140000
+Estimated gas: 34002
+```
+
 ### Depositing ETH to the CST contract from the Cardstack Foundation
+In order to deposit ETH into the CST contract, use the `scripts/cst-deposit-info.js` script to show the deposit request:
+```
+truffle exec ./scripts/cst-deposit-info.js --network=rinkeby -r "<regsitry address>"
+```
+This will result in the instructions to deposit ETH into the CST contract:
+```
+truffle exec ./scripts/cst-deposit-info.js --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Using network 'rinkeby'.
+
+Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
+
+To deposit ETH into the CST contract, send ETH to the following address with the following data:
+Address: 0xf96f2ca367e194ce82b1cb86d4bb495241cac93e
+Data: 0x9ae066b0
+Estimated gas: 22612
+```
+
 ### Freezing CST Token
 ### Freezing CST Account
