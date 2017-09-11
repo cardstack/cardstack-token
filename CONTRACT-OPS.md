@@ -366,7 +366,7 @@ Estimated gas: 34002
 ### Depositing ETH to the CST contract from the Cardstack Foundation
 In order to deposit ETH into the CST contract, use the `scripts/cst-deposit-info.js` script to show the deposit request:
 ```
-truffle exec ./scripts/cst-deposit-info.js --network=mainnet -r "<regsitry address>"
+truffle exec ./scripts/cst-deposit-info.js --network=mainnet -r "<registry address>"
 ```
 This will result in the instructions to deposit ETH into the CST contract:
 ```
@@ -382,4 +382,46 @@ Estimated gas: 22612
 ```
 
 ### Freezing CST Token
+In order freeze the CST contract such that all CST transactions stop, use the `scripts/cst-freeze-token.js` to generate the request that should be issued by the cold wallet:
+
+```
+truffle exec ./scripts/cst-freeze-token.js --network=mainnet -d -r "<registry address>"
+```
+
+This will result in the following response, which can be plugged into myetherwallet.com with the cold wallet device:
+```
+truffle exec ./scripts/cst-freeze-token.js --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Using network 'rinkeby'.
+
+Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Data for freezing token for CST (0xf96f2ca367e194ce82b1cb86d4bb495241cac93e):
+
+Address: 0xf96f2ca367e194ce82b1cb86d4bb495241cac93e
+Data: 0x771eee160000000000000000000000000000000000000000000000000000000000000001
+Estimated gas: 28921
+```
+
+You can use the script `scripts/system-info.js` to confirm that the token is frozen.
+
+To then unfreeze the token so that CST transactions can resume, use the `scripts/cst-unfreeze-token.js` to generate the request that should be issued by the cold wallet:
+
+```
+truffle exec ./scripts/cst-unfreeze-token.js --network=mainnet -d -r "<registry address>"
+```
+
+This will result in the response, which can be plugged into myetherwallet.com with the cold wallet device:
+```
+truffle exec ./scripts/cst-unfreeze-token.js --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Using network 'rinkeby'.
+
+Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Data for unfreezing token for CST (0xf96f2ca367e194ce82b1cb86d4bb495241cac93e):
+
+Address: 0xf96f2ca367e194ce82b1cb86d4bb495241cac93e
+Data: 0x771eee160000000000000000000000000000000000000000000000000000000000000000
+Estimated gas: 28857
+```
+
+You can use the script `scripts/system-info.js` to confirm that the token is unfrozen.
+
 ### Freezing CST Account
