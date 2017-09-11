@@ -2,6 +2,7 @@
 This document describes the various contract operations necessary for mantaining operational contiunity for the Cardstack Token ecosystem in the context of the Ethereum main network.
 
 * [Terms](#terms)
+
 * [Cardstack Token Creation Ceremony](#cardstack-token-creation-ceremony)
    * [Preparation](#preparation)
    * [T-minus 3 days](#t-minus-3-days)
@@ -16,6 +17,7 @@ This document describes the various contract operations necessary for mantaining
       * [Contract Creation](#contract-creation)
    * [T-minus 30 minutes](#t-minus-30-minutes)
    * [T-minus 0](#t-minus-0)
+
 * [Cardstack Token Continuing Operations](#cardstack-token-continuing-operations)
    * [Monitoring CST Token Sale](#monitoring-cst-token-sale)
    * [Monitoring CST Ledger](#monitoring-cst-ledger)
@@ -259,6 +261,12 @@ truffle exec ./scripts/cst-buy-info.js --network=mainnet -r <registry address>
 * Share the CST purchase information publically.
 * Return the cold wallet and PIN to safety deposit
 * Congratulations the CST token sale is live 🎉🎊
+
+
+
+
+
+
 
 
 
