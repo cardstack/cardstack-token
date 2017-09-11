@@ -43,7 +43,7 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (!options.cst || (!options.network && !options.data) || options.help || !options.registry) {
+  if (!options.cst || !options.network || options.help || !options.registry) {
     console.log(getUsage(usage));
     callback();
     return;
