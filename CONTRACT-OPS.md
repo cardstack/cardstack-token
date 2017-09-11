@@ -1,5 +1,7 @@
-Table of Contents
+# Contract Operations
+This document describes the various contract operations necessary for mantaining operational contiunity for the Cardstack Token ecosystem in the context of the Ethereum main network.
 =================
+
 * [Terms](#terms)
 * [Cardstack Token Creation Ceremony](#cardstack-token-creation-ceremony)
    * [Preparation](#preparation)
@@ -22,9 +24,6 @@ Table of Contents
    * [Depositing ETH to the CST contract from the Cardstack Foundation](#depositing-eth-to-the-cst-contract-from-the-cardstack-foundation)
    * [Freezing CST Token](#freezing-cst-token)
    * [Freezing CST Account](#freezing-cst-account)
-
-# Contract Operations
-This document describes the various contract operations necessary for mantaining operational contiunity for the Cardstack Token ecosystem in the context of the Ethereum main network.
 
 ## Terms
 The following terms are used in this guide:
