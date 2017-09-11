@@ -1,4 +1,4 @@
-const { CST_NAME } = require("../lib/constants");
+const { CST_NAME, NULL_ADDRESS } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 let RegistryContract = artifacts.require("./Registry.sol");
@@ -47,7 +47,7 @@ const usage = [
       description: "The maximum number of CST that can be purchased from the CST contract. (This is used to set the maximum number of CST avialable for each phase of CST purchase.)"
     },{
       name: "foundation",
-      description: "The address of the CST Foundation, which has the ability to deposit and withdraw ETH against the CST contract."
+      description: "(optional) The address of the CST Foundation, which has the ability to deposit and withdraw ETH against the CST contract."
     },{
       name: "registry",
       alias: "r",
@@ -73,7 +73,6 @@ module.exports = async function(callback) {
       !buyPriceEth ||
       !sellPriceEth ||
       !sellCap ||
-      !foundation ||
       !options.network ||
       options.help ||
       !options.registry) {
@@ -83,6 +82,7 @@ module.exports = async function(callback) {
   }
 
   let registryAddress = options.registry;
+  foundation = foundation || NULL_ADDRESS;
 
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
 
