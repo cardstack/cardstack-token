@@ -24,7 +24,7 @@ The following physical materials need to be acquired in perparation for the cere
 * Opaque Tape
 * Opaque envelopes
 * At least 10 _(?)_ safety deposit boxes from mulitple banks throughout the city. 1 should box that is large enough to hold the MacBook Pro. Boxes used for cold wallets and cold wallet passwords need to be available 24/7 365 days a year in relative proximity to the base of our operations so that they are readily available in the event of emergency contract operation procedures (aka token freeze).
-* Cardstack Foundation Ethereum address has been established
+* Ideally the Cardstack Foundation Ethereum address has been established
 
 ### T-minus 3 days
 #### Cold Wallet Setup
@@ -45,7 +45,7 @@ The following physical materials need to be acquired in perparation for the cere
 
 #### Contract Ops Funding
 * Retreive one of the cold wallets and its PIN (if you have not commited the PIN to memory) from the safety deposit box.
-* Purchase at least 3 ETH from the funding accounts (may need to wait a day or two for the purchases to clear) using a brand new address on one of the cold wallets. If you have not memorized the PIN for the cold wallet, go to the clean room with the cold wallet PIN (and a another person) along with an unsecure terminal and perform the purchase.
+* Purchase at least 2 ETH from the funding accounts (may need to wait a day or two for the purchases to clear) using a brand new address on one of the cold wallets. If you have not memorized the PIN for the cold wallet, go to the clean room with the cold wallet PIN (and a another person) along with an unsecure terminal and perform the purchase.
 * Note the Ethereum account that you have used to purchase the ethers and the cold wallet name that you have used in `cardstack-token` GitHub project add the cold wallet ethereum address to the file contract-ops/cold-wallets.md.
 * Return cold wallet and PIN to safety deposit box.
 * Wait for the transaction to clear (may need to take a couple days).
@@ -135,8 +135,8 @@ npm run build
 * From the safety deposit box retrieve the cold wallet used to purchase ethers for operations gas fees and its PIN.
 * Go to the clean room with a partner, bring an unsecured computer with tape over the camera 
 * Using the cold wallet and www.myetherwallet.com transfer ETH to the Ethereum addresses you recorded for the cold wallets and the secure terminal's wallet main account.
-  * Transfer at 2 ETH to the secure terminal's wallet main account address that was recorded in `cardstack-token` GitHub project contract-ops/secure-terminal.md
-  * Transfer 0.3 ETH to each of the cold wallet's primary addresses that you recorded in `cardstack-token` GitHub project contract-ops/cold-wallets.md
+  * Transfer at 1 ETH to the secure terminal's wallet main account address that was recorded in `cardstack-token` GitHub project contract-ops/secure-terminal.md
+  * Transfer 0.25 ETH to each of the cold wallet's primary addresses that you recorded in `cardstack-token` GitHub project contract-ops/cold-wallets.md
 * Return the cold wallet and PIN to the safety deposit box.
 
 ### T-minus 3 hours
@@ -165,7 +165,7 @@ rm -rf ./build && npm run build
 ```
 truffle migrate --reset --network=mainnet
 ```
-The contracts will take 5-10 minutes to be created depending on network conditions _(TODO: need to see how we can adjust the gas price for contract deploys and truffle execs to get our blocks to be mined faster)_
+The contracts will take 5-10 minutes to be created depending on network conditions. We are currently using a 30 GWEI gas price. This can be increased in the truffle.js file for faster transaction mining (albiet at a higher overall deployment cost).
 * When the contracts have completed deploying copy the output from the `truffle migrate` command to `cardstack-token` GitHub project `contract-ops/deploys/<current date timestamp>.txt` and commit the file. The addresses included in the output from `truffle migrate` are very important. Note the `Registry` address and the `CardStackToken` address.
 * Register the CST contract with the registry by executing:
 ```
@@ -197,8 +197,7 @@ geth --rpc --rpcapi db,eth,net,web3,personal
 ```
 truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d
 ```
-(These numbers are examples, use the real values when the time comes)
-_(TODO: can we use a null address if the foundation address has not been set yet?)_
+(These numbers are examples, use the real values when the time comes. Also note that the foundation address is optional)
 * The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide. The gas limit describes the units of gas that this transaction will allow to be consumed. You are not penalized for using a larger value than the estimated gas. You are only charged for gas that your transaction actually uses. Also, increasing this particular value does not make your tranaction process faster (that is a different field).
 * adjust the gas price slider in the upper right to reflect the speed that you want the transaction to be processed with.
 * click the button to confirm the transaction
