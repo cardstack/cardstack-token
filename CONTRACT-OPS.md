@@ -340,7 +340,7 @@ Accounts:
   0xd481b3ebd3b8109778631f6d276e3ae47ece9b5f: 200
 ```
 ### Withdrawing ETH from CST contract for Cardstack Foundation
-In order to withdraw ETH from the CST contract, first ensure that the Cardstack Foundation's Ethereum wallet address is set on the CST contract using the `scripts/system-info.js` script. If the Cardstack Foundation address has not been set or is incorrect, then use the `scripts/cst-configure.js` script to set the foundation address:
+In order to withdraw ETH from the CST contract, first ensure that the Cardstack Foundation's Ethereum wallet address is set on the CST contract using the `scripts/system-info.js` script, also make sure this address has enough of a balance to pay gas fees for the request. If the Cardstack Foundation address has not been set or is incorrect, then use the `scripts/cst-configure.js` script to set the foundation address:
 
 ```
 truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d
