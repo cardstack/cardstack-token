@@ -244,7 +244,102 @@ truffle exec ./scripts/cst-buy-info.js --network=mainnet -r <registry address>
 
 ## Cardstack Token Continuing Operations
 ### Monitoring CST Token Sale
+To view the state of the various contracts in the CST ecosystem, execute the following command:
+```
+truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+```
+
+This will return a response that looks like this: 
+```
+truffle exec ./scripts/system-info.js --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Using network 'rinkeby'.
+
+Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
+
+Contracts:
+  Registry: 0x9f0055eb73e36973594634cd65fab48a6aa11535 (registry)
+  Storage: 0x301618ced6c48af5c5b949680a24f0912297b851 (storage)
+  Ledger: 0xc56af65b69c3ff0cd17980e0388a092fc30e9460 (ledger)
+  CST contract: 0xf96f2ca367e194ce82b1cb86d4bb495241cac93e (cst)
+
+Registry (0x9f0055eb73e36973594634cd65fab48a6aa11535):
+  cst: 0xf96f2ca367e194ce82b1cb86d4bb495241cac93e (cst)
+  cstStorage: 0x301618ced6c48af5c5b949680a24f0912297b851 (storage)
+  cstLedger: 0xc56af65b69c3ff0cd17980e0388a092fc30e9460 (ledger)
+
+  Registry super admins:
+    0xc5d2ee825f8bb57d18726f288ae899a890415f58
+
+  Registry admins:
+
+
+Cardstack Token (0xf96f2ca367e194ce82b1cb86d4bb495241cac93e):
+  registry: 0x9f0055eb73e36973594634cd65fab48a6aa11535
+  storageName: cstStorage
+  ledgerName: cstLedger
+  isFrozen: false
+  deprecated: false
+  successor: 0x0000000000000000000000000000000000000000
+  name: Cardstack Token
+  symbol: CST
+  buyPrice (ETH): 0.002
+  sellPrice (ETH): 0.002
+  sellCap: 1000000
+  totalSupply: 1000000000
+  balance (ETH): 0.4
+  minimumBalance (ETH): 0
+  foundation: 0x0000000000000000000000000000000000000000
+
+  CST super admins:
+    0x9f0055eb73e36973594634cd65fab48a6aa11535 (registry)
+    0xc5d2ee825f8bb57d18726f288ae899a890415f58
+
+  CST admins:
+
+  Frozen Accounts:
+
+
+Ledger (0xc56af65b69c3ff0cd17980e0388a092fc30e9460)
+  totalTokens: 1000000000
+  totalInCirculation: 200
+  number of accounts: 1
+
+  Ledger super admins:
+    0x9f0055eb73e36973594634cd65fab48a6aa11535 (registry)
+
+  Ledger admins:
+    0xf96f2ca367e194ce82b1cb86d4bb495241cac93e (cst)
+
+
+Storage (0x301618ced6c48af5c5b949680a24f0912297b851)
+  Storage super admins:
+    0x9f0055eb73e36973594634cd65fab48a6aa11535 (registry)
+
+  Storage admins:
+    0xf96f2ca367e194ce82b1cb86d4bb495241cac93e (cst)
+```
+
 ### Monitoring CST Ledger
+To view a list of all accounts that hold CST tokens execute the script:
+```
+truffle exec ./scripts/ledger-info.js --network=mainnet -r <registry address>
+```
+
+This will return a response like this:
+```
+truffle exec ./scripts/ledger-info.js --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Using network 'rinkeby'.
+
+Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Ledger (0xc56af65b69c3ff0cd17980e0388a092fc30e9460
+  totalTokens: 1000000000
+  totalInCirculation: 200
+  number of accounts: 1
+
+Accounts:
+  0xd481b3ebd3b8109778631f6d276e3ae47ece9b5f: 200
+```
 ### Withdrawing ETH from CST contract for Cardstack Foundation
+### Depositing ETH to the CST contract from the Cardstack Foundation
 ### Freezing CST Token
 ### Freezing CST Account
