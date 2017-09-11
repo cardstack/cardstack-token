@@ -70,7 +70,7 @@ The following physical materials need to be acquired in perparation for the cere
 * Put a USB stick in the MacBook and format the USB Stick (repeat for each USB stick)
 * Copy the file in the `keystore` folder on to each USB stick (it will be named something like `UTC--2017-07-11T16-12-35.585181429Z--48ed71f1ec9c`).
 * Copy the Ethereum main address of the wallet and paste into the `cardstack-token` GitHub project contract-ops/secure-terminal.md (this address is the public key and will be public knowledge after the contract is created, so it is ok to display this address in the clear and not locked down).
-* Update the `cardstack-token` GitHub project `./truffle.json` file `mainnet.from` entry with the Ethereum wallet's main address from the previous setp.
+* Update the `cardstack-token` GitHub project `./truffle.js` file `mainnet.from` entry with the Ethereum wallet's main address from the previous setp.
 * Wait for the blocks to complete downloading. If you leave the clean room, lock the door and post a different pair of people to monitor the entrance to the clean room while the blocks are downloading.
 * Now would be a good time to deposit the secure terminal's ethereum wallet passwords and macbook's user password (assuming you can use Touch ID now to unlock the computer) and USB sticks in separate safety deposit boxes, while the bocks are downloading. Make sure to not save the Ethereum wallet passwords in the same safety deposit box as the USB sticks.
 * Wait until all the blocks have completed downloading. It is probabaly evening now. Regardless if the blocks have completed downloading or not, power-off the secure terminal _(the secure terminal should never be powered on outside of the clean room)_
