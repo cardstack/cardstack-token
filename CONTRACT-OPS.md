@@ -195,7 +195,7 @@ geth --rpc --rpcapi db,eth,net,web3,personal
 ```
 * From the terminal, in the cardstack token project directory execute this command to create the contract confugration transaction (note that you can't actually sell CST back to the contract, but the contract still needs to have a sellPriceEth set):
 ```
-truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d
+truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
 ```
 (These numbers are examples, use the real values when the time comes. Also note that the foundation address is optional)
 * The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide. The gas limit describes the units of gas that this transaction will allow to be consumed. You are not penalized for using a larger value than the estimated gas. You are only charged for gas that your transaction actually uses. Also, increasing this particular value does not make your tranaction process faster (that is a different field).
@@ -211,7 +211,7 @@ truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
 * Now mint the CST tokens, this should represent the total eventual amount of tokens after the final phase of the CST token sale.
 ```
-truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry address> -d
+truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry address> -d --network=mainnet
 ```
 * The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide.
 * adjust the gas price slider in the upper right to reflect the speed that you want the transaction to be processed with.
@@ -343,12 +343,12 @@ Accounts:
 In order to withdraw ETH from the CST contract, first ensure that the Cardstack Foundation's Ethereum wallet address is set on the CST contract using the `scripts/system-info.js` script, also make sure this address has enough of a balance to pay gas fees for the request. If the Cardstack Foundation address has not been set or is incorrect, then use the `scripts/cst-configure.js` script to set the foundation address:
 
 ```
-truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d
+truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
 ```
 
 Then use the `scripts/cst-withdraw-info.js` to formulate the request that will be issued from the Cardstack Foundation, where the amount to withdraw is in units of ETH:
 ```
-truffle exec ./scripts/cst-withdraw-info.js --amount=0.2 --network=rinkeby -r "<registry address>"
+truffle exec ./scripts/cst-withdraw-info.js --amount=0.2 --network=mainnet -r "<registry address>"
 ```
 This will return instructions that can be sent to the Cardstack Foundation for how to perform their withdrawal:
 ```
@@ -366,7 +366,7 @@ Estimated gas: 34002
 ### Depositing ETH to the CST contract from the Cardstack Foundation
 In order to deposit ETH into the CST contract, use the `scripts/cst-deposit-info.js` script to show the deposit request:
 ```
-truffle exec ./scripts/cst-deposit-info.js --network=rinkeby -r "<regsitry address>"
+truffle exec ./scripts/cst-deposit-info.js --network=mainnet -r "<regsitry address>"
 ```
 This will result in the instructions to deposit ETH into the CST contract:
 ```
