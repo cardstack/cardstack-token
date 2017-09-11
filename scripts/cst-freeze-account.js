@@ -62,7 +62,7 @@ module.exports = async function(callback) {
   let address = options.address;
 
   if (options.data) {
-    let data = cst.contract.freezeAccount(address, true);
+    let data = cst.contract.freezeAccount.getData(address, true);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
       data

@@ -62,7 +62,7 @@ module.exports = async function(callback) {
   let address = options.address;
 
   if (options.data) {
-    let data = cst.contract.addSuperAdmin(address);
+    let data = cst.contract.addSuperAdmin.getData(address);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
       data
@@ -72,7 +72,7 @@ module.exports = async function(callback) {
     console.log(`Data: ${data}`);
     console.log(`Estimated gas: ${estimatedGas}`);
 
-    data = registry.contract.addSuperAdmin(address);
+    data = registry.contract.addSuperAdmin.getData(address);
     estimatedGas = web3.eth.estimateGas({
       to: registry.address,
       data

@@ -96,7 +96,7 @@ module.exports = async function(callback) {
 
 
   if (options.data) {
-    let data = contract.contract.removeAdmin(address);
+    let data = contract.contract.removeAdmin.getData(address);
     let estimatedGas = web3.eth.estimateGas({
       to: contract.address,
       data

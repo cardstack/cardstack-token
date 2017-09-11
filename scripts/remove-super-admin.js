@@ -62,7 +62,7 @@ module.exports = async function(callback) {
   let address = options.address;
 
   if (options.data) {
-    let data = cst.contract.removeSuperAdmin(address);
+    let data = cst.contract.removeSuperAdmin.getData(address);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
       data
