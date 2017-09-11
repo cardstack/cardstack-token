@@ -440,7 +440,7 @@ To then unfreeze the token so that CST transactions can resume, use the `scripts
 truffle exec ./scripts/cst-unfreeze-token.js --network=mainnet -d -r "<registry address>"
 ```
 
-This will result in the response, which can be plugged into myetherwallet.com with the cold wallet device:
+This will result in the following response, which can be plugged into myetherwallet.com with the cold wallet device:
 ```
 truffle exec ./scripts/cst-unfreeze-token.js --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
 Using network 'rinkeby'.
@@ -456,3 +456,39 @@ Estimated gas: 28857
 You can use the script `scripts/system-info.js` to confirm that the token is unfrozen.
 
 ### Freezing CST Account
+In order to freeze a specific CST account ot prevent that account from buying, receiving, or sending CST, use `scripts/cst-freeze-account.js` to generate the request that should be issued by the cold wallet:
+
+```
+truffle exec ./scripts/cst-freeze-account.js --address="<address to freeze>" --network=rinkeby -d -r "<registry address>"
+```
+This will result in the following response, which can be plugged into myetherwallet.com with the cold wallet device:
+```
+truffle exec ./scripts/cst-freeze-account.js --address=0x395d155505432d55a8d8ba9c6c49f8211b65d609 --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Using network 'rinkeby'.
+
+Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Data for freezing account 0x395d155505432d55a8d8ba9c6c49f8211b65d609 for CST (0xf96f2ca367e194ce82b1cb86d4bb495241cac93e):
+
+Address: 0xf96f2ca367e194ce82b1cb86d4bb495241cac93e
+Data: 0xe724529c000000000000000000000000395d155505432d55a8d8ba9c6c49f8211b65d6090000000000000000000000000000000000000000000000000000000000000001
+Estimated gas: 107996
+```
+You can use the script `scripts/system-info.js` to confirm that the account is frozen.
+
+To then unfreeze the account, use the `scripts/cst-unfreeze-account.js` script to generate the request that should be issued by the cold wallet:
+```
+truffle exec ./scripts/cst-unfreeze-account.js --address="<address to freeze>" --network=rinkeby -d -r "<registry address>"
+```
+This will result in the following response, which can be plugged into myetherwallet.com with the cold wallet device:
+```
+truffle exec ./scripts/cst-unfreeze-account.js --address=0x395d155505432d55a8d8ba9c6c49f8211b65d609 --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Using network 'rinkeby'.
+
+Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
+Data for unfreezing account 0x395d155505432d55a8d8ba9c6c49f8211b65d609 for CST (0xf96f2ca367e194ce82b1cb86d4bb495241cac93e):
+
+Address: 0xf96f2ca367e194ce82b1cb86d4bb495241cac93e
+Data: 0xe724529c000000000000000000000000395d155505432d55a8d8ba9c6c49f8211b65d6090000000000000000000000000000000000000000000000000000000000000000
+Estimated gas: 92932
+```
+You can use the script `scripts/system-info.js` to confirm that the account is frozen.
