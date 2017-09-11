@@ -44,7 +44,7 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (options.amount === undefined || options.amount === null || !options.registry || options.help || (!options.network && !options.data)) {
+  if (options.amount === undefined || options.amount === null || !options.registry || options.help || !options.network) {
     console.log(getUsage(usage));
     callback();
     return;

@@ -1,21 +1,19 @@
 const { CST_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
-
 let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
-  { name: "registry", alias: "r", type: String },
-  { name: "data", alias: "d", type: Boolean }
+  { name: "registry", alias: "r", type: String }
 ];
 
 const usage = [
   {
-    header: "cst-freeze-untoken",
-    content: "This script unfreezes the CST token."
+    header: "cst-buy-info",
+    content: "This script displays ETH deposit information that instructs how the Cardstack Foundation can deposit ETH into the CST contract for the purposes of buying back CST."
   },{
     header: "Options",
     optionList: [{
@@ -29,13 +27,10 @@ const usage = [
       name: "registry",
       alias: "r",
       description: "The address of the registry."
-    },{
-      name: "data",
-      alias: "d",
-      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
     }]
   }
 ];
+
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
@@ -54,27 +49,15 @@ module.exports = async function(callback) {
 
   let cst = await CardStackToken.at(cstAddress);
 
-  if (options.data) {
-    let data = cst.contract.freezeToken.getData(false);
-    let estimatedGas = web3.eth.estimateGas({
-      to: cst.address,
-      data
-    });
-    console.log(`Data for unfreezing token for CST (${cst.address}):`);
-    console.log(`\nAddress: ${cst.address}`);
-    console.log(`Data: ${data}`);
-    console.log(`Estimated gas: ${estimatedGas}`);
-    callback();
-    return;
-  }
-
-  try {
-    console.log(`Unfreezing token for CST (${cst.address})...`);
-    await cst.freezeToken(false);
-    console.log('done');
-  } catch (err) {
-    console.error(`Error unfreezing token for CST (${cst.address}, ${err.message}`);
-  }
+  let data = cst.contract.foundationDeposit.getData();
+  let estimatedGas = web3.eth.estimateGas({
+    to: cst.address,
+    data
+  });
+  console.log(`\nTo deposit ETH into the CST contract, send ETH to the following address with the following data:`);
+  console.log(`Address: ${cst.address}`);
+  console.log(`Data: ${data}`);
+  console.log(`Estimated gas: ${estimatedGas}`);
 
   callback();
 };
