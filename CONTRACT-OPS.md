@@ -1,6 +1,5 @@
 # Contract Operations
 This document describes the various contract operations necessary for mantaining operational contiunity for the Cardstack Token ecosystem in the context of the Ethereum main network.
-=================
 
 * [Terms](#terms)
 * [Cardstack Token Creation Ceremony](#cardstack-token-creation-ceremony)
