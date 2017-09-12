@@ -86,9 +86,12 @@ The following physical materials need to be acquired in perparation for the cere
 * Write down the password on a piece of paper and place the password in an envelope.
 * Record fingerprint TouchID of at least 2 other highly trusted people in the room on the MacBook
 * Perform OS X software update
-* Install the latest official Ethereum Wallet App
-* Launch the Ethereum Wallet App. The Ethereum wallet will begin to download the mainnet block chain. This will take about 8-12 hours. You can click on "Launch Application" to perform the next steps while the blocks are downloading.
-* You will be prompted to create an account with a password, do this. The password you select should be at least 12 random words that you and your partner(s) contribute.
+* Make sure computer clock is synced with the current time, and in the correct timezone.
+* Install the latest official Ethereum Wallet App: http://github.com/ethereum/mist/releases, and locate the dmg for the Ethereum Wallet Installer for Mac OS X.
+* Add the Ethereum Wallet to the /Applications folder, and launch the Ethereum Wallet App.
+* Select the option to use the "Main Network" and click on "Skip" when asked if we have a wallet file.
+* You will be prompted to create an account with a password, do this. The password you select should be at least 8 random words that you and your partner(s) contribute. You will have to type this password out, so don't choose words that are super hard to spell.
+* The Ethereum wallet will begin to download the mainnet block chain. This will take about 8-12 hours. You can click on "Launch Application" to perform the next steps while the blocks are downloading.
 * Write down the password that you create the account with on 3 different pieces of paper.
 * Place those pieces of paper in separate opaque envelopes
 * From the ethereum wallet select File -> Backup -> Accounts from teh file menu. This will open your finder to a `keystore` folder.
