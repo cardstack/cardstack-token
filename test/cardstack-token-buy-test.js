@@ -44,7 +44,7 @@ contract('CardStackToken', function(accounts) {
       await cst.foundationWithdraw(cstEth.toNumber());
     });
 
-    it("should be able to purchase CST", async function() {
+    it("an approved buyer should be able to purchase CST", async function() {
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, NULL_ADDRESS);
       await ledger.mintTokens(10);
       let buyerAccount = accounts[8];
@@ -54,6 +54,8 @@ contract('CardStackToken', function(accounts) {
       let startCstEth = await web3.eth.getBalance(cst.address);
 
       startBalance = asInt(startBalance);
+
+      await cst.addBuyer(buyerAccount);
 
       let txn = await cst.buy({
         from: buyerAccount,
@@ -90,6 +92,39 @@ contract('CardStackToken', function(accounts) {
       assert.equal(event.args._to, buyerAccount, "The recipient is correct");
     });
 
+    it("a non approved buyer cannot purchase CST", async function() {
+      await ledger.mintTokens(10);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, NULL_ADDRESS);
+
+      let buyerAccount = accounts[1];
+      let txnValue = web3.toWei(2, "ether");
+      let startBalance = await web3.eth.getBalance(buyerAccount);
+
+      startBalance = asInt(startBalance);
+
+      let exceptionThrown;
+      try {
+        await cst.buy({
+          from: buyerAccount,
+          value: txnValue,
+          gasPrice: GAS_PRICE
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let endBalance = await web3.eth.getBalance(buyerAccount);
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+
+      endBalance = asInt(endBalance);
+
+      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
+      assert.equal(cstBalance, 0, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
+    });
+
     it("can not purchase more CST than the amount of ethers in the buyers wallet", async function() {
       await ledger.mintTokens(10);
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, NULL_ADDRESS);
@@ -97,6 +132,8 @@ contract('CardStackToken', function(accounts) {
       let buyerAccount = accounts[1];
       let txnValue = web3.toWei(1000, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
+
+      await cst.addBuyer(buyerAccount);
 
       if (asInt(txnValue) < asInt(startBalance)) {
         throw new Error(`Buyer account ${buyerAccount} has too much value to be able to conduct this test ${startBalance}`);
@@ -134,6 +171,8 @@ contract('CardStackToken', function(accounts) {
       let txnValue = web3.toWei(11, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
 
+      await cst.addBuyer(buyerAccount);
+
       startBalance = asInt(startBalance);
 
       let exceptionThrown;
@@ -166,6 +205,8 @@ contract('CardStackToken', function(accounts) {
       let txnValue = web3.toWei(0.9, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
 
+      await cst.addBuyer(buyerAccount);
+
       startBalance = asInt(startBalance);
 
       let exceptionThrown;
@@ -197,6 +238,8 @@ contract('CardStackToken', function(accounts) {
       let buyerAccount = accounts[1];
       let txnValue = web3.toWei(6, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
+
+      await cst.addBuyer(buyerAccount);
 
       startBalance = asInt(startBalance);
 

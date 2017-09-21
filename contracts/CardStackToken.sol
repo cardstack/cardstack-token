@@ -37,6 +37,13 @@ contract CardStackToken is Ownable,
   uint public minimumBalance;
   address public foundation;
 
+  // Note that the data for the buyer whitelist itenationally lives in this contract
+  // and not in storage, as this whitelist is specific to phase 1 token sale
+  uint public totalBuyers;
+  mapping (address => bool) public approvedBuyer;
+  mapping (uint => address) public approvedBuyerForIndex;
+  mapping (address => bool) processedBuyer;
+
   uint public decimals = 0;
 
   event SellCapChange(uint newSellCap);
@@ -194,6 +201,7 @@ contract CardStackToken is Ownable,
 
   function buy() payable unlessFrozen unlessUpgraded triggersRewards returns (uint) {
     require(msg.value >= buyPrice);
+    require(approvedBuyer[msg.sender]);
     assert(buyPrice > 0);
 
     uint amount = msg.value.div(buyPrice);
@@ -256,5 +264,18 @@ contract CardStackToken is Ownable,
     bytes32 hash = externalStorage.getRewardsContractHash();
 
     return Registry(registry).contractForHash(hash);
+  }
+
+  function addBuyer(address buyer) onlySuperAdmins unlessUpgraded returns (bool) {
+    approvedBuyer[buyer] = true;
+    if (!processedBuyer[buyer]) {
+      processedBuyer[buyer] = true;
+      approvedBuyerForIndex[totalBuyers] = buyer;
+      totalBuyers = totalBuyers.add(1);
+    }
+  }
+
+  function removeBuyer(address buyer) onlySuperAdmins unlessUpgraded returns (bool) {
+    approvedBuyer[buyer] = false;
   }
 }

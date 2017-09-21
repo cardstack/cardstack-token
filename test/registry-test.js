@@ -254,6 +254,7 @@ contract('Registry', function(accounts) {
       let recipientAccount = accounts[4];
       let txnValue = web3.toWei(0.2, "ether");
 
+      await cst1.addBuyer(buyerAccount);
       await cst1.buy({
         from: buyerAccount,
         value: txnValue,

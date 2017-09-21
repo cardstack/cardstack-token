@@ -36,7 +36,7 @@ contract('CardStackToken', function(accounts) {
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(1, "ether"), 100, NULL_ADDRESS);
 
       await checkBalance(frozenAccount, 1);
-
+      await cst.addBuyer(frozenAccount);
       await cst.buy({
         from: frozenAccount,
         value: web3.toWei(1, "ether"),
@@ -92,6 +92,8 @@ contract('CardStackToken', function(accounts) {
       let buyerAccount = frozenAccount;
       let txnValue = web3.toWei(1, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
+
+      await cst.addBuyer(buyerAccount);
 
       startBalance = asInt(startBalance);
 
@@ -149,6 +151,8 @@ contract('CardStackToken', function(accounts) {
       let transferAmount = 1;
 
       await checkBalance(senderAccount, 1);
+
+      await cst.addBuyer(senderAccount);
 
       await cst.buy({
         from: senderAccount,
@@ -328,6 +332,7 @@ contract('CardStackToken', function(accounts) {
 
       await checkBalance(frozenAccount, 1);
 
+      await cst.addBuyer(frozenAccount);
       await cst.buy({
         from: frozenAccount,
         value: web3.toWei(1, "ether"),
@@ -412,6 +417,8 @@ contract('CardStackToken', function(accounts) {
       let txnValue = web3.toWei(1, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
 
+      await cst.addBuyer(buyerAccount);
+
       startBalance = asInt(startBalance);
 
       let exceptionThrown;
@@ -470,6 +477,8 @@ contract('CardStackToken', function(accounts) {
 
       await checkBalance(senderAccount, 1);
 
+      await cst.addBuyer(senderAccount);
+
       await cst.buy({
         from: senderAccount,
         value: web3.toWei(1, "ether"),
@@ -507,6 +516,7 @@ contract('CardStackToken', function(accounts) {
 
       await checkBalance(senderAccount, 1);
 
+      await cst.addBuyer(senderAccount);
       await cst.buy({
         from: senderAccount,
         value: web3.toWei(1, "ether"),

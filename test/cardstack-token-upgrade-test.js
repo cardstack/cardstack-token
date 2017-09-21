@@ -244,6 +244,27 @@ contract('CardStackToken', function(accounts) {
       await cst2.foundationWithdraw(cstEth.toNumber());
     });
 
+    it("allows adding a buyer for a successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      let buyerAccount = accounts[8];
+      await cst2.addBuyer(buyerAccount, { from: admin });
+
+      let isBuyer = await cst2.approvedBuyer(buyerAccount);
+
+      assert.ok(isBuyer, "the buyer is set");
+    });
+
+    it("allows removing a buyer for a successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      let buyerAccount = accounts[8];
+      await cst2.addBuyer(buyerAccount, { from: admin });
+      await cst2.removeBuyer(buyerAccount, { from: admin });
+
+      let isBuyer = await cst2.approvedBuyer(buyerAccount);
+
+      assert.notOk(isBuyer, "the buyer is not set");
+    });
+
     it("allows purchase of CST for successor contract", async function() {
       await cst2.upgradedFrom(cst1.address, { from: admin });
       await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, NULL_ADDRESS);
@@ -254,6 +275,8 @@ contract('CardStackToken', function(accounts) {
       let txnValue = web3.toWei(2, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
       let startCstEth = await web3.eth.getBalance(cst2.address);
+
+      await cst2.addBuyer(buyerAccount);
 
       startBalance = asInt(startBalance);
 
@@ -494,10 +517,46 @@ contract('CardStackToken', function(accounts) {
       await cst2.addSuperAdmin(admin);
     });
 
+    it("does not allow adding a buyer for a successor contract", async function() {
+      let approvedBuyer = accounts[11];
+      await cst1.upgradeTo(cst2.address, { from: admin });
+      let exceptionThrown;
+      try {
+        await cst1.addBuyer(approvedBuyer, { from: admin });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let isBuyer = await cst1.approvedBuyer(approvedBuyer);
+
+      assert.notOk(isBuyer, "the buyer is not set");
+    });
+
+    it("does not allow removing a buyer for a successor contract", async function() {
+      let approvedBuyer = accounts[11];
+      await cst1.addBuyer(approvedBuyer, { from: admin });
+      await cst1.upgradeTo(cst2.address, { from: admin });
+      let exceptionThrown;
+      try {
+        await cst1.removeBuyer(approvedBuyer, { from: admin });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let isBuyer = await cst1.approvedBuyer(approvedBuyer);
+
+      assert.ok(isBuyer, "the buyer is set");
+    });
+
     it("does not allow purchase of CST when the contract has been upgraded", async function() {
+      let buyerAccount = accounts[4];
+      await cst1.addBuyer(buyerAccount);
       await cst1.upgradeTo(cst2.address, { from: admin });
 
-      let buyerAccount = accounts[4];
       checkBalance(buyerAccount, 1);
       let txnValue = web3.toWei(0.1, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);

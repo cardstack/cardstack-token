@@ -415,6 +415,7 @@ contract('CardStackToken', function(accounts) {
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
+      await cst.addBuyer(buyer);
       await cst.buy({
         from: buyer,
         value: txnValue,
@@ -455,6 +456,7 @@ contract('CardStackToken', function(accounts) {
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
+      await cst.addBuyer(buyer);
       await cst.buy({
         from: buyer,
         value: txnValue,
@@ -493,6 +495,7 @@ contract('CardStackToken', function(accounts) {
       let txnValue = web3.toWei(1, "ether");
       let minValue = web3.toWei(0.5, "ether");
       await cst.setMinimumBalance(minValue, { from: superAdmin });
+      await cst.addBuyer(buyer);
       await cst.buy({
         from: buyer,
         value: txnValue,
@@ -567,6 +570,92 @@ contract('CardStackToken', function(accounts) {
       let minimumBalance = await cst.minimumBalance();
 
       assert.equal(minimumBalance.toNumber(), 0, "The minimumBalance is correct");
+    });
+
+  });
+
+  describe("buyer whitelist", function() {
+    let approvedBuyer = accounts[11];
+
+    beforeEach(async function() {
+      ledger = await CstLedger.new();
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      await registry.setStorageBytes32Value("cstStorage", "cstTokenName", web3.toHex("CardStack Token"));
+      await registry.setStorageBytes32Value("cstStorage", "cstTokenSymbol", web3.toHex("CST"));
+      await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.1, "ether"));
+      await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.1, "ether"));
+      await registry.setStorageUIntValue("cstStorage", "cstSellCap", 1000);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await registry.register("CST", cst.address);
+      await cst.addSuperAdmin(superAdmin);
+      await cst.mintTokens(1000);
+    });
+
+    it("allows a super admin to add an approved buyer", async function() {
+      let totalBuyers = await cst.totalBuyers();
+
+      assert.equal(totalBuyers.toNumber(), 0, 'the totalBuyers is correct');
+
+      await cst.addBuyer(approvedBuyer, { from: superAdmin });
+
+      totalBuyers = await cst.totalBuyers();
+      let isBuyer = await cst.approvedBuyer(approvedBuyer);
+      let firstBuyer = await cst.approvedBuyerForIndex(0);
+
+      assert.equal(totalBuyers, 1, 'the totalBuyers is correct');
+      assert.ok(isBuyer, "the buyer is set");
+      assert.equal(firstBuyer, approvedBuyer, "the approvedBuyerForIndex is correct");
+    });
+
+    it("allows a super admin to remove an approved buyer", async function() {
+      await cst.addBuyer(approvedBuyer, { from: superAdmin });
+
+      await cst.removeBuyer(approvedBuyer, { from: superAdmin });
+
+      let isBuyer = await cst.approvedBuyer(approvedBuyer);
+
+      assert.notOk(isBuyer, "the buyer is not set");
+    });
+
+    it("does not allow a non-super admin to add an approved buyer", async function() {
+      let exceptionThrown;
+      try {
+        await cst.addBuyer(approvedBuyer, { from: approvedBuyer });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let totalBuyers = await cst.totalBuyers();
+      let isBuyer = await cst.approvedBuyer(approvedBuyer);
+
+      assert.equal(totalBuyers.toNumber(), 0, 'the totalBuyers is correct');
+      assert.notOk(isBuyer, "the buyer is not set");
+    });
+
+    it("does not allow a non-super admin to remove an approved buyer", async function() {
+      await cst.addBuyer(approvedBuyer, { from: superAdmin });
+
+      let exceptionThrown;
+      try {
+        await cst.removeBuyer(approvedBuyer, { from: approvedBuyer });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let totalBuyers = await cst.totalBuyers();
+      let isBuyer = await cst.approvedBuyer(approvedBuyer);
+
+      assert.equal(totalBuyers, 1, 'the totalBuyers is correct');
+      assert.ok(isBuyer, "the buyer is set");
     });
 
   });
