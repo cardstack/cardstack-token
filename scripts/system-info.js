@@ -73,6 +73,7 @@ module.exports = async function(callback) {
   let cstFrozenCount = await cst.totalFrozenAccounts();
   let cstAdminCount = await cst.totalAdmins();
   let cstSuperAdminCount = await cst.totalSuperAdmins();
+  let cstBuyerCount = await cst.totalBuyers();
 
   let storageAddress = await registry.storageForHash(web3.sha3(cstStorageName.toString()));
   let ledgerAddress = await registry.storageForHash(web3.sha3(cstLedgerName.toString()));
@@ -166,6 +167,15 @@ Cardstack Token (${cst.address}):
     let address = await cst.adminsForIndex(i);
     let isAdmin = await cst.admins(address);
     if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+  console.log(`
+  CST Buyers:`);
+  for (let i = 0; i < cstBuyerCount; i++) {
+    let address = await cst.approvedBuyerForIndex(i);
+    let isBuyer = await cst.approvedBuyer(address);
+    if (isBuyer) {
       console.log(`    ${prettyAddress(address)}`);
     }
   }

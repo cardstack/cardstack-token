@@ -115,7 +115,7 @@ contract('CardStackToken', function(accounts) {
       let txnValue = web3.toWei(0.1, "ether");
 
       await cst.setRewardsContractName("rewards", { from: superAdmin });
-
+      await cst.addBuyer(buyerAccount);
       await cst.buy({
         from: buyerAccount,
         value: txnValue,
