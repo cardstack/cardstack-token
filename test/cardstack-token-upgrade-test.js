@@ -10,7 +10,6 @@ const CardStackToken = artifacts.require("./CardStackToken.sol");
 const CstLedger = artifacts.require("./CstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
 const Registry = artifacts.require("./Registry.sol");
-const CstRewards = artifacts.require("./CstRewards.sol");
 
 contract('CardStackToken', function(accounts) {
   let cst1;
@@ -240,7 +239,6 @@ contract('CardStackToken', function(accounts) {
       let cstEth = await web3.eth.getBalance(cst2.address);
 
       await cst2.configure(0x0, 0x0, 0, 0, 0, 0, 1000000, accounts[0]);
-      await cst2.setMinimumBalance(0);
       await cst2.foundationWithdraw(cstEth.toNumber());
     });
 
@@ -445,18 +443,6 @@ contract('CardStackToken', function(accounts) {
       assert.ok(cumulativeGasUsed < 40000, "Less than 40000 gas was used for the txn");
       assert.ok(Math.abs(finalBalance) < parseFloat(web3.fromWei(ROUNDING_ERROR_WEI, "ether")), "Foundations's wallet balance was changed correctly");
       assert.equal(endCstBalance, 0, "The CST balance is correct");
-    });
-
-    it("allows adding rewards contract for successor contract", async function() {
-      let rewards = await CstRewards.new();
-      await registry.register("rewards", rewards.address);
-
-      await cst2.upgradedFrom(cst1.address, { from: admin });
-      await cst2.setRewardsContractName("rewards", { from: admin });
-
-      let observedRewards = await cst2.rewardsContract();
-
-      assert.equal(observedRewards, rewards.address, "the rewards contract is correct");
     });
 
     it("allows approving allowance for successor contract", async function() {
@@ -815,16 +801,6 @@ contract('CardStackToken', function(accounts) {
     });
 
     // yes we intentionally allow this to change after contract has been upgraded so foundation can recoup all ethers for the deprecated contract
-    it("does allow setMinimumBalance when contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
-      await cst1.setMinimumBalance(web3.toWei(0.1, "ether"));
-
-      let resultingMinBalance = await cst1.minimumBalance();
-
-      assert.equal(resultingMinBalance.toNumber(), web3.toWei(0.1, "ether"), "the minimumBalance is correct");
-    });
-
-    // yes we intentionally allow this to change after contract has been upgraded so foundation can recoup all ethers for the deprecated contract
     it("does allow foundationWithdraw when contract has been upgraded", async function() {
       let foundation = accounts[34];
       let txnValue = web3.toWei(0.1, "ether");
@@ -888,37 +864,6 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(startFoundationBalance.toNumber() - endFoundationBalance.toNumber() < MAX_FAILED_TXN_GAS * GAS_PRICE, "The foundations's account was just charged for gas");
       assert.equal(endCstBalance.toNumber(), 0, "The CST balance is correct");
-    });
-
-    it("does not allow adding a rewards contract when contract has been upgraded", async function() {
-      let rewards = await CstRewards.new();
-      await registry.register("rewards", rewards.address);
-      await cst1.upgradeTo(cst2.address, { from: admin });
-      let exceptionThrown;
-      try {
-        await cst1.setRewardsContractName("rewards", { from: admin });
-      } catch (err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Exception was thrown");
-    });
-
-    it("does not allow rewardsContract when contract has been upgraaded", async function() {
-      let rewards = await CstRewards.new();
-      await registry.register("rewards", rewards.address);
-      await cst1.setRewardsContractName("rewards", { from: admin });
-
-      await cst1.upgradeTo(cst2.address, { from: admin });
-
-      let exceptionThrown;
-      try {
-        await cst1.rewardsContract();
-      } catch (err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Exception was thrown");
     });
 
     it("does not allow approving allowance when contract has been upgraded", async function() {

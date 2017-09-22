@@ -40,7 +40,6 @@ contract('CardStackToken', function(accounts) {
       let cstEth = await web3.eth.getBalance(cst.address);
 
       await cst.configure(0x0, 0x0, 0, 0, 0, 0, 1000000, accounts[0]);
-      await cst.setMinimumBalance(0);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
 
@@ -265,5 +264,203 @@ contract('CardStackToken', function(accounts) {
       assert.equal(cstBalance, 0, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
     });
+
+    it("allows a buyer to buy up to the balance limit", async function() {
+      await ledger.mintTokens(100);
+      await cst.configure(web3.toHex("CardStack Token"),
+                          web3.toHex("CST"),
+                          web3.toWei(1, "ether"),
+                          web3.toWei(1, "ether"),
+                          100,
+                          10,     // CST pool is 10 CST
+                          200000, // 20% balance limit, which means max of 2 CST per account (20% of the 10 CST pool)
+                          NULL_ADDRESS);
+      let buyerAccount = accounts[8];
+      let txnValue = web3.toWei(2, "ether");
+
+      let startBalance = await web3.eth.getBalance(buyerAccount);
+      let startCstEth = await web3.eth.getBalance(cst.address);
+
+      startBalance = asInt(startBalance);
+
+      await cst.addBuyer(buyerAccount);
+
+      let txn = await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+      assert.ok(txn.receipt);
+      assert.ok(txn.logs);
+
+      let { cumulativeGasUsed } = txn.receipt;
+      let endBalance = await web3.eth.getBalance(buyerAccount);
+      let endCstEth = await web3.eth.getBalance(cst.address);
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+      let balanceOfCstContract = await cst.balanceOf(cst.address);
+
+      endBalance = asInt(endBalance);
+
+      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
+      assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
+      assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 2, 'the ether balance for the CST contract is correct');
+      assert.equal(cstBalance, 2, "The CST balance is correct");
+      assert.equal(totalInCirculation, 2, "The CST total in circulation was updated correctly");
+      assert.equal(asInt(balanceOfCstContract), 98, "The balanceOf the cst contract is correct");
+
+      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "Transfer", "The event type is correct");
+      assert.equal(event.args._value.toNumber(), 2, "The CST amount is correct");
+      assert.equal(event.args._from, cst.address, "The sender is correct");
+      assert.equal(event.args._to, buyerAccount, "The recipient is correct");
+    });
+
+    it("does not allow buyer to buy enough CST to surpass the balance limit", async function() {
+      let buyerAccount = accounts[1];
+      await ledger.mintTokens(100);
+      await ledger.debitAccount(buyerAccount, 1);
+      await cst.configure(web3.toHex("CardStack Token"),
+                          web3.toHex("CST"),
+                          web3.toWei(1, "ether"),
+                          web3.toWei(1, "ether"),
+                          100,
+                          10,     // CST pool is 10 CST
+                          200000, // 20% balance limit, which means max of 2 CST per account (20% of the 10 CST pool)
+                          NULL_ADDRESS);
+      let txnValue = web3.toWei(2, "ether");
+      let startBalance = await web3.eth.getBalance(buyerAccount);
+
+      startBalance = asInt(startBalance);
+      await cst.addBuyer(buyerAccount);
+
+      let exceptionThrown;
+      try {
+        await cst.buy({
+          from: buyerAccount,
+          value: txnValue,
+          gasPrice: GAS_PRICE
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let endBalance = await web3.eth.getBalance(buyerAccount);
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+      let balanceOfCstContract = await cst.balanceOf(cst.address);
+
+      endBalance = asInt(endBalance);
+
+      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
+      assert.equal(cstBalance, 1, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 1, "The CST total in circulation was not updated");
+      assert.equal(asInt(balanceOfCstContract), 99, "The balanceOf the cst contract is correct");
+    });
+
+    it("allows a buyer to buy up to a custom balance limit", async function() {
+      await ledger.mintTokens(100);
+      await cst.configure(web3.toHex("CardStack Token"),
+                          web3.toHex("CST"),
+                          web3.toWei(1, "ether"),
+                          web3.toWei(1, "ether"),
+                          100,
+                          10,     // CST pool is 10 CST
+                          200000, // 20% balance limit, which means max of 2 CST per account (20% of the 10 CST pool)
+                          NULL_ADDRESS);
+      let buyerAccount = accounts[8];
+      let txnValue = web3.toWei(4, "ether");
+
+      let startBalance = await web3.eth.getBalance(buyerAccount);
+      let startCstEth = await web3.eth.getBalance(cst.address);
+
+      startBalance = asInt(startBalance);
+
+      await cst.setCustomBuyer(buyerAccount, 400000); // 40% balance limit, which means max of 4 CST for the custom balance limit (40% of 10 CST pool)
+
+      let txn = await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+      assert.ok(txn.receipt);
+      assert.ok(txn.logs);
+
+      let { cumulativeGasUsed } = txn.receipt;
+      let endBalance = await web3.eth.getBalance(buyerAccount);
+      let endCstEth = await web3.eth.getBalance(cst.address);
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+      let balanceOfCstContract = await cst.balanceOf(cst.address);
+
+      endBalance = asInt(endBalance);
+
+      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
+      assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
+      assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 4, 'the ether balance for the CST contract is correct');
+      assert.equal(cstBalance, 4, "The CST balance is correct");
+      assert.equal(totalInCirculation, 4, "The CST total in circulation was updated correctly");
+      assert.equal(asInt(balanceOfCstContract), 96, "The balanceOf the cst contract is correct");
+
+      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "Transfer", "The event type is correct");
+      assert.equal(event.args._value.toNumber(), 4, "The CST amount is correct");
+      assert.equal(event.args._from, cst.address, "The sender is correct");
+      assert.equal(event.args._to, buyerAccount, "The recipient is correct");
+    });
+
+    it("does not allows a buyer to buy enough CST to exceed custom balance limit", async function() {
+      let buyerAccount = accounts[1];
+      await ledger.mintTokens(100);
+      await ledger.debitAccount(buyerAccount, 1);
+      await cst.configure(web3.toHex("CardStack Token"),
+                          web3.toHex("CST"),
+                          web3.toWei(1, "ether"),
+                          web3.toWei(1, "ether"),
+                          100,
+                          10,     // CST pool is 10 CST
+                          200000, // 20% balance limit, which means max of 2 CST per account (20% of the 10 CST pool)
+                          NULL_ADDRESS);
+      let txnValue = web3.toWei(4, "ether");
+      let startBalance = await web3.eth.getBalance(buyerAccount);
+
+      startBalance = asInt(startBalance);
+
+      await cst.setCustomBuyer(buyerAccount, 400000); // 40% balance limit, which means max of 4 CST for the custom balance limit (40% of 10 CST pool)
+
+      let exceptionThrown;
+      try {
+        await cst.buy({
+          from: buyerAccount,
+          value: txnValue,
+          gasPrice: GAS_PRICE
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let endBalance = await web3.eth.getBalance(buyerAccount);
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+      let balanceOfCstContract = await cst.balanceOf(cst.address);
+
+      endBalance = asInt(endBalance);
+
+      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
+      assert.equal(cstBalance, 1, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 1, "The CST total in circulation was not updated");
+      assert.equal(asInt(balanceOfCstContract), 99, "The balanceOf the cst contract is correct");
+    });
+
   });
 });

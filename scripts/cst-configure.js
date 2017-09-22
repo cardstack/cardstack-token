@@ -12,6 +12,8 @@ const optionsDefs = [
   { name: "buyPriceEth", type: Number },
   { name: "sellPriceEth", type: Number },
   { name: "sellCap", type: Number },
+  { name: "buyerPool", type: Number },
+  { name: "maximumBalancePercentage", type: String },
   { name: "foundation", type: String },
   { name: "registry", alias: "r", type: String },
   { name: "data", alias: "d", type: Boolean }
@@ -46,6 +48,12 @@ const usage = [
       name: "sellCap",
       description: "The maximum number of CST that can be purchased from the CST contract. (This is used to set the maximum number of CST avialable for each phase of CST purchase.)"
     },{
+      name: "buyerPool",
+      description: "The maximum number of CST that are available to be purchased in the current phase of the CST token sale. This is the amount from which the maximum balance percentage is calculated."
+    },{
+      name: "maximumBalancePercentage",
+      description: "this is the maximum amount of CST that an account is allowed to posses expressed as a percentage of the buyerPool for the current phase of the token sale, e.g. \"--maximumBalancePercentage=0.2%\""
+    },{
       name: "foundation",
       description: "(optional) The address of the CST Foundation, which has the ability to deposit and withdraw ETH against the CST contract."
     },{
@@ -65,8 +73,14 @@ module.exports = async function(callback) {
         tokenSymbol,
         buyPriceEth,
         sellPriceEth,
+        buyerPool,
+        maximumBalancePercentage,
         sellCap,
         foundation } = options;
+
+  if (maximumBalancePercentage) {
+    maximumBalancePercentage = parseFloat(maximumBalancePercentage.replace("%", "")) / 100;
+  }
 
   if (!tokenName ||
       !tokenSymbol ||
@@ -74,6 +88,8 @@ module.exports = async function(callback) {
       !sellPriceEth ||
       !sellCap ||
       !options.network ||
+      !buyerPool ||
+      !maximumBalancePercentage ||
       options.help ||
       !options.registry) {
     console.log(getUsage(usage));
@@ -97,6 +113,8 @@ module.exports = async function(callback) {
   buy price (ETH): ${buyPriceEth}
   sell price: (ETH): ${sellPriceEth}
   sell cap: ${sellCap}
+  buyer pool: ${buyerPool}
+  maximum balance percentage: ${maximumBalancePercentage * 100}% (${Math.floor(buyerPool * maximumBalancePercentage)} CST)
   foundation address: ${foundation}`);
 
   if (options.data) {
@@ -104,7 +122,9 @@ module.exports = async function(callback) {
                                               web3.toHex(tokenSymbol),
                                               web3.toWei(parseFloat(buyPriceEth), "ether"),
                                               web3.toWei(parseFloat(sellPriceEth), "ether"),
-                                              parseInt(sellCap, 10),
+                                              sellCap,
+                                              buyerPool,
+                                              maximumBalancePercentage * 1000000,
                                               foundation);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
@@ -124,7 +144,9 @@ module.exports = async function(callback) {
                         web3.toHex(tokenSymbol),
                         web3.toWei(parseFloat(buyPriceEth), "ether"),
                         web3.toWei(parseFloat(sellPriceEth), "ether"),
-                        parseInt(sellCap, 10),
+                        sellCap,
+                        buyerPool,
+                        maximumBalancePercentage * 1000000,
                         foundation);
     console.log("done");
   } catch (err) {

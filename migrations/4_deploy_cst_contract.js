@@ -12,6 +12,10 @@ module.exports = async function(deployer) {
     let registry = await RegistryContract.deployed();
     await deployer.deploy(CstLibrary);
     await deployer.link(CstLibrary, CardStackToken);
-    await deployer.deploy(CardStackToken, registry.address, CST_STORAGE_NAME, CST_LEDGER_NAME);
+    await deployer.deploy(CardStackToken,
+                          registry.address,
+                          CST_STORAGE_NAME,
+                          CST_LEDGER_NAME,
+                          { gas: 6100000 });  // need as much gas as possible--this is a big contract
   }
 };
