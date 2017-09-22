@@ -51,7 +51,7 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst.address);
 
-      await cst.configure(0x0, 0x0, 0, 0, 0, accounts[0]);
+      await cst.configure(0x0, 0x0, 0, 0, 0, 0, 1000000, accounts[0]);
       await cst.setMinimumBalance(0);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
@@ -59,7 +59,7 @@ contract('CardStackToken', function(accounts) {
     it("should configure the CST correctly", async function() {
       await ledger.mintTokens(10000);
 
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 1, 8000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 1, 8000, 8000, 1000000, NULL_ADDRESS);
 
       let name = await cst.name();
       let symbol = await cst.symbol();
@@ -90,6 +90,9 @@ contract('CardStackToken', function(accounts) {
       assert.equal(storageSellCap.toNumber(), 8000, "external storage is updated");
     });
 
+    xit("it should configure CST with the buyer pool and the balance limit (feelfree to merge with test above", async function() {
+    });
+
     it("non-owner cannot configure token", async function() {
       let nonOwner = accounts[1];
 
@@ -97,7 +100,7 @@ contract('CardStackToken', function(accounts) {
 
       let exceptionThrown;
       try {
-        await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 1, 8000, NULL_ADDRESS, {
+        await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 1, 8000, 8000, 1000000, NULL_ADDRESS, {
           from: nonOwner
         });
       } catch(err) {
@@ -404,7 +407,7 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst.address);
 
-      await cst.configure(0x0, 0x0, 0, 0, 0, accounts[0]);
+      await cst.configure(0x0, 0x0, 0, 0, 0, 0, 1000000, accounts[0]);
       await cst.setMinimumBalance(0);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
@@ -412,7 +415,7 @@ contract('CardStackToken', function(accounts) {
     it("allows foundation to withdraw ether from foundationWithdraw()", async function() {
       let buyer = accounts[20];
       await checkBalance(buyer, 1);
-      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, foundation, { from: superAdmin });
+      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
       await cst.addBuyer(buyer);
@@ -453,7 +456,7 @@ contract('CardStackToken', function(accounts) {
       let buyer = accounts[20];
       let nonFoundation = accounts[21];
       await checkBalance(buyer, 1);
-      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, foundation, { from: superAdmin });
+      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
       await cst.addBuyer(buyer);
@@ -490,7 +493,7 @@ contract('CardStackToken', function(accounts) {
     it("does not allow foundation to withdraw more ether than minimumBalance amount", async function() {
       let buyer = accounts[20];
       await checkBalance(buyer, 1);
-      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, foundation, { from: superAdmin });
+      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
       let minValue = web3.toWei(0.5, "ether");
@@ -527,7 +530,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("allows foundation to deposit ether in foundationDeposit", async function() {
-      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, foundation, { from: superAdmin });
+      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
       let startFoundationBalance = await web3.eth.getBalance(foundation);
@@ -658,6 +661,18 @@ contract('CardStackToken', function(accounts) {
       assert.ok(isBuyer, "the buyer is set");
     });
 
+  });
+
+  describe("setCustomBuyer", function() {
+    xit("should allows super admin to set custom buyer", async function() {
+      // assert totalCustomBuyers
+      // assert customBuyerForIndex
+      // assert customBuyerLimt
+      // assert approvedBuyer
+    });
+
+    xit("should not allow non-super admin to set custom buyer", async function() {
+    });
   });
 
 });

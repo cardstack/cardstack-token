@@ -37,8 +37,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
-      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
-      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
+      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       await cst1.addAdmin(admin);
       await cst2.addAdmin(admin);
     });
@@ -229,8 +229,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
-      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
-      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
+      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       await cst1.addSuperAdmin(admin);
       await cst2.addSuperAdmin(admin);
     });
@@ -239,7 +239,7 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst2.address);
 
-      await cst2.configure(0x0, 0x0, 0, 0, 0, accounts[0]);
+      await cst2.configure(0x0, 0x0, 0, 0, 0, 0, 1000000, accounts[0]);
       await cst2.setMinimumBalance(0);
       await cst2.foundationWithdraw(cstEth.toNumber());
     });
@@ -267,7 +267,7 @@ contract('CardStackToken', function(accounts) {
 
     it("allows purchase of CST for successor contract", async function() {
       await cst2.upgradedFrom(cst1.address, { from: admin });
-      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, NULL_ADDRESS);
+      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
 
       let buyerAccount = accounts[8];
       checkBalance(buyerAccount, 2);
@@ -392,7 +392,7 @@ contract('CardStackToken', function(accounts) {
 
     it("allows foundationWithdraw and foundationDeposit for successor contract", async function() {
       let foundation = accounts[24];
-      await cst2.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, foundation);
+      await cst2.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation);
 
       let txnValue = web3.toWei(1, "ether");
       let startFoundationBalance = await web3.eth.getBalance(foundation);
@@ -492,6 +492,9 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(grantorBalance), 40, "the balance is correct");
       assert.equal(asInt(recipientBalance), 10, "the balance is correct");
     });
+
+    xit("allows setCustomBuyer for successor contract", async function() {
+    });
   });
 
   describe("contract upgrade - predecessor contract", function() {
@@ -511,8 +514,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
-      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
-      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
+      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       await cst1.addSuperAdmin(admin);
       await cst2.addSuperAdmin(admin);
     });
@@ -715,7 +718,7 @@ contract('CardStackToken', function(accounts) {
       await cst1.upgradeTo(cst2.address, { from: admin });
       let exceptionThrown;
       try {
-        await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, NULL_ADDRESS);
+        await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       } catch (err) {
         exceptionThrown = true;
       }
@@ -809,7 +812,7 @@ contract('CardStackToken', function(accounts) {
     it("does allow foundationWithdraw when contract has been upgraded", async function() {
       let foundation = accounts[34];
       let txnValue = web3.toWei(0.1, "ether");
-      await cst1.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, foundation);
+      await cst1.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation);
       await cst1.foundationDeposit({
         from: foundation,
         value: txnValue,
@@ -941,6 +944,9 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(asInt(grantorBalance), 50, "the balance is correct");
       assert.equal(asInt(recipientBalance), 0, "the balance is correct");
+    });
+
+    xit("does not allow setCustomBuyer when contract has been upgraded", async function() {
     });
   });
 });

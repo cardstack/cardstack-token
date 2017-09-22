@@ -39,6 +39,14 @@ contract CardStackToken is Ownable,
 
   // Note that the data for the buyer whitelist itenationally lives in this contract
   // and not in storage, as this whitelist is specific to phase 1 token sale
+  uint public cstBuyerPool;
+  uint public cstBalanceLimitPercent6SigDigits; // 100% = 1000000, 1% = 10000, 0.1% = 1000, 0.01% = 100, etc.
+
+  uint public totalCustomBuyers;
+  mapping (address => uint) public customBuyerLimit; // 6 significant digits
+  mapping (uint => address) public customBuyerForIndex;
+  mapping (address => bool) processedCustomBuyer;
+
   uint public totalBuyers;
   mapping (address => bool) public approvedBuyer;
   mapping (uint => address) public approvedBuyerForIndex;
@@ -105,6 +113,8 @@ contract CardStackToken is Ownable,
                      uint _buyPrice,
                      uint _sellPrice,
                      uint _sellCap,
+                     uint _buyerPool,
+                     uint _balanceLimit,
                      address _foundation) onlySuperAdmins unlessUpgraded initStorage returns (bool) {
 
     externalStorage.setTokenName(_tokenName);
@@ -118,6 +128,9 @@ contract CardStackToken is Ownable,
     buyPrice = _buyPrice;
     sellCap = _sellCap;
     foundation = _foundation;
+
+    cstBuyerPool = _buyerPool;
+    cstBalanceLimitPercent6SigDigits = _balanceLimit;
 
     return true;
   }
@@ -266,6 +279,18 @@ contract CardStackToken is Ownable,
     return Registry(registry).contractForHash(hash);
   }
 
+  function setCustomBuyer(address buyer, uint buyerLimitPercentage6SigDigits) onlySuperAdmins unlessUpgraded returns (bool) {
+    customBuyerLimit[buyer] = buyerLimitPercentage6SigDigits;
+    if (!processedCustomBuyer[buyer]) {
+      processedCustomBuyer[buyer] = true;
+      customBuyerForIndex[totalCustomBuyers] = buyer;
+      totalCustomBuyers = totalCustomBuyers.add(1);
+    }
+    addBuyer(buyer);
+
+    return true;
+  }
+
   function addBuyer(address buyer) onlySuperAdmins unlessUpgraded returns (bool) {
     approvedBuyer[buyer] = true;
     if (!processedBuyer[buyer]) {
@@ -273,9 +298,13 @@ contract CardStackToken is Ownable,
       approvedBuyerForIndex[totalBuyers] = buyer;
       totalBuyers = totalBuyers.add(1);
     }
+
+    return true;
   }
 
   function removeBuyer(address buyer) onlySuperAdmins unlessUpgraded returns (bool) {
     approvedBuyer[buyer] = false;
+
+    return true;
   }
 }
