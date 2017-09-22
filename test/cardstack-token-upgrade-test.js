@@ -493,7 +493,23 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(recipientBalance), 10, "the balance is correct");
     });
 
-    xit("allows setCustomBuyer for successor contract", async function() {
+    it("allows setCustomBuyer for successor contract", async function() {
+      let customBuyerAccount = accounts[29];
+
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+
+      let totalCustomBuyers = await cst2.totalCustomBuyers();
+
+      assert.equal(totalCustomBuyers, 0, 'the total custom buyers is correct');
+
+      await cst2.setCustomBuyer(customBuyerAccount, 30000, { from: admin });
+
+      totalCustomBuyers = await cst2.totalCustomBuyers();
+      let firstCustomBuyer = await cst2.customBuyerForIndex(0);
+
+
+      assert.equal(totalCustomBuyers, 1, 'the total custom buyers is correct');
+      assert.equal(firstCustomBuyer, customBuyerAccount, "the customBuyerForIndex is correct");
     });
   });
 
@@ -946,7 +962,23 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(recipientBalance), 0, "the balance is correct");
     });
 
-    xit("does not allow setCustomBuyer when contract has been upgraded", async function() {
+    it("does not allow setCustomBuyer when contract has been upgraded", async function() {
+      let customBuyerAccount = accounts[29];
+
+      await cst1.upgradeTo(cst2.address, { from: admin });
+
+      let exceptionThrown;
+      try {
+        await cst1.setCustomBuyer(customBuyerAccount, 30000, { from: admin });
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
+
+      let totalCustomBuyers = await cst1.totalCustomBuyers();
+
+      assert.equal(totalCustomBuyers, 0, 'the total custom buyers is correct');
     });
   });
 });
