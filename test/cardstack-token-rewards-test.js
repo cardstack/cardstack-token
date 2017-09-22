@@ -16,7 +16,7 @@ contract('CardStackToken', function(accounts) {
   let rewards;
   let ledger;
 
-  describe("rewards contract", function() {
+  xdescribe("rewards contract", function() {
     beforeEach(async function() {
       ledger = await CstLedger.new();
       let storage = await Storage.new();

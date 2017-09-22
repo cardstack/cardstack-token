@@ -11,7 +11,6 @@ import "./displayable.sol";
 import "./upgradeable.sol";
 import "./configurable.sol";
 import "./storable.sol";
-import "./IRewards.sol";
 
 contract CardStackToken is Ownable,
                            freezable,
@@ -34,7 +33,6 @@ contract CardStackToken is Ownable,
   uint public sellPrice;
   uint public buyPrice;
   uint public sellCap;
-  uint public minimumBalance;
   address public foundation;
 
   // Note that the data for the buyer whitelist itenationally lives in this contract
@@ -76,15 +74,6 @@ contract CardStackToken is Ownable,
     tokenLedger = ITokenLedger(ledgerAddress);
     externalStorage = storageAddress;
     _;
-  }
-
-  modifier triggersRewards() {
-    _;
-
-    address rewards = rewardsContract();
-    if (rewards != 0x0) {
-      IRewards(rewards).processRewards();
-    }
   }
 
   function CardStackToken(address _registry, string _storageName, string _ledgerName) payable {
@@ -139,7 +128,6 @@ contract CardStackToken is Ownable,
     buyPrice = externalStorage.getBuyPrice();
     sellPrice = externalStorage.getSellPrice();
     sellCap = externalStorage.getSellCap();
-    minimumBalance = externalStorage.getMinimumBalance();
     foundation = externalStorage.getFoundation();
 
     return true;
@@ -179,7 +167,7 @@ contract CardStackToken is Ownable,
     }
   }
 
-  function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded triggersRewards returns (bool) {
+  function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded returns (bool) {
     require(!frozenAccount[recipient]);
 
     tokenLedger.transfer(msg.sender, recipient, amount);
@@ -195,7 +183,7 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function grantTokens(address recipient, uint amount) onlySuperAdmins unlessFrozen unlessUpgraded triggersRewards returns (bool) {
+  function grantTokens(address recipient, uint amount) onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
     require(amount <= tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation()));           // make sure there are enough tokens to grant
 
     tokenLedger.debitAccount(recipient, amount);
@@ -204,15 +192,7 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function setMinimumBalance(uint newMinimumBalance) onlySuperAdmins  returns (bool) {
-    minimumBalance = newMinimumBalance;
-
-    externalStorage.setMinimumBalance(newMinimumBalance);
-
-    return true;
-  }
-
-  function buy() payable unlessFrozen unlessUpgraded triggersRewards returns (uint) {
+  function buy() payable unlessFrozen unlessUpgraded returns (uint) {
     require(msg.value >= buyPrice);
     require(approvedBuyer[msg.sender]);
     assert(buyPrice > 0);
@@ -222,6 +202,18 @@ contract CardStackToken is Ownable,
     assert(tokenLedger.totalInCirculation().add(amount) <= sellCap);
     assert(amount <= supply);
 
+    uint balanceLimit;
+    uint buyerBalance = tokenLedger.balanceOf(msg.sender);
+    uint customLimit = customBuyerLimit[msg.sender];
+
+    if (customLimit > 0) {
+      balanceLimit = cstBuyerPool.mul(customLimit).div(1000000);
+    } else {
+      balanceLimit = cstBuyerPool.mul(cstBalanceLimitPercent6SigDigits).div(1000000);
+    }
+
+    assert(balanceLimit >= buyerBalance.add(amount));
+
     tokenLedger.debitAccount(msg.sender, amount);
     Transfer(this, msg.sender, amount);
 
@@ -229,8 +221,6 @@ contract CardStackToken is Ownable,
   }
 
   function foundationWithdraw(uint amount) onlyFoundation returns (bool) {
-    require(amount <= this.balance.sub(minimumBalance));
-
     msg.sender.transfer(amount);
 
     return true;
@@ -245,7 +235,7 @@ contract CardStackToken is Ownable,
     return externalStorage.getAllowance(owner, spender);
   }
 
-  function transferFrom(address from, address to, uint256 value) unlessFrozen unlessUpgraded triggersRewards returns (bool) {
+  function transferFrom(address from, address to, uint256 value) unlessFrozen unlessUpgraded returns (bool) {
     require(!frozenAccount[from]);
     require(!frozenAccount[to]);
 
@@ -266,17 +256,6 @@ contract CardStackToken is Ownable,
 
     Approval(msg.sender, spender, value);
     return true;
-  }
-
-  function setRewardsContractName(string rewardsContractName) onlySuperAdmins unlessUpgraded returns (bool) {
-    externalStorage.setRewardsContractHash(sha3(rewardsContractName));
-    return true;
-  }
-
-  function rewardsContract() constant unlessUpgraded returns (address) {
-    bytes32 hash = externalStorage.getRewardsContractHash();
-
-    return Registry(registry).contractForHash(hash);
   }
 
   function setCustomBuyer(address buyer, uint buyerLimitPercentage6SigDigits) onlySuperAdmins unlessUpgraded returns (bool) {

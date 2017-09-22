@@ -34,7 +34,6 @@ contract('Registry', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.1, "ether"), { from: superAdmin });
       await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.1, "ether"), { from: superAdmin });
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 100, { from: superAdmin });
-      await registry.setStorageUIntValue("cstStorage", "cstMinimumBalance", web3.toWei(0.2, "ether"), { from: superAdmin });
       await registry.setStorageAddressValue("cstStorage", "cstFoundation", foundation, { from: superAdmin });
 
       cst1 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
@@ -249,6 +248,14 @@ contract('Registry', function(accounts) {
 
     it("can preserve contract state through a contract upgrade", async function() {
       await registry.register("CardStack Token", cst1.address, { from: superAdmin });
+      await cst1.configure(web3.toHex("CardStack Token"),
+                           web3.toHex("CST"),
+                           web3.toWei(0.1, "ether"),
+                           web3.toWei(0.1, "ether"),
+                           100,
+                           100,
+                           1000000,
+                           foundation);
 
       let buyerAccount = accounts[8];
       let recipientAccount = accounts[4];
@@ -287,7 +294,6 @@ contract('Registry', function(accounts) {
       let buyPrice = await cst2.buyPrice();
       let sellPrice = await cst2.sellPrice();
       let sellCap = await cst2.sellCap();
-      let minimumBalance = await cst2.minimumBalance();
       let foundationAddress = await cst2.foundation();
 
       assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
@@ -299,7 +305,6 @@ contract('Registry', function(accounts) {
       assert.equal(buyPrice.toNumber(), web3.toWei(0.1, "ether"), "the buyPrice is correct");
       assert.equal(sellPrice.toNumber(), web3.toWei(0.1, "ether"), "the sellPrice is correct");
       assert.equal(sellCap.toNumber(), 100, "the sellCap is correct");
-      assert.equal(minimumBalance.toNumber(), web3.toWei(0.2, "ether"), "the minimumBalance is correct");
       assert.equal(foundationAddress, foundation, "the foundation address is correct");
     });
 

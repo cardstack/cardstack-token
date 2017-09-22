@@ -52,7 +52,6 @@ contract('CardStackToken', function(accounts) {
       let cstEth = await web3.eth.getBalance(cst.address);
 
       await cst.configure(0x0, 0x0, 0, 0, 0, 0, 1000000, accounts[0]);
-      await cst.setMinimumBalance(0);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
 
@@ -408,7 +407,6 @@ contract('CardStackToken', function(accounts) {
       let cstEth = await web3.eth.getBalance(cst.address);
 
       await cst.configure(0x0, 0x0, 0, 0, 0, 0, 1000000, accounts[0]);
-      await cst.setMinimumBalance(0);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
 
@@ -490,45 +488,6 @@ contract('CardStackToken', function(accounts) {
       assert.equal(endCstBalance, txnValue, "The CST balance is correct");
     });
 
-    it("does not allow foundation to withdraw more ether than minimumBalance amount", async function() {
-      let buyer = accounts[20];
-      await checkBalance(buyer, 1);
-      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation, { from: superAdmin });
-
-      let txnValue = web3.toWei(1, "ether");
-      let minValue = web3.toWei(0.5, "ether");
-      await cst.setMinimumBalance(minValue, { from: superAdmin });
-      await cst.addBuyer(buyer);
-      await cst.buy({
-        from: buyer,
-        value: txnValue,
-        gasPrice: GAS_PRICE
-      });
-
-      let startFoundationBalance = await web3.eth.getBalance(foundation);
-      startFoundationBalance = asInt(startFoundationBalance);
-
-      let exceptionThrown;
-      try {
-        await cst.foundationWithdraw(txnValue, {
-          from: foundation,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Transaction should fire exception");
-
-      let endCstBalance = await web3.eth.getBalance(cst.address);
-      let endFoundationBalance = await web3.eth.getBalance(foundation);
-      endCstBalance = asInt(endCstBalance);
-      endFoundationBalance = asInt(endFoundationBalance);
-
-      assert.ok(startFoundationBalance - endFoundationBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The foundation account was changed for just gas");
-      assert.equal(endCstBalance, txnValue, "The CST balance is correct");
-    });
-
     it("allows foundation to deposit ether in foundationDeposit", async function() {
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation, { from: superAdmin });
 
@@ -558,23 +517,6 @@ contract('CardStackToken', function(accounts) {
       assert.ok(Math.abs(finalBalance) < parseFloat(web3.fromWei(ROUNDING_ERROR_WEI, "ether")), "Foundations's wallet balance was changed correctly");
       assert.equal(endCstBalance, txnValue, "The CST balance is correct");
     });
-
-    it("does not allow non-super admin to set minimumBalance", async function() {
-      let nonSuperAdmin = accounts[4];
-      let minValue = web3.toWei(0.5, "ether");
-      let exceptionThrown;
-      try {
-        await cst.setMinimumBalance(minValue, { from: nonSuperAdmin });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Transaction should fire exception");
-      let minimumBalance = await cst.minimumBalance();
-
-      assert.equal(minimumBalance.toNumber(), 0, "The minimumBalance is correct");
-    });
-
   });
 
   describe("buyer whitelist", function() {

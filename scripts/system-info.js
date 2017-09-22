@@ -68,12 +68,14 @@ module.exports = async function(callback) {
   let sellCap = await cst.sellCap();
   let foundation = await cst.foundation();
   let balanceWei = await web3.eth.getBalance(cst.address);
-  let minBalanceWei = await cst.minimumBalance();
   let totalSupply = await cst.totalSupply();
   let cstFrozenCount = await cst.totalFrozenAccounts();
   let cstAdminCount = await cst.totalAdmins();
   let cstSuperAdminCount = await cst.totalSuperAdmins();
   let cstBuyerCount = await cst.totalBuyers();
+  let cstCustomBuyerCount = await cst.totalCustomBuyers();
+  let cstBuyerPool = await cst.cstBuyerPool();
+  let cstBalanceLimit = await cst.cstBalanceLimitPercent6SigDigits();
 
   let storageAddress = await registry.storageForHash(web3.sha3(cstStorageName.toString()));
   let ledgerAddress = await registry.storageForHash(web3.sha3(cstLedgerName.toString()));
@@ -136,62 +138,6 @@ Registry (${registry.address}):
 
   console.log(`
 
-Cardstack Token (${cst.address}):
-  registry: ${cstRegistry}
-  storageName: ${cstStorageName}
-  ledgerName: ${cstLedgerName}
-  isFrozen: ${cstFrozen}
-  deprecated: ${cstDeprecated}
-  successor: ${successor}
-  name: ${cstName}
-  symbol: ${cstSymbol}
-  buyPrice (ETH): ${web3.fromWei(buyPriceWei, "ether")}
-  sellPrice (ETH): ${web3.fromWei(sellPriceWei, "ether")}
-  sellCap: ${sellCap}
-  totalSupply: ${totalSupply}
-  balance (ETH): ${web3.fromWei(balanceWei, "ether")}
-  minimumBalance (ETH): ${web3.fromWei(minBalanceWei, "ether")}
-  foundation: ${foundation}
-
-  CST super admins:`);
-  for (let i = 0; i < cstSuperAdminCount; i++) {
-    let address = await cst.superAdminsForIndex(i);
-    let isAdmin = await cst.superAdmins(address);
-    if (isAdmin) {
-      console.log(`    ${prettyAddress(address)}`);
-    }
-  }
-  console.log(`
-  CST admins:`);
-  for (let i = 0; i < cstAdminCount; i++) {
-    let address = await cst.adminsForIndex(i);
-    let isAdmin = await cst.admins(address);
-    if (isAdmin) {
-      console.log(`    ${prettyAddress(address)}`);
-    }
-  }
-  console.log(`
-  CST Buyers:`);
-  for (let i = 0; i < cstBuyerCount; i++) {
-    let address = await cst.approvedBuyerForIndex(i);
-    let isBuyer = await cst.approvedBuyer(address);
-    if (isBuyer) {
-      console.log(`    ${prettyAddress(address)}`);
-    }
-  }
-
-  console.log(`
-  Frozen Accounts:`);
-  for (let i = 0; i < cstFrozenCount; i++) {
-    let address = await cst.frozenAccountForIndex(i);
-    let isFrozen = await cst.frozenAccount(address);
-    if (isFrozen) {
-      console.log(`    ${address}`);
-    }
-  }
-
-  console.log(`
-
 Ledger (${ledger.address})
   totalTokens: ${totalTokens}
   totalInCirculation: ${totalInCirculation}
@@ -233,6 +179,72 @@ Storage (${storage.address})
     let isAdmin = await storage.admins(address);
     if (isAdmin) {
       console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+  console.log(`
+
+Cardstack Token (${cst.address}):
+  registry: ${cstRegistry}
+  storageName: ${cstStorageName}
+  ledgerName: ${cstLedgerName}
+  isFrozen: ${cstFrozen}
+  deprecated: ${cstDeprecated}
+  successor: ${successor}
+  name: ${cstName}
+  symbol: ${cstSymbol}
+  buyPrice (ETH): ${web3.fromWei(buyPriceWei, "ether")}
+  sellPrice (ETH): ${web3.fromWei(sellPriceWei, "ether")}
+  sellCap: ${sellCap}
+  buyerPool: ${cstBuyerPool}
+  balanceLimit: ${(cstBalanceLimit.toNumber() / 1000000) * 100}% (${Math.floor(cstBuyerPool.toNumber() * cstBalanceLimit.toNumber() / 1000000)} CST)
+  totalSupply: ${totalSupply}
+  balance (ETH): ${web3.fromWei(balanceWei, "ether")}
+  foundation: ${foundation}
+
+  CST super admins:`);
+  for (let i = 0; i < cstSuperAdminCount; i++) {
+    let address = await cst.superAdminsForIndex(i);
+    let isAdmin = await cst.superAdmins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+  console.log(`
+  CST admins:`);
+  for (let i = 0; i < cstAdminCount; i++) {
+    let address = await cst.adminsForIndex(i);
+    let isAdmin = await cst.admins(address);
+    if (isAdmin) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+  console.log(`
+  CST Custom Buyer limits:`);
+  for (let i = 0; i < cstCustomBuyerCount; i++) {
+    let address = await cst.customBuyerForIndex(i);
+    let limit = await cst.customBuyerLimit(address);
+    limit = limit.toNumber();
+    if (limit) {
+      console.log(`    ${prettyAddress(address)}: ${(limit / 1000000) * 100}% (${Math.floor(cstBuyerPool.toNumber() * limit / 1000000)} CST)`);
+    }
+  }
+  console.log(`
+  CST Buyers:`);
+  for (let i = 0; i < cstBuyerCount; i++) {
+    let address = await cst.approvedBuyerForIndex(i);
+    let isBuyer = await cst.approvedBuyer(address);
+    if (isBuyer) {
+      console.log(`    ${prettyAddress(address)}`);
+    }
+  }
+
+  console.log(`
+  Frozen Accounts:`);
+  for (let i = 0; i < cstFrozenCount; i++) {
+    let address = await cst.frozenAccountForIndex(i);
+    let isFrozen = await cst.frozenAccount(address);
+    if (isFrozen) {
+      console.log(`    ${address}`);
     }
   }
 
