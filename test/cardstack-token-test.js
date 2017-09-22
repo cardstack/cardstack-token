@@ -67,6 +67,8 @@ contract('CardStackToken', function(accounts) {
       let buyPrice = await cst.buyPrice();
       let sellPrice = await cst.sellPrice();
       let sellCap = await cst.sellCap();
+      let buyerPool = await cst.cstBuyerPool();
+      let balanceLimit = await cst.cstBalanceLimitPercent6SigDigits();
       let totalInCirculation = await cst.totalInCirculation();
 
       assert.equal(name, "CardStack Token", "The name of the token is correct");
@@ -76,21 +78,24 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
       assert.equal(asInt(buyPrice), 2, "The buyPrice is correct");
       assert.equal(asInt(sellPrice), 1, "The sellPrice is correct");
+      assert.equal(asInt(buyerPool), 8000, "The buyerPool is correct");
+      assert.equal(asInt(balanceLimit), 1000000, "The balanceLimit is correct");
 
       let storageTokenName = await storage.getBytes32Value("cstTokenName");
       let storageTokenSymbol = await storage.getBytes32Value("cstTokenSymbol");
       let storageBuyPrice = await storage.getUIntValue("cstBuyPrice");
       let storageSellPrice = await storage.getUIntValue("cstSellPrice");
       let storageSellCap = await storage.getUIntValue("cstSellCap");
+      let storageBuyerPool = await storage.getUIntValue("cstBuyerPool");
+      let storageBalanceLimit = await storage.getUIntValue("cstBalanceLimitPercent6SigDigits");
 
       assert.equal(web3.toUtf8(storageTokenName.toString()), "CardStack Token", "external storage is updated");
       assert.equal(web3.toUtf8(storageTokenSymbol.toString()), "CST", "external storage is updated");
       assert.equal(storageBuyPrice.toNumber(), 2, "external storage is updated");
       assert.equal(storageSellPrice.toNumber(), 1, "external storage is updated");
       assert.equal(storageSellCap.toNumber(), 8000, "external storage is updated");
-    });
-
-    xit("it should configure CST with the buyer pool and the balance limit (feelfree to merge with test above", async function() {
+      assert.equal(storageBuyerPool.toNumber(), 0, "external storage is not updated");
+      assert.equal(storageBalanceLimit.toNumber(), 0, "external storage is not updated");
     });
 
     it("non-owner cannot configure token", async function() {
@@ -664,14 +669,55 @@ contract('CardStackToken', function(accounts) {
   });
 
   describe("setCustomBuyer", function() {
-    xit("should allows super admin to set custom buyer", async function() {
-      // assert totalCustomBuyers
-      // assert customBuyerForIndex
-      // assert customBuyerLimt
-      // assert approvedBuyer
+    let customBuyer = accounts[23];
+    let approvedBuyer = accounts[17];
+
+    beforeEach(async function() {
+      ledger = await CstLedger.new();
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await registry.register("CST", cst.address);
+      await cst.addSuperAdmin(superAdmin);
     });
 
-    xit("should not allow non-super admin to set custom buyer", async function() {
+    it("should allows super admin to set custom buyer", async function() {
+      let totalCustomBuyers = await cst.totalCustomBuyers();
+
+      assert.equal(totalCustomBuyers, 0, 'the total custom buyers is correct');
+
+      await cst.setCustomBuyer(customBuyer, 30000, { from: superAdmin });
+
+      totalCustomBuyers = await cst.totalCustomBuyers();
+      let customBuyerLimit = await cst.customBuyerLimit(customBuyer);
+      let isBuyer = await cst.approvedBuyer(customBuyer);
+      let firstCustomBuyer = await cst.customBuyerForIndex(0);
+
+      assert.equal(totalCustomBuyers, 1, 'the total custom buyers is correct');
+      assert.equal(customBuyerLimit, 30000, 'the custom buyer limit is correct');
+      assert.ok(isBuyer, "the buyer is set");
+      assert.equal(firstCustomBuyer, customBuyer, "the customBuyerForIndex is correct");
+    });
+
+    it("should not allow non-super admin to set custom buyer", async function() {
+      let exceptionThrown;
+      try {
+        await cst.setCustomBuyer(approvedBuyer, { from: approvedBuyer });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let totalCustomBuyers = await cst.totalCustomBuyers();
+      let isBuyer = await cst.approvedBuyer(approvedBuyer);
+
+      assert.equal(totalCustomBuyers.toNumber(), 0, 'the totalCustomBuyers is correct');
+      assert.notOk(isBuyer, "the buyer is not set");
     });
   });
 
