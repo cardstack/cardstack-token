@@ -14,7 +14,7 @@ A current version of the CST ERC-20 token has been deployed to Rinkeby. The CST 
 
 **Address:**
 ```
- 0x19b2aa23e083389a217564d7305aad27bef59c68   
+ 0x9b664f2932d701d84e52865c51f59e27f8838878   
  ```
 **Data:**
 ```
