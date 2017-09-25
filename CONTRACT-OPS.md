@@ -223,7 +223,7 @@ geth --rpc --rpcapi db,eth,net,web3,personal
 ```
 * From the terminal, in the cardstack token project directory execute this command to create the contract confugration transaction (note that you can't actually sell CST back to the contract, but the contract still needs to have a sellPriceEth set):
 ```
-truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
+truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --buyerPool=50000000 --maximumBalancePercentage=100% --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
 ```
 (These numbers are examples, use the real values when the time comes. Also note that the foundation address is optional)
 * The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide. The gas limit describes the units of gas that this transaction will allow to be consumed. You are not penalized for using a larger value than the estimated gas. You are only charged for gas that your transaction actually uses. Also, increasing this particular value does not make your tranaction process faster (that is a different field).
@@ -252,13 +252,29 @@ truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry addre
 ```
 truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
+
+* Next, whitelist the buyers of CST, note that a minimum balance percentage for the buyer only needs to be set if it deviates from the global maximum percentage set in the contract:
+```
+truffle exec ./scripts/cst-add-buyer.js --address=<buyer's address> --maximumBalancePercentage=0.2% -r <registry address> -d --network=mainnet
+```
+* The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide.
+* adjust the gas price slider in the upper right to reflect the speed that you want the transaction to be processed with.
+* click the button to confirm the transaction
+* enter the PIN for the cold wallet
+* confirm the transaction on the cold wallet
+* send the signed transaction
+* monitor the completion of the transaction.
+* after the transaction is complete view the CST system info and confirm that the configuration has updated correctly: 
+```
+truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+```
+
 * Next, generate the information that you need to share with the outside world on how to buy a CST token:
 ```
 truffle exec ./scripts/cst-buy-info.js --network=mainnet -r <registry address>
 ``` 
 * The result will be an Ethereum address, data, and estimated gas to purchase CST tokens.
-* The CST is now available for purchase and the CST contract will disable the `buy()` function as soon as the amount of CST tokens sold reaches the `sellCap` specified during the CST configuration.
-* Finally we should perform a test purchase of CST on mainnet to confirm that everything is in working order.
+* The CST is now available for purchase and the CST contract will disable the `buy()` function as soon as the amount of CST tokens sold reaches the `sellCap` specified during the CST configuration or the buyer's balance would exceed the maximum balance amount after the purchase of CST.
 
 ### T-minus 0
 * Share the CST purchase information publically.
