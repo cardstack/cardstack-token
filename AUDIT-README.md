@@ -10,16 +10,17 @@ The CST token project leverages Truffle as our framework. We additionally have a
 
 Additionally, we've written scripts that are executed via `truffle exec` in the `scripts/` folder for performing contract operations on CST token, including: registering the token, configuring the token, minting tokens, granting CST, freezing accounts, getting contract/ledger status, managing admins, etc.
 
-A current version of the CST ERC-20 token has been deployed to Rinkeby. To purchase CST send ethers to:
+A current version of the CST ERC-20 token has been deployed to Rinkeby. The CST contract leverages a buyer "white list". To purchase CST, send use the addresses for the buyer that you wish to use, and then after we have added the buyers to the whitelist, send ethers to:
 
 **Address:**
 ```
- 0xf96f2ca367e194ce82b1cb86d4bb495241cac93e   
+ 0x19b2aa23e083389a217564d7305aad27bef59c68   
  ```
 **Data:**
 ```
 0xa6f2ae3a
-``` 
+```
+(estimated gas 6125435)
 
 The current price of CST in Rinkeby is 1 CST = 0.002 ETH
 
