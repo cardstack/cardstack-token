@@ -198,9 +198,9 @@ contract CardStackToken is Ownable,
     assert(buyPrice > 0);
 
     uint amount = msg.value.div(buyPrice);
-    uint supply = tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation());
+    uint tokensAvailable = tokenLedger.tokensAvailable();
     assert(tokenLedger.totalInCirculation().add(amount) <= sellCap);
-    assert(amount <= supply);
+    assert(amount <= tokensAvailable);
 
     uint balanceLimit;
     uint buyerBalance = tokenLedger.balanceOf(msg.sender);
