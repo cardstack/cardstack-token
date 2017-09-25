@@ -14,8 +14,8 @@ const optionsDefs = [
 
 const usage = [
   {
-    header: "remove-buyer",
-    content: "This script removes a buyer address from the buyers whitelist."
+    header: "cst-remove-buyer",
+    content: "This script removes a buyer address from the CST buyers whitelist."
   },{
     header: "Options",
     optionList: [{
