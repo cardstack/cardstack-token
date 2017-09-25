@@ -15,8 +15,8 @@ const optionsDefs = [
 
 const usage = [
   {
-    header: "add-buyer",
-    content: "This script adds a buyer address to the buyers whitelist."
+    header: "cst-add-buyer",
+    content: "This script adds a buyer address to the CST buyers whitelist."
   },{
     header: "Options",
     optionList: [{
@@ -62,20 +62,23 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
+  let buyerPool = await cst.cstBuyerPool();
+  buyerPool = buyerPool.toNumber();
 
   let { address, maximumBalancePercentage } = options;
   if (maximumBalancePercentage) {
     maximumBalancePercentage = parseFloat(maximumBalancePercentage.replace("%", "")) / 100;
   }
+  let maxBalance = Math.floor(buyerPool * maximumBalancePercentage);
 
   if (options.data) {
-    if (maximumBalancePercentage) {
-      let data = cst.contract.setCustomBuyer.getData(address, maximumBalancePercentage * 1000000);
+    if (maximumBalancePercentage !== undefined && maximumBalancePercentage !== null) {
+      let data = cst.contract.setCustomBuyer.getData(address, maxBalance);
       let estimatedGas = web3.eth.estimateGas({
         to: cst.address,
         data
       });
-      console.log(`Data for adding buyer "${address}" with maximumBalancePercentage ${maximumBalancePercentage * 100}% for CST ${cst.address}:`);
+      console.log(`Data for adding buyer "${address}" with maximumBalancePercentage ${maximumBalancePercentage * 100}% (${maxBalance} CST ) for CST ${cst.address}:`);
       console.log(`\nAddress: ${cst.address}`);
       console.log(`Data: ${data}`);
       console.log(`Estimated gas: ${estimatedGas}`);
@@ -96,9 +99,9 @@ module.exports = async function(callback) {
   }
 
   try {
-    if (maximumBalancePercentage) {
-      console.log(`Adding buyer "${address}" with maximumBalancePercentage ${maximumBalancePercentage * 100}% for CST ${cst.address}...`);
-      await cst.setCustomBuyer(address, maximumBalancePercentage * 1000000);
+    if (maximumBalancePercentage !== undefined && maximumBalancePercentage !== null) {
+      console.log(`Adding buyer "${address}" with maximumBalancePercentage ${maximumBalancePercentage * 100}% (${maxBalance} CST) for CST ${cst.address}...`);
+      await cst.setCustomBuyer(address, maxBalance);
     } else {
       console.log(`Adding buyer "${address}" for CST ${cst.address}...`);
       await cst.addBuyer(address);

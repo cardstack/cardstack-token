@@ -38,10 +38,10 @@ contract CardStackToken is Ownable,
   // Note that the data for the buyer whitelist itenationally lives in this contract
   // and not in storage, as this whitelist is specific to phase 1 token sale
   uint public cstBuyerPool;
-  uint public cstBalanceLimitPercent6SigDigits; // 100% = 1000000, 1% = 10000, 0.1% = 1000, 0.01% = 100, etc.
+  uint public cstBalanceLimit;
 
   uint public totalCustomBuyers;
-  mapping (address => uint) public customBuyerLimit; // 6 significant digits
+  mapping (address => uint) public customBuyerLimit;
   mapping (uint => address) public customBuyerForIndex;
   mapping (address => bool) processedCustomBuyer;
 
@@ -119,7 +119,7 @@ contract CardStackToken is Ownable,
     foundation = _foundation;
 
     cstBuyerPool = _buyerPool;
-    cstBalanceLimitPercent6SigDigits = _balanceLimit;
+    cstBalanceLimit = _balanceLimit;
 
     return true;
   }
@@ -207,9 +207,9 @@ contract CardStackToken is Ownable,
     uint customLimit = customBuyerLimit[msg.sender];
 
     if (customLimit > 0) {
-      balanceLimit = cstBuyerPool.mul(customLimit).div(1000000);
+      balanceLimit = customLimit;
     } else {
-      balanceLimit = cstBuyerPool.mul(cstBalanceLimitPercent6SigDigits).div(1000000);
+      balanceLimit = cstBalanceLimit;
     }
 
     assert(balanceLimit >= buyerBalance.add(amount));
@@ -258,8 +258,8 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function setCustomBuyer(address buyer, uint buyerLimitPercentage6SigDigits) onlySuperAdmins unlessUpgraded returns (bool) {
-    customBuyerLimit[buyer] = buyerLimitPercentage6SigDigits;
+  function setCustomBuyer(address buyer, uint balanceLimit) onlySuperAdmins unlessUpgraded returns (bool) {
+    customBuyerLimit[buyer] = balanceLimit;
     if (!processedCustomBuyer[buyer]) {
       processedCustomBuyer[buyer] = true;
       customBuyerForIndex[totalCustomBuyers] = buyer;

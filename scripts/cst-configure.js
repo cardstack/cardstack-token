@@ -100,6 +100,8 @@ module.exports = async function(callback) {
   let registryAddress = options.registry;
   foundation = foundation || NULL_ADDRESS;
 
+  let maxBalance = Math.floor(buyerPool * maximumBalancePercentage);
+
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
 
   console.log(`Using registry at ${registry.address}`);
@@ -114,7 +116,7 @@ module.exports = async function(callback) {
   sell price: (ETH): ${sellPriceEth}
   sell cap: ${sellCap}
   buyer pool: ${buyerPool}
-  maximum balance percentage: ${maximumBalancePercentage * 100}% (${Math.floor(buyerPool * maximumBalancePercentage)} CST)
+  maximum balance percentage: ${maximumBalancePercentage * 100}% (${maxBalance} CST)
   foundation address: ${foundation}`);
 
   if (options.data) {
@@ -124,7 +126,7 @@ module.exports = async function(callback) {
                                               web3.toWei(parseFloat(sellPriceEth), "ether"),
                                               sellCap,
                                               buyerPool,
-                                              maximumBalancePercentage * 1000000,
+                                              maxBalance,
                                               foundation);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
@@ -146,7 +148,7 @@ module.exports = async function(callback) {
                         web3.toWei(parseFloat(sellPriceEth), "ether"),
                         sellCap,
                         buyerPool,
-                        maximumBalancePercentage * 1000000,
+                        maxBalance,
                         foundation);
     console.log("done");
   } catch (err) {

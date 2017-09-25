@@ -75,7 +75,7 @@ module.exports = async function(callback) {
   let cstBuyerCount = await cst.totalBuyers();
   let cstCustomBuyerCount = await cst.totalCustomBuyers();
   let cstBuyerPool = await cst.cstBuyerPool();
-  let cstBalanceLimit = await cst.cstBalanceLimitPercent6SigDigits();
+  let cstBalanceLimit = await cst.cstBalanceLimit();
 
   let storageAddress = await registry.storageForHash(web3.sha3(cstStorageName.toString()));
   let ledgerAddress = await registry.storageForHash(web3.sha3(cstLedgerName.toString()));
@@ -184,7 +184,7 @@ Storage (${storage.address})
   console.log(`
 
 Cardstack Token (${cst.address}):
-  registry: ${cstRegistry}
+  registry: ${prettyAddress(cstRegistry)}
   storageName: ${cstStorageName}
   ledgerName: ${cstLedgerName}
   isFrozen: ${cstFrozen}
@@ -196,7 +196,7 @@ Cardstack Token (${cst.address}):
   sellPrice (ETH): ${web3.fromWei(sellPriceWei, "ether")}
   sellCap: ${sellCap}
   buyerPool: ${cstBuyerPool}
-  balanceLimit: ${(cstBalanceLimit.toNumber() / 1000000) * 100}% (${Math.floor(cstBuyerPool.toNumber() * cstBalanceLimit.toNumber() / 1000000)} CST)
+  balanceLimit: ${(cstBalanceLimit.toNumber() / cstBuyerPool.toNumber()) * 100}% (${cstBalanceLimit} CST)
   totalSupply: ${totalSupply}
   balance (ETH): ${web3.fromWei(balanceWei, "ether")}
   foundation: ${foundation}
@@ -219,13 +219,13 @@ Cardstack Token (${cst.address}):
     }
   }
   console.log(`
-  CST Custom Buyer limits:`);
+  CST Buyers with custom balance limit:`);
   for (let i = 0; i < cstCustomBuyerCount; i++) {
     let address = await cst.customBuyerForIndex(i);
     let limit = await cst.customBuyerLimit(address);
     limit = limit.toNumber();
     if (limit) {
-      console.log(`    ${prettyAddress(address)}: ${(limit / 1000000) * 100}% (${Math.floor(cstBuyerPool.toNumber() * limit / 1000000)} CST)`);
+      console.log(`    ${prettyAddress(address)}: ${(limit/cstBuyerPool.toNumber()) * 100}% (${limit} CST)`);
     }
   }
   console.log(`

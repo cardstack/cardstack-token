@@ -272,8 +272,8 @@ contract('CardStackToken', function(accounts) {
                           web3.toWei(1, "ether"),
                           web3.toWei(1, "ether"),
                           100,
-                          10,     // CST pool is 10 CST
-                          200000, // 20% balance limit, which means max of 2 CST per account (20% of the 10 CST pool)
+                          10,
+                          2,
                           NULL_ADDRESS);
       let buyerAccount = accounts[8];
       let txnValue = web3.toWei(2, "ether");
@@ -329,8 +329,8 @@ contract('CardStackToken', function(accounts) {
                           web3.toWei(1, "ether"),
                           web3.toWei(1, "ether"),
                           100,
-                          10,     // CST pool is 10 CST
-                          200000, // 20% balance limit, which means max of 2 CST per account (20% of the 10 CST pool)
+                          10,
+                          2,
                           NULL_ADDRESS);
       let txnValue = web3.toWei(2, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
@@ -370,8 +370,8 @@ contract('CardStackToken', function(accounts) {
                           web3.toWei(1, "ether"),
                           web3.toWei(1, "ether"),
                           100,
-                          10,     // CST pool is 10 CST
-                          200000, // 20% balance limit, which means max of 2 CST per account (20% of the 10 CST pool)
+                          10,
+                          2,
                           NULL_ADDRESS);
       let buyerAccount = accounts[8];
       let txnValue = web3.toWei(4, "ether");
@@ -381,7 +381,7 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
-      await cst.setCustomBuyer(buyerAccount, 400000); // 40% balance limit, which means max of 4 CST for the custom balance limit (40% of 10 CST pool)
+      await cst.setCustomBuyer(buyerAccount, 4);
 
       let txn = await cst.buy({
         from: buyerAccount,
@@ -427,15 +427,15 @@ contract('CardStackToken', function(accounts) {
                           web3.toWei(1, "ether"),
                           web3.toWei(1, "ether"),
                           100,
-                          10,     // CST pool is 10 CST
-                          200000, // 20% balance limit, which means max of 2 CST per account (20% of the 10 CST pool)
+                          10,
+                          2,
                           NULL_ADDRESS);
       let txnValue = web3.toWei(4, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
 
       startBalance = asInt(startBalance);
 
-      await cst.setCustomBuyer(buyerAccount, 400000); // 40% balance limit, which means max of 4 CST for the custom balance limit (40% of 10 CST pool)
+      await cst.setCustomBuyer(buyerAccount, 4);
 
       let exceptionThrown;
       try {
