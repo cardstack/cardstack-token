@@ -28,7 +28,7 @@ contract('CardStackToken', function(accounts) {
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
-      await registry.register("CST", cst.address, false);
+      await registry.register("CST", cst.address);
 
       for (let i = 0; i < accounts.length; i++) {
         await checkBalance(accounts[i], 1);
