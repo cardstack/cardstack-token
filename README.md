@@ -72,11 +72,21 @@ You can view the CST system info by executing:
 ```
 truffle exec ./scripts/system-info.js --network=testrpc -r <Registry's address> 
 ```
-You can configure the price and details around CST by executing: TODO (copy from CONTRACT_OPS.md)
 
-You can mint new CST's (which must exist in order for people to buy) by executing: TODO (copy from CONTRACT_OPS.md)
+You can configure the price and details around CST by executing:
+```
+truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --buyerPool=50000000 --maximumBalancePercentage=100% --foundation="<foundation address>" -r "<registry address>" --network=testrpc
+```
 
-You will need to whitelist buyers of CST by executing: TODO (copy from CONTRACT_OPS.md)
+You can mint new CST's (which must exist in order for people to buy) by executing:
+```
+truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry address> --network=testrpc
+```
+
+You will need to whitelist buyers of CST by executing:
+```
+truffle exec ./scripts/cst-add-buyer.js --address=<buyer's address> -r <registry address> --network=testrpc
+```
 
 You can execute this script to get the purchase information for CST:
 ```
