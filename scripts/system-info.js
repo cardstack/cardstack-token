@@ -5,7 +5,7 @@ let RegistryContract = artifacts.require("./Registry.sol");
 let ExternalStorage = artifacts.require("./ExternalStorage.sol");
 let CstLedger = artifacts.require("./CstLedger.sol");
 
-const { CST_NAME } = require("../lib/constants");
+const { NULL_ADDRESS, CST_NAME } = require("../lib/constants");
 
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
@@ -49,6 +49,12 @@ module.exports = async function(callback) {
 
   console.log(`Using registry at ${registry.address}`);
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
+  if (cstAddress === NULL_ADDRESS) {
+    console.log(`There is no CST contract resgistered with the Registry at ${registry.address}`);
+    callback();
+    return;
+  }
+
   let registryAdminCount = await registry.totalAdmins();
   let registrySuperAdminCount = await registry.totalSuperAdmins();
 
