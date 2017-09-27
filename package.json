@@ -8,7 +8,7 @@
   "scripts": {
     "build": "rm -rf build && truffle compile",
     "test": "rm -rf build && ./node_modules/.bin/truffle test",
-    "testrpc": "rm -f ./node_modules/ethereum-bridge/config/instance/*.json && ./node_modules/.bin/testrpc --mnemonic='gooches are never the answer' --accounts 50",
+    "testrpc": "rm -f ./node_modules/ethereum-bridge/config/instance/*.json && ./node_modules/.bin/testrpc --mnemonic='gooches are never the answer' --accounts 50 --gasLimit 0x5D1420",
     "oraclize": "./bin/oraclize.sh",
     "oraclize-clean": "rm -f ./node_modules/ethereum-bridge/config/instance/*.json"
   },
