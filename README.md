@@ -72,6 +72,11 @@ You can view the CST system info by executing:
 ```
 truffle exec ./scripts/system-info.js --network=testrpc -r <Registry's address> 
 ```
+You can configure the price and details around CST by executing: TODO (copy from CONTRACT_OPS.md)
+
+You can mint new CST's (which must exist in order for people to buy) by executing: TODO (copy from CONTRACT_OPS.md)
+
+You will need to whitelist buyers of CST by executing: TODO (copy from CONTRACT_OPS.md)
 
 You can execute this script to get the purchase information for CST:
 ```
