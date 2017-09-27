@@ -93,7 +93,7 @@ You can execute this script to get the purchase information for CST:
 truffle exec ./scripts/cst-buy-info.js --network=testrpc -r <Registry's address>
 ```
 
-From there you can execute other scripts to configure the CST contract and/or mint tokens, etc.
+
 
 ### Rinkeby
 To deploy the CST contracts on Rinkeby, make sure that your wallet's main account has at least 1.25 ETH (which is how much it currently costs to deploy the CST contracts as of 9/8/2017). Copy your wallet's main account address into the clipboard. Close the Mist or Ethereum wallet apps if they are open (geth cannot run when Mist is running and vice versa). Then from the commandline execute:
