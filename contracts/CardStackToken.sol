@@ -238,6 +238,8 @@ contract CardStackToken is Ownable,
   function transferFrom(address from, address to, uint256 value) unlessFrozen unlessUpgraded returns (bool) {
     require(!frozenAccount[from]);
     require(!frozenAccount[to]);
+    require(from != msg.sender);
+    require(value > 0);
 
     uint allowanceValue = allowance(from, msg.sender);
     require(allowanceValue >= value);
@@ -251,6 +253,7 @@ contract CardStackToken is Ownable,
 
   function approve(address spender, uint256 value) unlessFrozen unlessUpgraded returns (bool) {
     require(!frozenAccount[spender]);
+    require(msg.sender != spender);
 
     externalStorage.setAllowance(msg.sender, spender, value);
 
