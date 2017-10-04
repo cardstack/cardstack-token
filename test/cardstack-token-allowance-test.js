@@ -47,6 +47,19 @@ contract('CardStackToken', function(accounts) {
       assert.equal(event.args._spender, spender, "The spendor is correct");
     });
 
+    it("does not allow an account to approve itself as a spender", async function() {
+      let exceptionThrown;
+      try {
+        await cst.approve(grantor, 10, { from: grantor });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+      let allowance = await cst.allowance(grantor, grantor);
+
+      assert.equal(asInt(allowance), 0, "the allowance is correct");
+    });
+
     it("allows spender to transferFrom their approved account, and allowance is updated correctly", async function() {
       await cst.approve(spender, 10, { from: grantor });
 
@@ -73,6 +86,26 @@ contract('CardStackToken', function(accounts) {
       let exceptionThrown;
       try {
         await cst.transferFrom(unauthorizedAccount, recipient, 10, { from: spender });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let grantorBalance = await cst.balanceOf(grantor);
+      let recipientBalance = await cst.balanceOf(recipient);
+      let allowance = await cst.allowance(grantor, spender);
+
+      assert.equal(asInt(allowance), 10, "the allowance is correct");
+      assert.equal(asInt(grantorBalance), 50, "the balance is correct");
+      assert.equal(asInt(recipientBalance), 0, "the balance is correct");
+    });
+
+    it("does not allow a spender to transferFrom an account that they have not been approved for 0 CST", async function() {
+      let unauthorizedAccount = accounts[9];
+      await cst.approve(spender, 10, { from: grantor });
+      let exceptionThrown;
+      try {
+        await cst.transferFrom(unauthorizedAccount, recipient, 0, { from: spender });
       } catch(err) {
         exceptionThrown = true;
       }
