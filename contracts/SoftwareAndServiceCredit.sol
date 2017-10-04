@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.13;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -19,7 +19,7 @@ contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
   event SSCExpired(address indexed appContract, address indexed account, uint amount);
 
   modifier onlyApplicationContracts {
-    if (msg.sender != owner && !admins[msg.sender] && !applicationContracts[msg.sender]) throw;
+    if (msg.sender != owner && !admins[msg.sender] && !applicationContracts[msg.sender]) revert();
     _;
   }
 

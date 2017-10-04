@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.13;
 
 contract storable {
   function getLedgerNameHash() constant returns (bytes32);

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.13;
 
 contract displayable {
   function bytes32ToString(bytes32 x) constant returns (string) {

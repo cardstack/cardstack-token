@@ -114,7 +114,7 @@ contract('Registry', function(accounts) {
     it("allows the registry superAdmin to upgrade a contract", async function() {
       await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
-      let txn = await registry.upgradeContract("CardStack Token", cst2.address, false, { from: superAdmin });
+      let txn = await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin });
 
       let hash = await registry.getContractHash("CardStack Token");
       let count = await registry.numContracts();
@@ -154,7 +154,7 @@ contract('Registry', function(accounts) {
       let exceptionThrown;
 
       try {
-        await registry.upgradeContract("CardStack Token", cst2.address, false, { from: nonOwner });
+        await registry.upgradeContract("CardStack Token", cst2.address, { from: nonOwner });
       } catch (err) {
         exceptionThrown = true;
       }
@@ -188,7 +188,7 @@ contract('Registry', function(accounts) {
       let exceptionThrown;
 
       try {
-        await registry.upgradeContract("CardStack Token", cst2.address, false, { from: nonSuperAdmin });
+        await registry.upgradeContract("CardStack Token", cst2.address, { from: nonSuperAdmin });
       } catch (err) {
         exceptionThrown = true;
       }
@@ -219,7 +219,7 @@ contract('Registry', function(accounts) {
       let exceptionThrown;
 
       try {
-        await registry.upgradeContract("CardStack Token", cst2.address, false, { from: superAdmin });
+        await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin });
       } catch(err) {
         exceptionThrown = true;
       }
@@ -271,7 +271,7 @@ contract('Registry', function(accounts) {
       let cstBalance = await cst1.balanceOf(buyerAccount);
       assert.equal(asInt(cstBalance), 2, "The CST balance is correct");
 
-      await registry.upgradeContract("CardStack Token", cst2.address, false, { from: superAdmin });
+      await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin });
 
       let totalInCirculation = await cst2.totalInCirculation();
       cstBalance = await cst2.balanceOf(buyerAccount);
@@ -327,7 +327,7 @@ contract('Registry', function(accounts) {
       assert.equal(asInt(spenderBalance), 0, "the balance is correct");
       assert.equal(asInt(recipientBalance), 0, "the balance is correct");
 
-      await registry.upgradeContract("CardStack Token", cst2.address, false, { from: superAdmin });
+      await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin });
 
       allowance = await cst2.allowance(grantor, spender);
       grantorBalance = await cst2.balanceOf(grantor);
@@ -696,7 +696,7 @@ contract('Registry', function(accounts) {
         let exceptionThrown;
 
         try {
-          await registry.upgradeContract("CardStack Token", cst2.address, false, { from: superAdmin });
+          await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin });
         } catch(e) {
           exceptionThrown = true;
         }

@@ -6,7 +6,8 @@
     "test": "test"
   },
   "scripts": {
-    "build": "rm -rf build && truffle compile",
+    "build": "rm -rf build && ./node_modules/.bin/truffle compile",
+    "migrate": "rm -rf build && ./node_modules/.bin/truffle migrate",
     "test": "rm -rf build && ./node_modules/.bin/truffle test",
     "testrpc": "rm -f ./node_modules/ethereum-bridge/config/instance/*.json && ./node_modules/.bin/testrpc --mnemonic='gooches are never the answer' --accounts 50 --gasLimit 0x5D1420",
     "oraclize": "./bin/oraclize.sh",
@@ -23,7 +24,7 @@
     "lodash": "^4.17.4",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
-    "truffle": "^3.4.4",
+    "truffle": "^3.4.6",
     "zeppelin-solidity": "^1.2.0"
   },
   "dependencies": {}
