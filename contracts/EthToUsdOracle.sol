@@ -1,4 +1,4 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.13;
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./oraclize/usingOraclize.sol";
 
@@ -24,8 +24,8 @@ contract EthToUsdOracle is Ownable, usingOraclize {
   }
 
   function __callback(bytes32 myid, string result, bytes proof) {
-    if (!validIds[myid]) throw;
-    if (msg.sender != oraclize_cbAddress()) throw;
+    if (!validIds[myid]) revert();
+    if (msg.sender != oraclize_cbAddress()) revert();
 
     lastUpdate = block.timestamp;
     ETHUSD = parseInt(result, 5); // save it in storage as hundred-thousandth of a cent, e.g. $308.56893 -> 30856893

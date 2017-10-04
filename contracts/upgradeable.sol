@@ -1,5 +1,4 @@
-
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.13;
 
 import "./administratable.sol";
 
@@ -11,17 +10,17 @@ contract upgradeable is administratable {
   event UpgradedFrom(address indexed predecessor);
 
   modifier unlessUpgraded() {
-    if (successor != 0x0) throw;
+    if (successor != 0x0) revert();
     _;
   }
 
   modifier isUpgraded() {
-    if (successor == 0x0) throw;
+    if (successor == 0x0) revert();
     _;
   }
 
   modifier hasPredecessor() {
-    if (predecessor == 0x0) throw;
+    if (predecessor == 0x0) revert();
     _;
   }
 

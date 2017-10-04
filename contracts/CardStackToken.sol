@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.13;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -63,7 +63,7 @@ contract CardStackToken is Ownable,
                  uint _value);
 
   modifier onlyFoundation {
-    if (msg.sender != owner && msg.sender != foundation) throw;
+    if (msg.sender != owner && msg.sender != foundation) revert();
     _;
   }
 
@@ -86,7 +86,7 @@ contract CardStackToken is Ownable,
 
   /* This unnamed function is called whenever someone tries to send ether to it */
   function () {
-    throw;     // Prevents accidental sending of ether
+    revert();     // Prevents accidental sending of ether
   }
 
   function getLedgerNameHash() constant returns (bytes32) {

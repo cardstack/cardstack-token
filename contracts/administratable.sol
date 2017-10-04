@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.13;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
@@ -13,12 +13,12 @@ contract administratable is Ownable {
   mapping (address => bool) processedSuperAdmin;
 
   modifier onlyAdmins {
-    if (msg.sender != owner && !superAdmins[msg.sender] && !admins[msg.sender]) throw;
+    if (msg.sender != owner && !superAdmins[msg.sender] && !admins[msg.sender]) revert();
     _;
   }
 
   modifier onlySuperAdmins {
-    if (msg.sender != owner && !superAdmins[msg.sender]) throw;
+    if (msg.sender != owner && !superAdmins[msg.sender]) revert();
     _;
   }
 

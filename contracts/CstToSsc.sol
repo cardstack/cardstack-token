@@ -1,4 +1,4 @@
-
+pragma solidity ^0.4.13;
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract CstToSsc is Ownable {

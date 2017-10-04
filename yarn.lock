@@ -3271,7 +3271,17 @@ sntp@1.x.x:
   dependencies:
     hoek "2.x.x"
 
-solc@0.4.11, solc@^0.4.2:
+solc@0.4.15:
+  version "0.4.15"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.4.15.tgz#8ae8f1606a124a3f81c28b9dcecb0964ebdf9f25"
+  dependencies:
+    fs-extra "^0.30.0"
+    memorystream "^0.3.1"
+    require-from-string "^1.1.0"
+    semver "^5.3.0"
+    yargs "^4.7.1"
+
+solc@^0.4.2:
   version "0.4.11"
   resolved "https://registry.yarnpkg.com/solc/-/solc-0.4.11.tgz#2522eb43e7c0419bac2060b96e20a2593bfb5e8b"
   dependencies:
@@ -3557,13 +3567,13 @@ truffle-hdwallet-provider@0.0.3:
     web3 "^0.18.2"
     web3-provider-engine "^8.4.0"
 
-truffle@^3.4.4:
-  version "3.4.4"
-  resolved "https://registry.yarnpkg.com/truffle/-/truffle-3.4.4.tgz#5a2b04ceaf6bf89395fed6ea33bc5abfba120966"
+truffle@^3.4.6:
+  version "3.4.11"
+  resolved "https://registry.yarnpkg.com/truffle/-/truffle-3.4.11.tgz#c4aa12bd512c741a0fd2f6e922e6cd69cda97acb"
   dependencies:
     mocha "^3.4.2"
     original-require "^1.0.1"
-    solc "0.4.11"
+    solc "0.4.15"
 
 tty-browserify@0.0.0:
   version "0.0.0"
