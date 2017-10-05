@@ -39,6 +39,7 @@ contract CardStackToken is Ownable,
   // and not in storage, as this whitelist is specific to phase 1 token sale
   uint256 public cstBuyerPool;
   uint256 public cstBalanceLimit;
+  uint256 priceChangeBlockHeight;
 
   uint256 public totalCustomBuyersMapping;
   mapping (address => uint256) public customBuyerLimit;
@@ -112,6 +113,10 @@ contract CardStackToken is Ownable,
     externalStorage.setSellPrice(_sellPrice);
     externalStorage.setSellCap(_sellCap);
     externalStorage.setFoundation(_foundation);
+
+    if (sellPrice > 0 && sellPrice != _sellPrice) {
+      priceChangeBlockHeight = block.number;
+    }
 
     sellPrice = _sellPrice;
     buyPrice = _buyPrice;
@@ -195,6 +200,7 @@ contract CardStackToken is Ownable,
   function buy() payable unlessFrozen unlessUpgraded returns (uint256) {
     require(msg.value >= buyPrice);
     require(approvedBuyer[msg.sender]);
+    assert(priceChangeBlockHeight == 0 || block.number > priceChangeBlockHeight.add(1));
     assert(buyPrice > 0);
 
     uint256 amount = msg.value.div(buyPrice);
