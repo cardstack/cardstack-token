@@ -55,8 +55,8 @@ module.exports = async function(callback) {
     return;
   }
 
-  let registryAdminCount = await registry.totalAdmins();
-  let registrySuperAdminCount = await registry.totalSuperAdmins();
+  let registryAdminCount = await registry.totalAdminsMapping();
+  let registrySuperAdminCount = await registry.totalSuperAdminsMapping();
 
   let cst = await CardStackToken.at(cstAddress);
 
@@ -75,11 +75,11 @@ module.exports = async function(callback) {
   let foundation = await cst.foundation();
   let balanceWei = await web3.eth.getBalance(cst.address);
   let totalSupply = await cst.totalSupply();
-  let cstFrozenCount = await cst.totalFrozenAccounts();
-  let cstAdminCount = await cst.totalAdmins();
-  let cstSuperAdminCount = await cst.totalSuperAdmins();
-  let cstBuyerCount = await cst.totalBuyers();
-  let cstCustomBuyerCount = await cst.totalCustomBuyers();
+  let cstFrozenCount = await cst.totalFrozenAccountsMapping();
+  let cstAdminCount = await cst.totalAdminsMapping();
+  let cstSuperAdminCount = await cst.totalSuperAdminsMapping();
+  let cstBuyerCount = await cst.totalBuyersMapping();
+  let cstCustomBuyerCount = await cst.totalCustomBuyersMapping();
   let cstBuyerPool = await cst.cstBuyerPool();
   let cstBalanceLimit = await cst.cstBalanceLimit();
 
@@ -92,11 +92,11 @@ module.exports = async function(callback) {
   let totalTokens = await ledger.totalTokens();
   let totalInCirculation = await ledger.totalInCirculation();
   let numAccounts = await ledger.ledgerCount();
-  let ledgerAdminCount = await ledger.totalAdmins();
-  let ledgerSuperAdminCount = await ledger.totalSuperAdmins();
+  let ledgerAdminCount = await ledger.totalAdminsMapping();
+  let ledgerSuperAdminCount = await ledger.totalSuperAdminsMapping();
 
-  let storageAdminCount = await storage.totalAdmins();
-  let storageSuperAdminCount = await storage.totalSuperAdmins();
+  let storageAdminCount = await storage.totalAdminsMapping();
+  let storageSuperAdminCount = await storage.totalSuperAdminsMapping();
 
   function prettyAddress(address) {
     if (address === registry.address) {

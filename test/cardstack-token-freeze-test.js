@@ -44,7 +44,7 @@ contract('CardStackToken', function(accounts) {
       });
 
 
-      let frozenCount = await cst.totalFrozenAccounts();
+      let frozenCount = await cst.totalFrozenAccountsMapping();
       let firstFrozenAccount = await cst.frozenAccountForIndex(0);
       let isFrozen = await cst.frozenAccount(frozenAccount);
 
@@ -181,7 +181,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("can unfreeze an account", async function() {
-      let frozenCount = await cst.totalFrozenAccounts();
+      let frozenCount = await cst.totalFrozenAccountsMapping();
       let firstFrozenAccount = await cst.frozenAccountForIndex(0);
       let isFrozen = await cst.frozenAccount(frozenAccount);
 
@@ -191,7 +191,7 @@ contract('CardStackToken', function(accounts) {
 
       let unfreezeEvent = await cst.freezeAccount(frozenAccount, false);
 
-      frozenCount = await cst.totalFrozenAccounts();
+      frozenCount = await cst.totalFrozenAccountsMapping();
       firstFrozenAccount = await cst.frozenAccountForIndex(0);
       isFrozen = await cst.frozenAccount(frozenAccount);
 

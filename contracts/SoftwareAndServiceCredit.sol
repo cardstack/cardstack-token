@@ -9,14 +9,14 @@ contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
 
   using SafeMath for uint256;
 
-  uint public sscExpirationSeconds = 60 * 60 * 24 * 30 * 6; // default to 6 months
+  uint256 public sscExpirationSeconds = 60 * 60 * 24 * 30 * 6; // default to 6 months
   mapping (address => bool) public applicationContracts;
-  mapping (address => uint) public balanceOf;
-  mapping (address => uint) public lastActiveTime;
+  mapping (address => uint256) public balanceOf;
+  mapping (address => uint256) public lastActiveTime;
 
-  event SSCIssued(address indexed admin, address indexed recipient, uint amount);
-  event SSCBurned(address indexed appContract, address indexed account, uint amount);
-  event SSCExpired(address indexed appContract, address indexed account, uint amount);
+  event SSCIssued(address indexed admin, address indexed recipient, uint256 amount);
+  event SSCBurned(address indexed appContract, address indexed account, uint256 amount);
+  event SSCExpired(address indexed appContract, address indexed account, uint256 amount);
 
   modifier onlyApplicationContracts {
     if (msg.sender != owner && !admins[msg.sender] && !applicationContracts[msg.sender]) revert();
@@ -29,12 +29,12 @@ contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
     return lastActiveTime[account].add(sscExpirationSeconds) < block.timestamp;
   }
 
-  function burn(address account, uint amount) onlyApplicationContracts unlessFrozen returns (bool) {
+  function burn(address account, uint256 amount) onlyApplicationContracts unlessFrozen returns (bool) {
     require(!frozenAccount[account]);
 
     // we expire all the user's SSC after inactivity that lasts longer than the expiration period
     if (hasExpired(account)) {
-      uint expiredAmount = balanceOf[account];
+      uint256 expiredAmount = balanceOf[account];
       balanceOf[account] = 0;
 
       SSCExpired(msg.sender, account, expiredAmount);
@@ -50,7 +50,7 @@ contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
     }
   }
 
-  function issueSSC(address recipient, uint amount) onlyAdmins unlessFrozen {
+  function issueSSC(address recipient, uint256 amount) onlyAdmins unlessFrozen {
     require(!frozenAccount[recipient]);
 
     balanceOf[recipient] = balanceOf[recipient].add(amount);
@@ -69,7 +69,7 @@ contract SoftwareAndServiceCredit is Ownable, freezable, administratable {
     delete applicationContracts[appContract];
   }
 
-  function setSscExpiration(uint expirationSec) onlyOwner {
+  function setSscExpiration(uint256 expirationSec) onlyOwner {
     require(expirationSec > 0);
 
     sscExpirationSeconds = expirationSec;

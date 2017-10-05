@@ -1,13 +1,16 @@
 pragma solidity ^0.4.13;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract freezable is Ownable {
+  using SafeMath for uint256;
+
   bool public frozenToken;
-  uint public totalFrozenAccounts;
+  uint256 public totalFrozenAccountsMapping;
   // TODO move this into external storage
   mapping (address => bool) public frozenAccount;
-  mapping (uint => address) public frozenAccountForIndex;
+  mapping (uint256 => address) public frozenAccountForIndex;
   mapping (address => bool) processedAccount;
 
   event FrozenFunds(address indexed target, bool frozen);
@@ -23,8 +26,8 @@ contract freezable is Ownable {
     frozenAccount[target] = freeze;
     if (!processedAccount[target]) {
       processedAccount[target] = true;
-      frozenAccountForIndex[totalFrozenAccounts] = target;
-      totalFrozenAccounts += 1;
+      frozenAccountForIndex[totalFrozenAccountsMapping] = target;
+      totalFrozenAccountsMapping = totalFrozenAccountsMapping.add(1);
     }
     FrozenFunds(target, freeze);
   }

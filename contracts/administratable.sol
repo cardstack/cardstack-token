@@ -1,12 +1,15 @@
 pragma solidity ^0.4.13;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract administratable is Ownable {
-  uint public totalAdmins;
-  uint public totalSuperAdmins;
-  mapping (uint => address) public adminsForIndex;
-  mapping (uint => address) public superAdminsForIndex;
+  using SafeMath for uint256;
+
+  uint256 public totalAdminsMapping;
+  uint256 public totalSuperAdminsMapping;
+  mapping (uint256 => address) public adminsForIndex;
+  mapping (uint256 => address) public superAdminsForIndex;
   mapping (address => bool) public admins;
   mapping (address => bool) public superAdmins;
   mapping (address => bool) processedAdmin;
@@ -26,8 +29,8 @@ contract administratable is Ownable {
     superAdmins[admin] = true;
     if (!processedSuperAdmin[admin]) {
       processedSuperAdmin[admin] = true;
-      superAdminsForIndex[totalSuperAdmins] = admin;
-      totalSuperAdmins += 1;
+      superAdminsForIndex[totalSuperAdminsMapping] = admin;
+      totalSuperAdminsMapping = totalSuperAdminsMapping.add(1);
     }
   }
 
@@ -39,8 +42,8 @@ contract administratable is Ownable {
     admins[admin] = true;
     if (!processedAdmin[admin]) {
       processedAdmin[admin] = true;
-      adminsForIndex[totalAdmins] = admin;
-      totalAdmins += 1;
+      adminsForIndex[totalAdminsMapping] = admin;
+      totalAdminsMapping = totalAdminsMapping.add(1);
     }
   }
 

@@ -13,7 +13,7 @@ contract('CstLedger', function(accounts) {
     it("allows owner to add an admin", async function() {
       await ledger.addAdmin(admin);
       let isAdmin = await ledger.admins(admin);
-      let adminCount = await ledger.totalAdmins();
+      let adminCount = await ledger.totalAdminsMapping();
       let firstAdminAddress = await ledger.adminsForIndex(0);
 
       assert.ok(isAdmin, "admin was added");
@@ -25,7 +25,7 @@ contract('CstLedger', function(accounts) {
       await ledger.addAdmin(admin);
 
       let isAdmin = await ledger.admins(admin);
-      let adminCount = await ledger.totalAdmins();
+      let adminCount = await ledger.totalAdminsMapping();
       let firstAdminAddress = await ledger.adminsForIndex(0);
 
       assert.ok(isAdmin, "admin was added");
@@ -49,7 +49,7 @@ contract('CstLedger', function(accounts) {
       }
 
       let isAdmin = await ledger.admins(admin);
-      let adminCount = await ledger.totalAdmins();
+      let adminCount = await ledger.totalAdminsMapping();
       let firstAdminAddress = await ledger.adminsForIndex(0);
 
       assert.ok(exceptionThrown, "Exception was thrown");

@@ -13,10 +13,10 @@ import "./freezable.sol";
 contract Registry is Ownable, administratable, upgradeable {
   using SafeMath for uint256;
 
-  uint public numContracts;
+  uint256 public numContracts;
   mapping(bytes32 => address) public storageForHash;
   mapping(bytes32 => address) public contractForHash;
-  mapping(uint => string) public contractNameForIndex;
+  mapping(uint256 => string) public contractNameForIndex;
 
   event ContractRegistered(address indexed _contract, string _name);
   event ContractUpgraded(address indexed successor, address indexed predecessor, string name);
@@ -101,17 +101,17 @@ contract Registry is Ownable, administratable, upgradeable {
     delete storageForHash[sha3(name)];
   }
 
-  function setStorageUIntValue(string storageName, string fieldName, uint value) onlySuperAdmins unlessUpgraded {
+  function setStorageUIntValue(string storageName, string fieldName, uint256 value) onlySuperAdmins unlessUpgraded {
     address storageAddress = getStorage(storageName);
     ExternalStorage(storageAddress).setUIntValue(fieldName, value);
   }
 
-  function setMultiLedgerValue(string storageName, string fieldName, address primaryAddress, address secondaryAddress, uint value) onlySuperAdmins unlessUpgraded {
+  function setMultiLedgerValue(string storageName, string fieldName, address primaryAddress, address secondaryAddress, uint256 value) onlySuperAdmins unlessUpgraded {
     address storageAddress = getStorage(storageName);
     ExternalStorage(storageAddress).setMultiLedgerValue(fieldName, primaryAddress, secondaryAddress, value);
   }
 
-  function setLedgerValue(string storageName, string fieldName, address account, uint value) onlySuperAdmins unlessUpgraded {
+  function setLedgerValue(string storageName, string fieldName, address account, uint256 value) onlySuperAdmins unlessUpgraded {
     address storageAddress = getStorage(storageName);
     ExternalStorage(storageAddress).setLedgerValue(fieldName, account, value);
   }
