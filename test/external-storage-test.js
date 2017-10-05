@@ -15,7 +15,7 @@ contract('ExternalStorage', function(accounts) {
     it("allows owner to add an admin", async function() {
       await storage.addAdmin(admin);
       let isAdmin = await storage.admins(admin);
-      let adminCount = await storage.totalAdmins();
+      let adminCount = await storage.totalAdminsMapping();
       let firstAdminAddress = await storage.adminsForIndex(0);
 
       assert.ok(isAdmin, "admin was added");
@@ -26,7 +26,7 @@ contract('ExternalStorage', function(accounts) {
     it("allows owner to remove an admin", async function() {
       await storage.addAdmin(admin);
       let isAdmin = await storage.admins(admin);
-      let adminCount = await storage.totalAdmins();
+      let adminCount = await storage.totalAdminsMapping();
       let firstAdminAddress = await storage.adminsForIndex(0);
 
       assert.ok(isAdmin, "admin was added");
@@ -50,7 +50,7 @@ contract('ExternalStorage', function(accounts) {
       }
 
       let isAdmin = await storage.admins(admin);
-      let adminCount = await storage.totalAdmins();
+      let adminCount = await storage.totalAdminsMapping();
       let firstAdminAddress = await storage.adminsForIndex(0);
 
       assert.ok(exceptionThrown, "Exception was thrown");

@@ -36,7 +36,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
 
       let isRegistrySuperAdmin = await cst.superAdmins(registry.address);
-      let superAdminCount = await cst.totalSuperAdmins();
+      let superAdminCount = await cst.totalSuperAdminsMapping();
       let firstSuperAdmin = await cst.superAdminsForIndex(0);
 
       assert.ok(isRegistrySuperAdmin, "the registry is the super admin for the cst contract");
@@ -543,17 +543,17 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("allows a super admin to add an approved buyer", async function() {
-      let totalBuyers = await cst.totalBuyers();
+      let totalBuyers = await cst.totalBuyersMapping();
 
       assert.equal(totalBuyers.toNumber(), 0, 'the totalBuyers is correct');
 
       await cst.addBuyer(approvedBuyer, { from: superAdmin });
 
-      totalBuyers = await cst.totalBuyers();
+      totalBuyers = await cst.totalBuyersMapping();
       let isBuyer = await cst.approvedBuyer(approvedBuyer);
       let firstBuyer = await cst.approvedBuyerForIndex(0);
 
-      assert.equal(totalBuyers, 1, 'the totalBuyers is correct');
+      assert.equal(totalBuyers, 1, 'the totalBuyersMapping is correct');
       assert.ok(isBuyer, "the buyer is set");
       assert.equal(firstBuyer, approvedBuyer, "the approvedBuyerForIndex is correct");
     });
@@ -578,10 +578,10 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let totalBuyers = await cst.totalBuyers();
+      let totalBuyers = await cst.totalBuyersMapping();
       let isBuyer = await cst.approvedBuyer(approvedBuyer);
 
-      assert.equal(totalBuyers.toNumber(), 0, 'the totalBuyers is correct');
+      assert.equal(totalBuyers.toNumber(), 0, 'the totalBuyersMapping is correct');
       assert.notOk(isBuyer, "the buyer is not set");
     });
 
@@ -597,10 +597,10 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let totalBuyers = await cst.totalBuyers();
+      let totalBuyers = await cst.totalBuyersMapping();
       let isBuyer = await cst.approvedBuyer(approvedBuyer);
 
-      assert.equal(totalBuyers, 1, 'the totalBuyers is correct');
+      assert.equal(totalBuyers, 1, 'the totalBuyersMapping is correct');
       assert.ok(isBuyer, "the buyer is set");
     });
 
@@ -624,14 +624,14 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("should allows super admin to set custom buyer", async function() {
-      let totalCustomBuyers = await cst.totalCustomBuyers();
+      let totalCustomBuyers = await cst.totalCustomBuyersMapping();
 
       assert.equal(totalCustomBuyers, 0, 'the total custom buyers is correct');
 
       await cst.setCustomBuyer(customBuyer, 30000, { from: superAdmin });
 
-      totalCustomBuyers = await cst.totalCustomBuyers();
-      let totalBuyers = await cst.totalBuyers();
+      totalCustomBuyers = await cst.totalCustomBuyersMapping();
+      let totalBuyers = await cst.totalBuyersMapping();
       let customBuyerLimit = await cst.customBuyerLimit(customBuyer);
       let isBuyer = await cst.approvedBuyer(customBuyer);
       let firstCustomBuyer = await cst.customBuyerForIndex(0);
@@ -653,7 +653,7 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(exceptionThrown, "Transaction should fire exception");
 
-      let totalCustomBuyers = await cst.totalCustomBuyers();
+      let totalCustomBuyers = await cst.totalCustomBuyersMapping();
       let isBuyer = await cst.approvedBuyer(approvedBuyer);
 
       assert.equal(totalCustomBuyers.toNumber(), 0, 'the totalCustomBuyers is correct');

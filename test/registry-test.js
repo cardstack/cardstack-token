@@ -100,7 +100,7 @@ contract('Registry', function(accounts) {
       let contractName = await registry.contractNameForIndex(0);
       let contractAddress = await registry.contractForHash(hash);
       let isRegistrySuperAdmin = await cst1.superAdmins(registry.address);
-      let superAdminCount = await cst1.totalSuperAdmins();
+      let superAdminCount = await cst1.totalSuperAdminsMapping();
       let firstSuperAdmin = await cst1.superAdminsForIndex(0);
 
       assert.equal(count, 1, "contract count is correct");

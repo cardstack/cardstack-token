@@ -3,9 +3,9 @@ pragma solidity ^0.4.13;
 contract displayable {
   function bytes32ToString(bytes32 x) constant returns (string) {
     bytes memory bytesString = new bytes(32);
-    uint charCount = 0;
-    for (uint j = 0; j < 32; j++) {
-      byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+    uint256 charCount = 0;
+    for (uint256 j = 0; j < 32; j++) {
+      byte char = byte(bytes32(uint256(x) * 2 ** (8 * j)));
       if (char != 0) {
         bytesString[charCount] = char;
         charCount++;

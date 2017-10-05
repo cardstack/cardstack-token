@@ -484,13 +484,13 @@ contract('CardStackToken', function(accounts) {
 
       await cst2.upgradedFrom(cst1.address, { from: admin });
 
-      let totalCustomBuyers = await cst2.totalCustomBuyers();
+      let totalCustomBuyers = await cst2.totalCustomBuyersMapping();
 
       assert.equal(totalCustomBuyers, 0, 'the total custom buyers is correct');
 
       await cst2.setCustomBuyer(customBuyerAccount, 30000, { from: admin });
 
-      totalCustomBuyers = await cst2.totalCustomBuyers();
+      totalCustomBuyers = await cst2.totalCustomBuyersMapping();
       let firstCustomBuyer = await cst2.customBuyerForIndex(0);
 
 
@@ -921,7 +921,7 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(exceptionThrown, "Exception was thrown");
 
-      let totalCustomBuyers = await cst1.totalCustomBuyers();
+      let totalCustomBuyers = await cst1.totalCustomBuyersMapping();
 
       assert.equal(totalCustomBuyers, 0, 'the total custom buyers is correct');
     });

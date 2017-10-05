@@ -4,13 +4,13 @@ import "./oraclize/usingOraclize.sol";
 
 contract EthToUsdOracle is Ownable, usingOraclize {
 
-  uint public ETHUSD;
-  uint public lastUpdate;
-  uint public updateFrequencySeconds = 3600;
+  uint256 public ETHUSD;
+  uint256 public lastUpdate;
+  uint256 public updateFrequencySeconds = 3600;
   mapping(bytes32=>bool) validIds;
 
   event NewOraclizeQuery(string description);
-  event OraclizeQueryNotEnoughFunds(string description, uint queryPrice);
+  event OraclizeQueryNotEnoughFunds(string description, uint256 queryPrice);
   event ETHPriceUpdated(string price, bytes proof);
 
   function EthToUsdOracle(bool testMode) payable {
@@ -36,18 +36,18 @@ contract EthToUsdOracle is Ownable, usingOraclize {
     update(updateFrequencySeconds);
   }
 
-  function setUpdateFrequency(uint sec) onlyOwner {
+  function setUpdateFrequency(uint256 sec) onlyOwner {
     require(sec > 0);
 
     updateFrequencySeconds = sec;
     update(updateFrequencySeconds);
   }
 
-  function update(uint delay) payable {
-    uint _now = block.timestamp;
+  function update(uint256 delay) payable {
+    uint256 _now = block.timestamp;
 
     if (lastUpdate == 0 || _now - lastUpdate >= updateFrequencySeconds) {
-      uint oraclizeFee = oraclize_getPrice("URL");
+      uint256 oraclizeFee = oraclize_getPrice("URL");
 
       if (oraclizeFee > this.balance) {
         OraclizeQueryNotEnoughFunds("Oraclize query was NOT sent, please add some ETH to cover for the query fee.", oraclizeFee);

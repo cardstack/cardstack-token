@@ -30,37 +30,37 @@ contract CardStackToken is Ownable,
 
   // These are mirrored in external storage so that state can live in future version of this contract
   // we save on gas prices by having these available as instance variables
-  uint public sellPrice;
-  uint public buyPrice;
-  uint public sellCap;
+  uint256 public sellPrice;
+  uint256 public buyPrice;
+  uint256 public sellCap;
   address public foundation;
 
   // Note that the data for the buyer whitelist itenationally lives in this contract
   // and not in storage, as this whitelist is specific to phase 1 token sale
-  uint public cstBuyerPool;
-  uint public cstBalanceLimit;
+  uint256 public cstBuyerPool;
+  uint256 public cstBalanceLimit;
 
-  uint public totalCustomBuyers;
-  mapping (address => uint) public customBuyerLimit;
-  mapping (uint => address) public customBuyerForIndex;
+  uint256 public totalCustomBuyersMapping;
+  mapping (address => uint256) public customBuyerLimit;
+  mapping (uint256 => address) public customBuyerForIndex;
   mapping (address => bool) processedCustomBuyer;
 
-  uint public totalBuyers;
+  uint256 public totalBuyersMapping;
   mapping (address => bool) public approvedBuyer;
-  mapping (uint => address) public approvedBuyerForIndex;
+  mapping (uint256 => address) public approvedBuyerForIndex;
   mapping (address => bool) processedBuyer;
 
-  uint public decimals = 0;
+  uint256 public decimals = 0;
 
-  event SellCapChange(uint newSellCap);
-  event PriceChange(uint newSellPrice, uint newBuyPrice);
-  event Mint(uint amountMinted, uint totalTokens, uint sellCap);
+  event SellCapChange(uint256 newSellCap);
+  event PriceChange(uint256 newSellPrice, uint256 newBuyPrice);
+  event Mint(uint256 amountMinted, uint256 totalTokens, uint256 sellCap);
   event Approval(address indexed _owner,
                  address indexed _spender,
                  uint256 _value);
   event Transfer(address indexed _from,
                  address indexed _to,
-                 uint _value);
+                 uint256 _value);
 
   modifier onlyFoundation {
     if (msg.sender != owner && msg.sender != foundation) revert();
@@ -99,11 +99,11 @@ contract CardStackToken is Ownable,
 
   function configure(bytes32 _tokenName,
                      bytes32 _tokenSymbol,
-                     uint _buyPrice,
-                     uint _sellPrice,
-                     uint _sellCap,
-                     uint _buyerPool,
-                     uint _balanceLimit,
+                     uint256 _buyPrice,
+                     uint256 _sellPrice,
+                     uint256 _sellCap,
+                     uint256 _buyerPool,
+                     uint256 _balanceLimit,
                      address _foundation) onlySuperAdmins unlessUpgraded initStorage returns (bool) {
 
     externalStorage.setTokenName(_tokenName);
@@ -150,15 +150,15 @@ contract CardStackToken is Ownable,
     return bytes32ToString(externalStorage.getTokenSymbol());
   }
 
-  function totalInCirculation() constant unlessFrozen unlessUpgraded returns(uint) {
+  function totalInCirculation() constant unlessFrozen unlessUpgraded returns(uint256) {
     return tokenLedger.totalInCirculation();
   }
 
-  function totalSupply() constant unlessFrozen unlessUpgraded returns(uint) {
+  function totalSupply() constant unlessFrozen unlessUpgraded returns(uint256) {
     return tokenLedger.totalTokens();
   }
 
-  function balanceOf(address account) constant unlessUpgraded unlessFrozen returns (uint) {
+  function balanceOf(address account) constant unlessUpgraded unlessFrozen returns (uint256) {
     address thisAddress = this;
     if (thisAddress == account) {
       return tokenLedger.tokensAvailable();
@@ -167,7 +167,7 @@ contract CardStackToken is Ownable,
     }
   }
 
-  function transfer(address recipient, uint amount) unlessFrozen unlessUpgraded returns (bool) {
+  function transfer(address recipient, uint256 amount) unlessFrozen unlessUpgraded returns (bool) {
     require(!frozenAccount[recipient]);
 
     tokenLedger.transfer(msg.sender, recipient, amount);
@@ -176,14 +176,14 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function mintTokens(uint mintedAmount) onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
+  function mintTokens(uint256 mintedAmount) onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
     tokenLedger.mintTokens(mintedAmount);
     Mint(mintedAmount, tokenLedger.totalTokens(), sellCap);
 
     return true;
   }
 
-  function grantTokens(address recipient, uint amount) onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
+  function grantTokens(address recipient, uint256 amount) onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
     require(amount <= tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation()));           // make sure there are enough tokens to grant
 
     tokenLedger.debitAccount(recipient, amount);
@@ -192,19 +192,19 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function buy() payable unlessFrozen unlessUpgraded returns (uint) {
+  function buy() payable unlessFrozen unlessUpgraded returns (uint256) {
     require(msg.value >= buyPrice);
     require(approvedBuyer[msg.sender]);
     assert(buyPrice > 0);
 
-    uint amount = msg.value.div(buyPrice);
-    uint tokensAvailable = tokenLedger.tokensAvailable();
+    uint256 amount = msg.value.div(buyPrice);
+    uint256 tokensAvailable = tokenLedger.tokensAvailable();
     assert(tokenLedger.totalInCirculation().add(amount) <= sellCap);
     assert(amount <= tokensAvailable);
 
-    uint balanceLimit;
-    uint buyerBalance = tokenLedger.balanceOf(msg.sender);
-    uint customLimit = customBuyerLimit[msg.sender];
+    uint256 balanceLimit;
+    uint256 buyerBalance = tokenLedger.balanceOf(msg.sender);
+    uint256 customLimit = customBuyerLimit[msg.sender];
 
     if (customLimit > 0) {
       balanceLimit = customLimit;
@@ -220,7 +220,8 @@ contract CardStackToken is Ownable,
     return amount;
   }
 
-  function foundationWithdraw(uint amount) onlyFoundation returns (bool) {
+  function foundationWithdraw(uint256 amount) onlyFoundation returns (bool) {
+    /* UNTRUSTED */
     msg.sender.transfer(amount);
 
     return true;
@@ -241,7 +242,7 @@ contract CardStackToken is Ownable,
     require(from != msg.sender);
     require(value > 0);
 
-    uint allowanceValue = allowance(from, msg.sender);
+    uint256 allowanceValue = allowance(from, msg.sender);
     require(allowanceValue >= value);
 
     tokenLedger.transfer(from, to, value);
@@ -261,12 +262,12 @@ contract CardStackToken is Ownable,
     return true;
   }
 
-  function setCustomBuyer(address buyer, uint balanceLimit) onlySuperAdmins unlessUpgraded returns (bool) {
+  function setCustomBuyer(address buyer, uint256 balanceLimit) onlySuperAdmins unlessUpgraded returns (bool) {
     customBuyerLimit[buyer] = balanceLimit;
     if (!processedCustomBuyer[buyer]) {
       processedCustomBuyer[buyer] = true;
-      customBuyerForIndex[totalCustomBuyers] = buyer;
-      totalCustomBuyers = totalCustomBuyers.add(1);
+      customBuyerForIndex[totalCustomBuyersMapping] = buyer;
+      totalCustomBuyersMapping = totalCustomBuyersMapping.add(1);
     }
     addBuyer(buyer);
 
@@ -277,8 +278,8 @@ contract CardStackToken is Ownable,
     approvedBuyer[buyer] = true;
     if (!processedBuyer[buyer]) {
       processedBuyer[buyer] = true;
-      approvedBuyerForIndex[totalBuyers] = buyer;
-      totalBuyers = totalBuyers.add(1);
+      approvedBuyerForIndex[totalBuyersMapping] = buyer;
+      totalBuyersMapping = totalBuyersMapping.add(1);
     }
 
     return true;

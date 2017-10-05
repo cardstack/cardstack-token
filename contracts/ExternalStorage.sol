@@ -6,22 +6,22 @@ import "./administratable.sol";
 contract ExternalStorage is administratable {
   using SafeMath for uint256;
 
-  mapping(bytes32 => mapping(address => mapping(address => uint))) MultiLedgerStorage;
-  mapping(bytes32 => uint) public primaryLedgerCount;
+  mapping(bytes32 => mapping(address => mapping(address => uint256))) MultiLedgerStorage;
+  mapping(bytes32 => uint256) public primaryLedgerCount;
   mapping(bytes32 => mapping(address => bool)) public ledgerPrimaryEntries;
-  mapping(bytes32 => mapping(uint => address)) public primaryLedgerEntryForIndex;
-  mapping(bytes32 => mapping(address => uint)) public secondaryLedgerCount;
+  mapping(bytes32 => mapping(uint256 => address)) public primaryLedgerEntryForIndex;
+  mapping(bytes32 => mapping(address => uint256)) public secondaryLedgerCount;
   mapping(bytes32 => mapping(address => mapping(address => bool))) public ledgerSecondaryEntries;
-  mapping(bytes32 => mapping(address => mapping(uint => address))) public secondaryLedgerEntryForIndex;
+  mapping(bytes32 => mapping(address => mapping(uint256 => address))) public secondaryLedgerEntryForIndex;
 
-  function getMultiLedgerValue(string record, address primaryAddress, address secondaryAddress) constant returns (uint) {
+  function getMultiLedgerValue(string record, address primaryAddress, address secondaryAddress) constant returns (uint256) {
     return MultiLedgerStorage[sha3(record)][primaryAddress][secondaryAddress];
   }
 
-  function setMultiLedgerValue(string record, address primaryAddress, address secondaryAddress, uint value) onlyAdmins {
+  function setMultiLedgerValue(string record, address primaryAddress, address secondaryAddress, uint256 value) onlyAdmins {
     bytes32 hash = sha3(record);
-    uint primaryLedgerIndex = primaryLedgerCount[hash];
-    uint secondaryLedgerIndex = secondaryLedgerCount[hash][primaryAddress];
+    uint256 primaryLedgerIndex = primaryLedgerCount[hash];
+    uint256 secondaryLedgerIndex = secondaryLedgerCount[hash][primaryAddress];
     if (!ledgerSecondaryEntries[hash][primaryAddress][secondaryAddress]) {
       secondaryLedgerEntryForIndex[hash][primaryAddress][secondaryLedgerIndex] = secondaryAddress;
       secondaryLedgerCount[hash][primaryAddress] = secondaryLedgerIndex.add(1);
@@ -37,23 +37,23 @@ contract ExternalStorage is administratable {
     MultiLedgerStorage[hash][primaryAddress][secondaryAddress] = value;
   }
 
-  mapping(bytes32 => mapping(address => uint)) LedgerStorage;
-  mapping(bytes32 => uint) public ledgerCount;
+  mapping(bytes32 => mapping(address => uint256)) LedgerStorage;
+  mapping(bytes32 => uint256) public ledgerCount;
   mapping(bytes32 => mapping(address => bool)) public ledgerAccounts;
-  mapping(bytes32 => mapping(uint => address)) public ledgerEntryForIndex;
+  mapping(bytes32 => mapping(uint256 => address)) public ledgerEntryForIndex;
 
-  function getLedgerValue(string record, address _address) constant returns (uint) {
+  function getLedgerValue(string record, address _address) constant returns (uint256) {
     return LedgerStorage[sha3(record)][_address];
   }
 
-  function getLedgerCount(string record) constant returns (uint) {
+  function getLedgerCount(string record) constant returns (uint256) {
     return ledgerCount[sha3(record)];
   }
 
-  function setLedgerValue(string record, address _address, uint value) onlyAdmins {
+  function setLedgerValue(string record, address _address, uint256 value) onlyAdmins {
     bytes32 hash = sha3(record);
     if (!ledgerAccounts[hash][_address]) {
-      uint ledgerIndex = ledgerCount[hash];
+      uint256 ledgerIndex = ledgerCount[hash];
       ledgerEntryForIndex[hash][ledgerIndex] = _address;
       ledgerCount[hash] = ledgerIndex.add(1);
       ledgerAccounts[hash][_address] = true;
@@ -62,13 +62,13 @@ contract ExternalStorage is administratable {
     LedgerStorage[hash][_address] = value;
   }
 
-  mapping(bytes32 => uint) UIntStorage;
+  mapping(bytes32 => uint256) UIntStorage;
 
-  function getUIntValue(string record) constant returns (uint) {
+  function getUIntValue(string record) constant returns (uint256) {
     return UIntStorage[sha3(record)];
   }
 
-  function setUIntValue(string record, uint value) onlyAdmins {
+  function setUIntValue(string record, uint256 value) onlyAdmins {
     UIntStorage[sha3(record)] = value;
   }
 
