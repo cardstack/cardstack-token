@@ -88,29 +88,6 @@ The following physical materials need to be acquired in perparation for the cere
 * Perform OS X software update
 * Make sure computer clock is synced with the current time, and in the correct timezone.
 * Install the latest official Ethereum Wallet App: http://github.com/ethereum/mist/releases, and locate the dmg for the Ethereum Wallet Installer for Mac OS X.
-* Add the Ethereum Wallet to the /Applications folder, and launch the Ethereum Wallet App.
-* Select the option to use the "Main Network" and click on "Skip" when asked if we have a wallet file.
-* You will be prompted to create an account with a password, do this. The password you select should be at least 8 random words that you and your partner(s) contribute. You will have to type this password out, so don't choose words that are super hard to spell.
-* The Ethereum wallet will begin to download the mainnet block chain. This will take about 8-12 hours. You can click on "Launch Application" to perform the next steps while the blocks are downloading.
-* Write down the password that you create the account with on 3 different pieces of paper.
-* Place those pieces of paper in separate opaque envelopes
-* From the ethereum wallet select File -> Backup -> Accounts from teh file menu. This will open your finder to a `keystore` folder.
-* Put a USB stick in the MacBook and format the USB Stick (repeat for each USB stick)
-* Copy the file in the `keystore` folder on to each USB stick (it will be named something like `UTC--2017-07-11T16-12-35.585181429Z--48ed71f1ec9c`).
-* Copy the Ethereum main address of the wallet and paste into the `cardstack-token` GitHub project contract-ops/secure-terminal.md (this address is the public key and will be public knowledge after the contract is created, so it is ok to display this address in the clear and not locked down).
-* Update the `cardstack-token` GitHub project `./truffle.js` file `mainnet.from` entry with the Ethereum wallet's main address from the previous setp.
-* Wait for the blocks to complete downloading. If you leave the clean room, lock the door and post a different pair of people to monitor the entrance to the clean room while the blocks are downloading.
-* Now would be a good time to deposit the secure terminal's ethereum wallet passwords and macbook's user password (assuming you can use Touch ID now to unlock the computer) and USB sticks in separate safety deposit boxes, while the bocks are downloading. Make sure to not save the Ethereum wallet passwords in the same safety deposit box as the USB sticks.
-* Wait until all the blocks have completed downloading. It is probabaly evening now. Regardless if the blocks have completed downloading or not, power-off the secure terminal _(the secure terminal should never be powered on outside of the clean room)_
-* Bring the secure terminal to the safety deposit box, and continue tomorrow morning.
-
-##### Day 2
-* Next day, retreive the secure terminal and the user password for the secure terminal from the safety deposit box (no need for the Ethereum wallet passwords or the USB sticks, we are done with that for now).
-* Go to the clean room with the secure terminal and a partner
-* Power on the secure terminal and login
-* Launch the Ethereum client and complete the block download
-* Wait for the blocks to complete downloading.
-* Close the Ethereum wallet client
 * Install X-Code and the dev tools that go along with X-code
 * Install brew
 * Perform a github clone of the https://github.com/cardstack/cardstack-token project and cd to that directory.
@@ -152,6 +129,37 @@ yarn install
 npm run build
 ```
 * For shits and grins you can run the tests as well (see the README.md)
+
+* Add the Ethereum Wallet to the /Applications folder, and launch the Ethereum Wallet App.
+* Select the option to use the "Main Network" and click on "Skip" when asked if we have a wallet file.
+* You will be prompted to create an account with a password, do this. The password you select should be at least 8 random words that you and your partner(s) contribute. You will have to type this password out, so don't choose words that are super hard to spell.
+* The Ethereum wallet will begin to download the mainnet block chain. This will take about 8-12 hours. You can click on "Launch Application" to perform the next steps while the blocks are downloading.
+* Write down the password that you create the account with on 3 different pieces of paper.
+* Place those pieces of paper in separate opaque envelopes
+* From the ethereum wallet select File -> Backup -> Accounts from teh file menu. This will open your finder to a `keystore` folder.
+* Put a USB stick in the MacBook and format the USB Stick (repeat for each USB stick)
+* Copy the file in the `keystore` folder on to each USB stick (it will be named something like `UTC--2017-07-11T16-12-35.585181429Z--48ed71f1ec9c`).
+* Copy the Ethereum main address of the wallet and paste into the `cardstack-token` GitHub project contract-ops/secure-terminal.md (this address is the public key and will be public knowledge after the contract is created, so it is ok to display this address in the clear and not locked down).
+* Update the `cardstack-token` GitHub project `./truffle.js` file `mainnet.from` entry with the Ethereum wallet's main address from the previous setp.
+
+* *OPTION 1 - FULL DOWNLOAD OF ETHEREUM BLOCKCHAIN (at least 48 hours)*
+
+* Wait for the blocks to complete downloading. If you leave the clean room, lock the door and post a different pair of people to monitor the entrance to the clean room while the blocks are downloading.
+* Now would be a good time to deposit the secure terminal's ethereum wallet passwords and macbook's user password (assuming you can use Touch ID now to unlock the computer) and USB sticks in separate safety deposit boxes, while the bocks are downloading. Make sure to not save the Ethereum wallet passwords in the same safety deposit box as the USB sticks.
+* Wait until all the blocks have completed downloading. It is probabaly evening now. Regardless if the blocks have completed downloading or not, power-off the secure terminal _(the secure terminal should never be powered on outside of the clean room)_
+* Bring the secure terminal to the safety deposit box, and continue tomorrow morning.
+* Next day, retreive the secure terminal and the user password for the secure terminal from the safety deposit box (no need for the Ethereum wallet passwords or the USB sticks, we are done with that for now).
+* Go to the clean room with the secure terminal and a partner
+* Power on the secure terminal and login
+* Launch the Ethereum client and complete the block download
+* Wait for the blocks to complete downloading.
+* Close the Ethereum wallet client
+
+* *OPTION 2 - COPY ETHEREUM BLOCKCHAIN FROM TRUSTED SOURCE*
+* Close the Ethereum Wallet app
+* From a trusted source, copy `~/Library/Ethereum/geth/chaindata/*` of a fully-synced synced Ethereum node to the secure terminal (very large ~ 170GB)
+* Luanch the Ethereum wallet app, and wait for blocks to complete downloading
+
 * Power off the secure terminal
 * Deposit the secure terminal and the user password back in the safety deposit box
 * Congratulations you have completed the setup of the secure terminal 🎉🎊.
