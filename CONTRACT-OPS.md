@@ -9,8 +9,6 @@ This document describes the various contract operations necessary for mantaining
       * [Cold Wallet Setup](#cold-wallet-setup)
       * [Contract Ops Funding](#contract-ops-funding)
       * [Secure Terminal Setup](#secure-terminal-setup)
-         * [Day 1](#day-1)
-         * [Day 2](#day-2)
    * [T-minus 1 day](#t-minus-1-day)
       * [Fund Operations Wallets for Gas Fees](#fund-operations-wallets-for-gas-fees)
    * [T-minus 3 hours](#t-minus-3-hours)
@@ -76,7 +74,6 @@ The following physical materials need to be acquired in perparation for the cere
 * Wait for the transaction to clear (may need to take a couple days).
 
 #### Secure Terminal Setup
-##### Day 1
 * Purchase a brand new (not refurbished), sealed in box, MacBook pro in person at an Apple store _(in cash?)_ (choose a smaller model to fit in a safety deposit box).
 * Purchase at least 3 USB sticks in person from a reputable vendor (e.g. Apple Store) that are in their original packaging and have not been tampered with. 
 * Go to the clean room with at least one other person, make sure to do this early in the morning, as this task will take all day. Make sure that *absolutely* no other electronic devices are in the clean room (this is the most sensitive clean room operation).
@@ -142,7 +139,7 @@ npm run build
 * Copy the Ethereum main address of the wallet and paste into the `cardstack-token` GitHub project contract-ops/secure-terminal.md (this address is the public key and will be public knowledge after the contract is created, so it is ok to display this address in the clear and not locked down).
 * Update the `cardstack-token` GitHub project `./truffle.js` file `mainnet.from` entry with the Ethereum wallet's main address from the previous setp.
 
-* *OPTION 1 - FULL DOWNLOAD OF ETHEREUM BLOCKCHAIN (at least 48 hours)*
+##### OPTION 1 - FULL DOWNLOAD OF ETHEREUM BLOCKCHAIN (at least 48 hours)
 
 * Wait for the blocks to complete downloading. If you leave the clean room, lock the door and post a different pair of people to monitor the entrance to the clean room while the blocks are downloading.
 * Now would be a good time to deposit the secure terminal's ethereum wallet passwords and macbook's user password (assuming you can use Touch ID now to unlock the computer) and USB sticks in separate safety deposit boxes, while the bocks are downloading. Make sure to not save the Ethereum wallet passwords in the same safety deposit box as the USB sticks.
@@ -154,12 +151,14 @@ npm run build
 * Launch the Ethereum client and complete the block download
 * Wait for the blocks to complete downloading.
 * Close the Ethereum wallet client
+* Power off the secure terminal
+* Deposit the secure terminal and the user password back in the safety deposit box
+* Congratulations you have completed the setup of the secure terminal 🎉🎊.
 
-* *OPTION 2 - COPY ETHEREUM BLOCKCHAIN FROM TRUSTED SOURCE*
+##### OPTION 2 - COPY ETHEREUM BLOCKCHAIN FROM TRUSTED SOURCE*
 * Close the Ethereum Wallet app
 * From a trusted source, copy `~/Library/Ethereum/geth/chaindata/*` of a fully-synced synced Ethereum node to the secure terminal (very large ~ 170GB)
-* Luanch the Ethereum wallet app, and wait for blocks to complete downloading
-
+* Launch the Ethereum wallet app, and wait for blocks to complete downloading
 * Power off the secure terminal
 * Deposit the secure terminal and the user password back in the safety deposit box
 * Congratulations you have completed the setup of the secure terminal 🎉🎊.
