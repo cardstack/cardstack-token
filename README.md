@@ -8,7 +8,7 @@ This project contains the smart contracts that govern the CardStack token.
 
 * [truffle](http://truffleframework.com/) to manage smart contracts (like ember-cli for Etherium). 
 ```
-yarn global add truffle
+yarn global add truffle@3.4.9
 ```
 
 * [geth](https://github.com/ethereum/go-ethereum/wiki/Installation-Instructions-for-Mac) to use as CLI ethereum wallet that truffle can manipulate.
@@ -58,7 +58,7 @@ rm -rf ./build
 
 Then execute:
 ```
-npm run migrate --reset --network=testrpc
+truffle migrate --reset --network=testrpc
 ```
 
 Make a note of the address of the `Registry` and of the `CardStackToken` contract. Make sure not to lose the address of the Registry, the registry address is specified as a parameter for all contract ops commands.
@@ -110,7 +110,7 @@ rm -rf ./build
 
 Then execute:
 ```
-npm run migrate --reset --network=rinkeby
+truffle migrate --reset --network=rinkeby
 ```
 The deploy will make many minutes to run depending on Rinkeby network stats.
 
