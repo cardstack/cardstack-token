@@ -113,9 +113,9 @@ nvm use node 7.6
 ```
 curl -o- -L https://yarnpkg.com/install.sh | bash
 ```
-* install truffle
+* install truffle (version 3.4.9 specifically, there is an issue in how the registry is deployed in later versions that prevents CST contract from being registered--still investigating).
 ```
-yarn global add truffle
+yarn global add truffle@3.4.9
 ```
 * yarn install the project
 ```
@@ -198,7 +198,7 @@ rm -rf ./build && npm run build
 ```
 * Create the contracts in mainnet:
 ```
-npm run migrate --reset --network=mainnet
+truffle migrate --reset --network=mainnet
 ```
 The contracts will take 5-10 minutes to be created depending on network conditions. We are currently using a 30 GWEI gas price. This can be increased in the truffle.js file for faster transaction mining (albiet at a higher overall deployment cost).
 * When the contracts have completed deploying copy the output from the `truffle migrate` command to `cardstack-token` GitHub project `contract-ops/deploys/<current date timestamp>.txt` and commit the file. The addresses included in the output from `truffle migrate` are very important. Note the `Registry` address and the `CardStackToken` address.
