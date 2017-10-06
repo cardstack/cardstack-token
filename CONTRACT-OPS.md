@@ -198,25 +198,25 @@ rm -rf ./build && npm run build
 ```
 * Create the contracts in mainnet:
 ```
-truffle migrate --reset --network=mainnet
+npm run migrate --reset --network=mainnet
 ```
 The contracts will take 5-10 minutes to be created depending on network conditions. We are currently using a 30 GWEI gas price. This can be increased in the truffle.js file for faster transaction mining (albiet at a higher overall deployment cost).
 * When the contracts have completed deploying copy the output from the `truffle migrate` command to `cardstack-token` GitHub project `contract-ops/deploys/<current date timestamp>.txt` and commit the file. The addresses included in the output from `truffle migrate` are very important. Note the `Registry` address and the `CardStackToken` address.
 * Register the CST contract with the registry by executing:
 ```
-truffle exec ./scripts/cst-register.js --cst="<CardStackToken address>" --registry="<Registry Address>" --network=mainnet
+npm run exec ./scripts/cst-register.js --cst="<CardStackToken address>" --registry="<Registry Address>" --network=mainnet
 ```
 * Run the system info command to confirm the CST contract was registered correctly:
 ```
-truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+npm run exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
 * Grant super admin permissions to each of the cold wallet addresses. Using the `cardstack-token` GitHub project `contract-ops/cold-wallets.md` file, for each address execute the following command:
 ```
-truffle exec ./scripts/add-super-admin.js --address="<cold wallet address>" --network=mainnet -r <registry address>
+npm run exec ./scripts/add-super-admin.js --address="<cold wallet address>" --network=mainnet -r <registry address>
 ```
 * Run the system info command to confirm the super admins were added correctly:
 ```
-truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+npm run exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
 * Power down the secure terminal and return the secure terminal, secure terminal user password and secure terminal's wallet password to safety deposit (or if you don't wanna run back to the bank, power-down the secure terminal and remove from clean room, assign a pair to watch over the secure terminal while the final steps are performed). 
 * At this point the CST contract exists in mainnet, but it has not been configured as an ERC-20 token and no tokens have been minted yet. The contract will not allow anyone to obtain CST yet.
@@ -230,7 +230,7 @@ geth --rpc --rpcapi db,eth,net,web3,personal
 ```
 * From the terminal, in the cardstack token project directory execute this command to create the contract confugration transaction (note that you can't actually sell CST back to the contract, but the contract still needs to have a sellPriceEth set):
 ```
-truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --buyerPool=50000000 --maximumBalancePercentage=100% --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
+npm run exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --buyerPool=50000000 --maximumBalancePercentage=100% --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
 ```
 (These numbers are examples, use the real values when the time comes. Also note that the foundation address is optional)
 * The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide. The gas limit describes the units of gas that this transaction will allow to be consumed. You are not penalized for using a larger value than the estimated gas. You are only charged for gas that your transaction actually uses. Also, increasing this particular value does not make your tranaction process faster (that is a different field).
@@ -242,11 +242,11 @@ truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSym
 * monitor the completion of the transaction.
 * after the transaction is complete view the CST system info and confirm that the configuration has updated correctly: 
 ```
-truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+npm run exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
 * Now mint the CST tokens, this should represent the total eventual amount of tokens after the final phase of the CST token sale.
 ```
-truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry address> -d --network=mainnet
+npm run exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry address> -d --network=mainnet
 ```
 * The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide.
 * adjust the gas price slider in the upper right to reflect the speed that you want the transaction to be processed with.
@@ -257,12 +257,12 @@ truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry addre
 * monitor the completion of the transaction.
 * after the transaction is complete view the CST system info and confirm that the configuration has updated correctly: 
 ```
-truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+npm run exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
 
 * Next, whitelist the buyers of CST, note that a minimum balance percentage for the buyer only needs to be set if it deviates from the global maximum percentage set in the contract:
 ```
-truffle exec ./scripts/cst-add-buyer.js --address=<buyer's address> --maximumBalancePercentage=0.2% -r <registry address> -d --network=mainnet
+npm run exec ./scripts/cst-add-buyer.js --address=<buyer's address> --maximumBalancePercentage=0.2% -r <registry address> -d --network=mainnet
 ```
 * The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide.
 * adjust the gas price slider in the upper right to reflect the speed that you want the transaction to be processed with.
@@ -273,12 +273,12 @@ truffle exec ./scripts/cst-add-buyer.js --address=<buyer's address> --maximumBal
 * monitor the completion of the transaction.
 * after the transaction is complete view the CST system info and confirm that the configuration has updated correctly: 
 ```
-truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+npm run exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
 
 * Next, generate the information that you need to share with the outside world on how to buy a CST token:
 ```
-truffle exec ./scripts/cst-buy-info.js --network=mainnet -r <registry address>
+npm run exec ./scripts/cst-buy-info.js --network=mainnet -r <registry address>
 ``` 
 * The result will be an Ethereum address, data, and estimated gas to purchase CST tokens.
 * The CST is now available for purchase and the CST contract will disable the `buy()` function as soon as the amount of CST tokens sold reaches the `sellCap` specified during the CST configuration or the buyer's balance would exceed the maximum balance amount after the purchase of CST.
@@ -303,12 +303,12 @@ truffle exec ./scripts/cst-buy-info.js --network=mainnet -r <registry address>
 ### Monitoring CST Token Sale
 To view the state of the various contracts in the CST ecosystem, execute the following command:
 ```
-truffle exec ./scripts/system-info.js --network=mainnet -r <registry address>
+npm run exec ./scripts/system-info.js --network=mainnet -r <registry address>
 ```
 
 This will return a response that looks like this: 
 ```
-truffle exec ./scripts/system-info.js --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+npm run exec ./scripts/system-info.js --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
 Using network 'rinkeby'.
 
 Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
@@ -379,12 +379,12 @@ Storage (0x301618ced6c48af5c5b949680a24f0912297b851)
 ### Monitoring CST Ledger
 To view a list of all accounts that hold CST tokens execute the script:
 ```
-truffle exec ./scripts/ledger-info.js --network=mainnet -r <registry address>
+npm run exec ./scripts/ledger-info.js --network=mainnet -r <registry address>
 ```
 
 This will return a response like this:
 ```
-truffle exec ./scripts/ledger-info.js --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+npm run exec ./scripts/ledger-info.js --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
 Using network 'rinkeby'.
 
 Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
@@ -400,16 +400,16 @@ Accounts:
 In order to withdraw ETH from the CST contract, first ensure that the Cardstack Foundation's Ethereum wallet address is set on the CST contract using the `scripts/system-info.js` script, also make sure this address has enough of a balance to pay gas fees for the request. If the Cardstack Foundation address has not been set or is incorrect, then use the `scripts/cst-configure.js` script to set the foundation address:
 
 ```
-truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
+npm run exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
 ```
 
 Then use the `scripts/cst-withdraw-info.js` to formulate the request that will be issued from the Cardstack Foundation, where the amount to withdraw is in units of ETH:
 ```
-truffle exec ./scripts/cst-withdraw-info.js --amount=0.2 --network=mainnet -r "<registry address>"
+npm run exec ./scripts/cst-withdraw-info.js --amount=0.2 --network=mainnet -r "<registry address>"
 ```
 This will return instructions that can be sent to the Cardstack Foundation for how to perform their withdrawal:
 ```
-truffle exec ./scripts/cst-withdraw-info.js --amount=0.2 --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+npm run exec ./scripts/cst-withdraw-info.js --amount=0.2 --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
 Using network 'rinkeby'.
 
 Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
@@ -423,11 +423,11 @@ Estimated gas: 34002
 ### Depositing ETH to the CST contract from the Cardstack Foundation
 In order to deposit ETH into the CST contract, use the `scripts/cst-deposit-info.js` script to show the deposit request:
 ```
-truffle exec ./scripts/cst-deposit-info.js --network=mainnet -r "<registry address>"
+npm run exec ./scripts/cst-deposit-info.js --network=mainnet -r "<registry address>"
 ```
 This will result in the instructions to deposit ETH into the CST contract:
 ```
-truffle exec ./scripts/cst-deposit-info.js --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+npm run exec ./scripts/cst-deposit-info.js --network=rinkeby -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
 Using network 'rinkeby'.
 
 Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
@@ -442,12 +442,12 @@ Estimated gas: 22612
 In order freeze the CST contract such that all CST transactions stop, use the `scripts/cst-freeze-token.js` to generate the request that should be issued by the cold wallet:
 
 ```
-truffle exec ./scripts/cst-freeze-token.js --network=mainnet -d -r "<registry address>"
+npm run exec ./scripts/cst-freeze-token.js --network=mainnet -d -r "<registry address>"
 ```
 
 This will result in the following response, which can be plugged into myetherwallet.com with the cold wallet device:
 ```
-truffle exec ./scripts/cst-freeze-token.js --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+npm run exec ./scripts/cst-freeze-token.js --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
 Using network 'rinkeby'.
 
 Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
@@ -463,12 +463,12 @@ You can use the script `scripts/system-info.js` to confirm that the token is fro
 To then unfreeze the token so that CST transactions can resume, use the `scripts/cst-unfreeze-token.js` to generate the request that should be issued by the cold wallet:
 
 ```
-truffle exec ./scripts/cst-unfreeze-token.js --network=mainnet -d -r "<registry address>"
+npm run exec ./scripts/cst-unfreeze-token.js --network=mainnet -d -r "<registry address>"
 ```
 
 This will result in the following response, which can be plugged into myetherwallet.com with the cold wallet device:
 ```
-truffle exec ./scripts/cst-unfreeze-token.js --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+npm run exec ./scripts/cst-unfreeze-token.js --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
 Using network 'rinkeby'.
 
 Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
@@ -485,11 +485,11 @@ You can use the script `scripts/system-info.js` to confirm that the token is unf
 In order to freeze a specific CST account ot prevent that account from buying, receiving, or sending CST, use `scripts/cst-freeze-account.js` to generate the request that should be issued by the cold wallet:
 
 ```
-truffle exec ./scripts/cst-freeze-account.js --address="<address to freeze>" --network=rinkeby -d -r "<registry address>"
+npm run exec ./scripts/cst-freeze-account.js --address="<address to freeze>" --network=rinkeby -d -r "<registry address>"
 ```
 This will result in the following response, which can be plugged into myetherwallet.com with the cold wallet device:
 ```
-truffle exec ./scripts/cst-freeze-account.js --address=0x395d155505432d55a8d8ba9c6c49f8211b65d609 --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+npm run exec ./scripts/cst-freeze-account.js --address=0x395d155505432d55a8d8ba9c6c49f8211b65d609 --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
 Using network 'rinkeby'.
 
 Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
@@ -503,11 +503,11 @@ You can use the script `scripts/system-info.js` to confirm that the account is f
 
 To then unfreeze the account, use the `scripts/cst-unfreeze-account.js` script to generate the request that should be issued by the cold wallet:
 ```
-truffle exec ./scripts/cst-unfreeze-account.js --address="<address to freeze>" --network=rinkeby -d -r "<registry address>"
+npm run exec ./scripts/cst-unfreeze-account.js --address="<address to freeze>" --network=rinkeby -d -r "<registry address>"
 ```
 This will result in the following response, which can be plugged into myetherwallet.com with the cold wallet device:
 ```
-truffle exec ./scripts/cst-unfreeze-account.js --address=0x395d155505432d55a8d8ba9c6c49f8211b65d609 --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
+npm run exec ./scripts/cst-unfreeze-account.js --address=0x395d155505432d55a8d8ba9c6c49f8211b65d609 --network=rinkeby -d -r 0x9f0055eb73e36973594634cd65fab48a6aa11535
 Using network 'rinkeby'.
 
 Using registry at 0x9f0055eb73e36973594634cd65fab48a6aa11535
