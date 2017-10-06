@@ -75,7 +75,7 @@ truffle exec ./scripts/system-info.js --network=testrpc -r <Registry's address>
 
 You can configure the price and details around CST by executing:
 ```
-truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --buyerPool=50000000 --maximumBalancePercentage=100% --foundation="<foundation address>" -r "<registry address>" --network=testrpc
+truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 --sellCap=50000000 --buyerPool=50000000 --maximumBalancePercentage=100% --foundation="<foundation address>" -r "<registry address>" --network=testrpc
 ```
 
 You can mint new CST's (which must exist in order for people to buy) by executing:
