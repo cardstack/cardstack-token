@@ -155,7 +155,7 @@ npm run build
 * Deposit the secure terminal and the user password back in the safety deposit box
 * Congratulations you have completed the setup of the secure terminal 🎉🎊.
 
-##### OPTION 2 - COPY ETHEREUM BLOCKCHAIN FROM TRUSTED SOURCE*
+##### OPTION 2 - COPY ETHEREUM BLOCKCHAIN FROM TRUSTED SOURCE
 * Close the Ethereum Wallet app
 * From a trusted source, copy `~/Library/Ethereum/geth/chaindata/*` of a fully-synced synced Ethereum node to the secure terminal (very large ~ 170GB)
 * Launch the Ethereum wallet app, and wait for blocks to complete downloading
