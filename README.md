@@ -8,7 +8,7 @@ This project contains the smart contracts that govern the CardStack token.
 
 * [truffle](http://truffleframework.com/) to manage smart contracts (like ember-cli for Etherium). 
 ```
-yarn global add truffle@3.4.9
+yarn global add truffle
 ```
 
 * [geth](https://github.com/ethereum/go-ethereum/wiki/Installation-Instructions-for-Mac) to use as CLI ethereum wallet that truffle can manipulate.
