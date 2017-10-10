@@ -23,8 +23,7 @@
     "lodash": "^4.17.4",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
-    "truffle": "3.4.9",
+    "truffle": "^3.4.11",
     "zeppelin-solidity": "^1.2.0"
-  },
-  "dependencies": {}
+  }
 }
