@@ -16,6 +16,6 @@ module.exports = async function(deployer) {
                           registry.address,
                           CST_STORAGE_NAME,
                           CST_LEDGER_NAME,
-                          { gas: 6100000 });  // need as much gas as possible--this is a big contract
+                          { gas: 5900000 });  // need as much gas as possible--this is a big contract
   }
 };
