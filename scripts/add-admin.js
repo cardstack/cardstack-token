@@ -1,4 +1,4 @@
-const { CST_NAME } = require("../lib/constants");
+const { CST_NAME, CST_STORAGE_NAME, CST_LEDGER_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 
@@ -6,9 +6,6 @@ let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 let ExternalStorage = artifacts.require("./ExternalStorage.sol");
 let CstLedger = artifacts.require("./CstLedger.sol");
-
-const cstStorageName = 'cstStorage';
-const cstLedgerName = 'cstLedger';
 
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
@@ -70,20 +67,20 @@ module.exports = async function(callback) {
   let { address, name } = options;
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
   let cst = await CardStackToken.at(cstAddress);
-  let storageAddress = await registry.storageForHash(web3.sha3(cstStorageName));
-  let ledgerAddress = await registry.storageForHash(web3.sha3(cstLedgerName));
+  let storageAddress = await registry.storageForHash(web3.sha3(CST_STORAGE_NAME));
+  let ledgerAddress = await registry.storageForHash(web3.sha3(CST_LEDGER_NAME));
   let storage = await ExternalStorage.at(storageAddress);
   let ledger = await CstLedger.at(ledgerAddress);
 
   let contract;
   switch (name) {
-    case 'cst':
+    case CST_NAME:
       contract = cst;
       break;
-    case 'cstLedger':
+    case CST_LEDGER_NAME:
       contract = ledger;
       break;
-    case 'cstStorage':
+    case CST_STORAGE_NAME:
       contract = storage;
       break;
   }
