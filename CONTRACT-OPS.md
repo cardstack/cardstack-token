@@ -113,9 +113,9 @@ nvm use node 7.6
 ```
 curl -o- -L https://yarnpkg.com/install.sh | bash
 ```
-* install truffle (version 3.4.9 specifically, there is an issue in how the registry is deployed in later versions that prevents CST contract from being registered--still investigating).
+* install truffle
 ```
-yarn global add truffle@3.4.9
+yarn global add truffle
 ```
 * yarn install the project
 ```
