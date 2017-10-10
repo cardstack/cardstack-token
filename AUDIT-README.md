@@ -14,13 +14,13 @@ A current version of the CST ERC-20 token has been deployed to Rinkeby. The CST 
 
 **Address:**
 ```
- 0x9b664f2932d701d84e52865c51f59e27f8838878   
+0x1004e7e3439c6c413aec6f424692494a55912cae   
  ```
 **Data:**
 ```
 0xa6f2ae3a
 ```
-(estimated gas 6125435)
+(estimated gas 180000)
 
 The current price of CST in Rinkeby is 1 CST = 0.002 ETH
 
