@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "async-parallel": "^1.2.3",
     "bluebird": "^3.5.0",
     "command-line-args": "^4.0.7",
     "command-line-usage": "^4.0.1",
