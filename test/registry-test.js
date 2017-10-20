@@ -38,6 +38,8 @@ contract('Registry', function(accounts) {
 
       cst1 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       cst2 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await cst1.setAllowTransfers(true);
+      await cst2.setAllowTransfers(true);
       await ledger.mintTokens(100);
     });
 
@@ -272,6 +274,7 @@ contract('Registry', function(accounts) {
       assert.equal(asInt(cstBalance), 2, "The CST balance is correct");
 
       await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin });
+      await cst2.setAllowTransfers(true);
 
       let totalInCirculation = await cst2.totalInCirculation();
       cstBalance = await cst2.balanceOf(buyerAccount);
@@ -329,6 +332,7 @@ contract('Registry', function(accounts) {
 
       await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin });
 
+      await cst2.setAllowTransfers(true);
       allowance = await cst2.allowance(grantor, spender);
       grantorBalance = await cst2.balanceOf(grantor);
       spenderBalance = await cst2.balanceOf(spender);

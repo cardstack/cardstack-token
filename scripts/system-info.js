@@ -81,6 +81,7 @@ module.exports = async function(callback) {
     cstCustomBuyerCount = await cst.totalCustomBuyersMapping();
     cstBuyerPool = await cst.cstBuyerPool();
     cstBalanceLimit = await cst.cstBalanceLimit();
+    cstAllowTransfers = await cst.allowTransfers();
   }
 
   let registryAdminCount = await registry.totalAdminsMapping();
@@ -225,6 +226,7 @@ Cardstack Token (${cst.address}):
   storageName: ${cstStorageName}
   ledgerName: ${cstLedgerName}
   isFrozen: ${cstFrozen}
+  allowTransfers: ${cstAllowTransfers}
   deprecated: ${cstDeprecated}
   successor: ${successor}
   name: ${cstName}

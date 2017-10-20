@@ -606,6 +606,45 @@ contract('CardStackToken', function(accounts) {
 
   });
 
+  describe("setAllowTransfers", function() {
+    beforeEach(async function() {
+      ledger = await CstLedger.new();
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await registry.register("CST", cst.address);
+      await cst.addSuperAdmin(superAdmin);
+    });
+
+    it("allows super admin to call setAllowTransfers", async function() {
+      let allowTransfers = await cst.allowTransfers();
+
+      assert.notOk(allowTransfers, "transfers are not initially allowed");
+
+      await cst.setAllowTransfers(true, { from: superAdmin });
+      allowTransfers = await cst.allowTransfers();
+
+      assert.ok(allowTransfers, "super admin setAllowedTransfers to true");
+    });
+
+    it("does not allow non-super admin to call setAllowTransfers", async function() {
+      let nonSuperAdmin = accounts[33];
+      let exceptionThrown;
+      try {
+        await cst.setAllowTransfers(true, { from: nonSuperAdmin });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      let allowTransfers = await cst.allowTransfers();
+      assert.notOk(allowTransfers, "setAllowTransfers is not changed by non-super admin");
+    });
+  });
+
   describe("setCustomBuyer", function() {
     let customBuyer = accounts[23];
     let approvedBuyer = accounts[17];

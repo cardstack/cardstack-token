@@ -32,6 +32,7 @@ contract('CardStackToken', function(accounts) {
       await ledger.mintTokens(100);
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
 
+      await cst.setAllowTransfers(true);
       await checkBalance(senderAccount, 1);
       await cst.addBuyer(senderAccount);
       await cst.buy({
@@ -98,5 +99,29 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
     });
+
+    it("should not be able to transfer when allowTransfers is false", async function() {
+      await cst.setAllowTransfers(false);
+      let transferAmount = 10;
+
+      let exceptionThrown;
+      try {
+        await cst.transfer(recipientAccount, transferAmount, {
+          from: senderAccount
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let senderBalance = await cst.balanceOf(senderAccount);
+      let recipientBalance = await cst.balanceOf(recipientAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
+      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+    });
+
   });
 });

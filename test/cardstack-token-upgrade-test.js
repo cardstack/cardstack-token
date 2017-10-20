@@ -40,6 +40,8 @@ contract('CardStackToken', function(accounts) {
       await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       await cst1.addAdmin(admin);
       await cst2.addAdmin(admin);
+      await cst1.setAllowTransfers(true);
+      await cst2.setAllowTransfers(true);
     });
 
     it("does not allow an admin to add a superAdmin", async function() {
@@ -232,6 +234,8 @@ contract('CardStackToken', function(accounts) {
       await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       await cst1.addSuperAdmin(admin);
       await cst2.addSuperAdmin(admin);
+      await cst1.setAllowTransfers(true);
+      await cst2.setAllowTransfers(true);
     });
 
     // be kind and return ethers to the root account
@@ -520,6 +524,8 @@ contract('CardStackToken', function(accounts) {
       await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       await cst1.addSuperAdmin(admin);
       await cst2.addSuperAdmin(admin);
+      await cst1.setAllowTransfers(true);
+      await cst2.setAllowTransfers(true);
     });
 
     it("does not allow adding a buyer for a successor contract", async function() {
@@ -924,6 +930,19 @@ contract('CardStackToken', function(accounts) {
       let totalCustomBuyers = await cst1.totalCustomBuyersMapping();
 
       assert.equal(totalCustomBuyers, 0, 'the total custom buyers is correct');
+    });
+
+    it("does not allow setAllowTransfers when contract has been upgraded", async function() {
+      await cst1.upgradeTo(cst2.address, { from: admin });
+
+      let exceptionThrown;
+      try {
+        await cst.setAllowTransfers(false);
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
     });
   });
 });
