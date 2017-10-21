@@ -31,6 +31,7 @@ contract('CardStackToken', function(accounts) {
       await ledger.mintTokens(100);
       await ledger.debitAccount(grantor, 50);
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst.setAllowTransfers(true);
     });
 
     it("allows account to approve an allowance for a spender", async function() {
@@ -144,6 +145,26 @@ contract('CardStackToken', function(accounts) {
       let exceptionThrown;
       try {
         await cst.transferFrom(grantor, recipient, 51, { from: spender });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let grantorBalance = await cst.balanceOf(grantor);
+      let recipientBalance = await cst.balanceOf(recipient);
+      let allowance = await cst.allowance(grantor, spender);
+
+      assert.equal(asInt(allowance), 10, "the allowance is correct");
+      assert.equal(asInt(grantorBalance), 50, "the balance is correct");
+      assert.equal(asInt(recipientBalance), 0, "the balance is correct");
+    });
+
+    it("should not be able to transferFrom when allowTransfers is false", async function() {
+      await cst.setAllowTransfers(false);
+      await cst.approve(spender, 10, { from: grantor });
+      let exceptionThrown;
+      try {
+        await cst.transferFrom(grantor, recipient, 10, { from: spender });
       } catch(err) {
         exceptionThrown = true;
       }

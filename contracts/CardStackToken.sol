@@ -52,6 +52,7 @@ contract CardStackToken is Ownable,
   mapping (address => bool) processedBuyer;
 
   uint256 public decimals = 0;
+  bool public allowTransfers;
 
   event SellCapChange(uint256 newSellCap);
   event PriceChange(uint256 newSellPrice, uint256 newBuyPrice);
@@ -173,6 +174,7 @@ contract CardStackToken is Ownable,
   }
 
   function transfer(address recipient, uint256 amount) unlessFrozen unlessUpgraded returns (bool) {
+    require(allowTransfers);
     require(!frozenAccount[recipient]);
 
     tokenLedger.transfer(msg.sender, recipient, amount);
@@ -243,6 +245,7 @@ contract CardStackToken is Ownable,
   }
 
   function transferFrom(address from, address to, uint256 value) unlessFrozen unlessUpgraded returns (bool) {
+    require(allowTransfers);
     require(!frozenAccount[from]);
     require(!frozenAccount[to]);
     require(from != msg.sender);
@@ -277,6 +280,11 @@ contract CardStackToken is Ownable,
     }
     addBuyer(buyer);
 
+    return true;
+  }
+
+  function setAllowTransfers(bool _allowTransfers) onlySuperAdmins unlessUpgraded returns (bool) {
+    allowTransfers = _allowTransfers;
     return true;
   }
 

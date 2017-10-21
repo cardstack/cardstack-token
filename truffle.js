@@ -22,6 +22,13 @@ module.exports = {
       gasPrice: 30000000000 // Default is 100 GWEI (100000000000), which is very fast
     },
 
+    rinkeby_docker: {
+      host: "localhost", // Connect to geth on the specified
+      port: 9545,
+      network_id: 4,
+      gasPrice: 30000000000 // Default is 100 GWEI (100000000000), which is very fast
+    },
+
     mainnet: {
       host: "localhost", // Connect to geth on the specified
       port: 8545,
