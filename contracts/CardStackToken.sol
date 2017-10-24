@@ -39,6 +39,7 @@ contract CardStackToken is Ownable,
   // and not in storage, as this whitelist is specific to phase 1 token sale
   uint256 public cstBuyerPool;
   uint256 public cstBalanceLimit;
+  uint256 public contributionMinimum;
   uint256 priceChangeBlockHeight;
 
   uint256 public totalCustomBuyersMapping;
@@ -213,6 +214,7 @@ contract CardStackToken is Ownable,
     uint256 balanceLimit;
     uint256 buyerBalance = tokenLedger.balanceOf(msg.sender);
     uint256 customLimit = customBuyerLimit[msg.sender];
+    require(contributionMinimum == 0 || buyerBalance >= contributionMinimum || amount >= contributionMinimum);
 
     if (customLimit > 0) {
       balanceLimit = customLimit;
@@ -285,6 +287,11 @@ contract CardStackToken is Ownable,
 
   function setAllowTransfers(bool _allowTransfers) onlySuperAdmins unlessUpgraded returns (bool) {
     allowTransfers = _allowTransfers;
+    return true;
+  }
+
+  function setContributionMinimum(uint256 _contributionMinimum) onlySuperAdmins unlessUpgraded returns (bool) {
+    contributionMinimum = _contributionMinimum;
     return true;
   }
 

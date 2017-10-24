@@ -606,6 +606,44 @@ contract('CardStackToken', function(accounts) {
 
   });
 
+  describe("setContributionMinimum", function() {
+    beforeEach(async function() {
+      ledger = await CstLedger.new();
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await registry.register("CST", cst.address);
+      await cst.addSuperAdmin(superAdmin);
+    });
+
+    it("allows super admin to call setContributionMinimum", async function() {
+      let contributionMinimum = await cst.contributionMinimum();
+      assert.equal(contributionMinimum.toNumber(), 0, "The contributionMinimum is initially 0");
+
+      await cst.setContributionMinimum(10, { from: superAdmin });
+
+      contributionMinimum = await cst.contributionMinimum();
+      assert.equal(contributionMinimum.toNumber(), 10, "The contributionMinimum is correct");
+    });
+
+    it("does not allow non-super admin to call setContributionMinimum", async function() {
+      let nonSuperAdmin = accounts[33];
+      let exceptionThrown;
+      try {
+        await cst.setContributionMinimum(10, { from: nonSuperAdmin });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      let contributionMinimum = await cst.contributionMinimum();
+      assert.equal(contributionMinimum.toNumber(), 0, "The contributionMinimum is correct");
+    });
+  });
+
   describe("setAllowTransfers", function() {
     beforeEach(async function() {
       ledger = await CstLedger.new();

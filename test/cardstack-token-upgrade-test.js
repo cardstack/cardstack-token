@@ -944,5 +944,18 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(exceptionThrown, "Exception was thrown");
     });
+
+    it("does not allow setContributionMinimum when contract has been upgraded", async function() {
+      await cst1.upgradeTo(cst2.address, { from: admin });
+
+      let exceptionThrown;
+      try {
+        await cst.setContributionMinimum(10);
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
+    });
   });
 });

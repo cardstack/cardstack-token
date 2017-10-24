@@ -14,6 +14,7 @@ const optionsDefs = [
   { name: "sellCap", type: Number },
   { name: "buyerPool", type: Number },
   { name: "maximumBalancePercentage", type: String },
+  { name: "maximumBalance", type: Number },
   { name: "foundation", type: String },
   { name: "registry", alias: "r", type: String },
   { name: "data", alias: "d", type: Boolean }
@@ -54,6 +55,9 @@ const usage = [
       name: "maximumBalancePercentage",
       description: "this is the maximum amount of CST that an account is allowed to posses expressed as a percentage of the buyerPool for the current phase of the token sale, e.g. \"--maximumBalancePercentage=0.2%\""
     },{
+      name: "maximumBalance"
+      description: "this is the maximum amount of CST that an account is allowed to posses expressed as number of CST"
+    },{
       name: "foundation",
       description: "(optional) The address of the CST Foundation, which has the ability to deposit and withdraw ETH against the CST contract."
     },{
@@ -89,7 +93,7 @@ module.exports = async function(callback) {
       !sellCap ||
       !options.network ||
       !buyerPool ||
-      !maximumBalancePercentage ||
+      (!maximumBalancePercentage && !maximumBalance) ||
       options.help ||
       !options.registry) {
     console.log(getUsage(usage));
@@ -100,7 +104,13 @@ module.exports = async function(callback) {
   let registryAddress = options.registry;
   foundation = foundation || NULL_ADDRESS;
 
-  let maxBalance = Math.floor(buyerPool * maximumBalancePercentage);
+  let maxBalance;
+  if (maximumBalancePercentage) {
+    maxBalance = Math.floor(buyerPool * maximumBalancePercentage);
+  } else if (maximumBalance && buyerPool) {
+    maxBalance = maximumBalance;
+    maximumBalancePercentage = Math.round(maximumBalance * 100 / buyerPool ) / 100;
+  }
 
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
 
