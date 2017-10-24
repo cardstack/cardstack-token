@@ -52,7 +52,8 @@ module.exports = async function(callback) {
 
   let cst, cstRegistry, cstFrozen, cstDeprecated, successor, cstStorageName, cstLedgerName, cstName,
     cstSymbol, buyPriceWei, sellPriceWei, sellCap, foundation, balanceWei, totalSupply, cstFrozenCount,
-    cstAdminCount, cstSuperAdminCount, cstBuyerCount, cstCustomBuyerCount, cstBuyerPool, cstBalanceLimit;
+    cstAdminCount, cstSuperAdminCount, cstBuyerCount, cstCustomBuyerCount, cstBuyerPool, cstBalanceLimit,
+    contributionMinimum;
 
   if (cstAddress === NULL_ADDRESS) {
     console.log(`There is no CST contract resgistered with the Registry at ${registry.address}`);
@@ -82,6 +83,7 @@ module.exports = async function(callback) {
     cstBuyerPool = await cst.cstBuyerPool();
     cstBalanceLimit = await cst.cstBalanceLimit();
     cstAllowTransfers = await cst.allowTransfers();
+    contributionMinimum = await cst.contributionMinimum();
   }
 
   let registryAdminCount = await registry.totalAdminsMapping();
@@ -235,6 +237,7 @@ Cardstack Token (${cst.address}):
   sellPrice (ETH): ${web3.fromWei(sellPriceWei, "ether")}
   sellCap: ${sellCap}
   buyerPool: ${cstBuyerPool}
+  contributionMinimum: ${contributionMinimum} CST
   balanceLimit: ${(cstBalanceLimit.toNumber() / cstBuyerPool.toNumber()) * 100}% (${cstBalanceLimit} CST)
   totalSupply: ${totalSupply}
   balance (ETH): ${web3.fromWei(balanceWei, "ether")}
