@@ -253,7 +253,6 @@ contract('Registry', function(accounts) {
       await cst1.configure(web3.toHex("CardStack Token"),
                            web3.toHex("CST"),
                            web3.toWei(0.1, "ether"),
-                           web3.toWei(0.1, "ether"),
                            100,
                            100,
                            1000000,
@@ -295,7 +294,6 @@ contract('Registry', function(accounts) {
       let name = await cst2.name();
       let symbol = await cst2.symbol();
       let buyPrice = await cst2.buyPrice();
-      let sellPrice = await cst2.sellPrice();
       let sellCap = await cst2.sellCap();
       let foundationAddress = await cst2.foundation();
 
@@ -306,7 +304,6 @@ contract('Registry', function(accounts) {
       assert.equal(name, "CardStack Token", "the name is correct");
       assert.equal(symbol, "CST", "the symbol is correct");
       assert.equal(buyPrice.toNumber(), web3.toWei(0.1, "ether"), "the buyPrice is correct");
-      assert.equal(sellPrice.toNumber(), web3.toWei(0.1, "ether"), "the sellPrice is correct");
       assert.equal(sellCap.toNumber(), 100, "the sellCap is correct");
       assert.equal(foundationAddress, foundation, "the foundation address is correct");
     });
@@ -460,11 +457,11 @@ contract('Registry', function(accounts) {
 
     it("allows superAdmin to set uint value", async function () {
       await registry.register("CardStack Token", cst1.address, { from: superAdmin });
-      await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.2, "ether"), { from: superAdmin });
+      await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.2, "ether"), { from: superAdmin });
       await cst1.configureFromStorage();
 
-      let sellPrice = await cst1.sellPrice();
-      assert.equal(sellPrice.toNumber(), web3.toWei(0.2, "ether"), "uint value was set by super admin");
+      let buyPrice = await cst1.buyPrice();
+      assert.equal(buyPrice.toNumber(), web3.toWei(0.2, "ether"), "uint value was set by super admin");
     });
 
     it("does not allow non-superAdmin to set uint value", async function() {
@@ -474,7 +471,7 @@ contract('Registry', function(accounts) {
       await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
       try {
-        await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.2, "ether"), { from: nonSuperAdmin });
+        await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.2, "ether"), { from: nonSuperAdmin });
       } catch(e) {
         exceptionThrown = true;
       }
@@ -482,8 +479,8 @@ contract('Registry', function(accounts) {
       assert.ok(exceptionThrown, "exception is thrown");
 
       await cst1.configureFromStorage();
-      let sellPrice = await cst1.sellPrice();
-      assert.equal(sellPrice.toNumber(), web3.toWei(0.1, "ether"), "sell price did not change");
+      let buyPrice = await cst1.buyPrice();
+      assert.equal(buyPrice.toNumber(), web3.toWei(0.1, "ether"), "buy price did not change");
     });
 
     it("allows superAdmin to set bytes32 value", async function () {

@@ -39,12 +39,12 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst.address);
 
-      await cst.configure(0x0, 0x0, 0, 0, 0, 0, 1000000, accounts[0]);
+      await cst.configure(0x0, 0x0, 0, 0, 0, 1000000, accounts[0]);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
 
     it("an approved buyer should be able to purchase CST", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
       await ledger.mintTokens(10);
       let buyerAccount = accounts[8];
       let txnValue = web3.toWei(2, "ether");
@@ -93,7 +93,7 @@ contract('CardStackToken', function(accounts) {
 
     it("a non approved buyer cannot purchase CST", async function() {
       await ledger.mintTokens(10);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
 
       let buyerAccount = accounts[1];
       let txnValue = web3.toWei(2, "ether");
@@ -125,7 +125,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("cannot buy CST immediately after a price change", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
       await ledger.mintTokens(10);
       let buyerAccount = accounts[8];
 
@@ -135,7 +135,7 @@ contract('CardStackToken', function(accounts) {
 
       await cst.addBuyer(buyerAccount);
 
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
       let txnValue = web3.toWei(0.2, "ether");
 
       let exceptionThrown;
@@ -162,7 +162,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("can buy CST at least 2 blocks after a price change", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
       await ledger.mintTokens(10);
       let buyerAccount = accounts[8];
       let txnValue = web3.toWei(2, "ether");
@@ -174,7 +174,7 @@ contract('CardStackToken', function(accounts) {
 
       await cst.addBuyer(buyerAccount);
 
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
 
       // change the block height by adding buyers
       await cst.addBuyer(accounts[20]);
@@ -209,7 +209,7 @@ contract('CardStackToken', function(accounts) {
 
     it("can not purchase more CST than the amount of ethers in the buyers wallet", async function() {
       await ledger.mintTokens(10);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
 
       let buyerAccount = accounts[1];
       let txnValue = web3.toWei(1000, "ether");
@@ -248,7 +248,7 @@ contract('CardStackToken', function(accounts) {
 
     it("can not purchase more CST than has been minted", async function() {
       await ledger.mintTokens(10);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 15, 15, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 15, 15, 1000000, NULL_ADDRESS);
       let buyerAccount = accounts[1];
       let txnValue = web3.toWei(11, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
@@ -282,7 +282,7 @@ contract('CardStackToken', function(accounts) {
 
     it("can not purchase fractional CST (less than purchase price for a single CST)", async function() {
       await ledger.mintTokens(10);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 15, 15, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 15, 15, 1000000, NULL_ADDRESS);
       let buyerAccount = accounts[1];
       let txnValue = web3.toWei(0.9, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
@@ -316,7 +316,7 @@ contract('CardStackToken', function(accounts) {
 
     it("can not purchase more CST than the CST sellCap", async function() {
       await ledger.mintTokens(10);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), web3.toWei(1, "ether"), 5, 5, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 5, 5, 1000000, NULL_ADDRESS);
       let buyerAccount = accounts[1];
       let txnValue = web3.toWei(6, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
@@ -352,7 +352,6 @@ contract('CardStackToken', function(accounts) {
       await ledger.mintTokens(100);
       await cst.configure(web3.toHex("CardStack Token"),
                           web3.toHex("CST"),
-                          web3.toWei(1, "ether"),
                           web3.toWei(1, "ether"),
                           100,
                           10,
@@ -410,7 +409,6 @@ contract('CardStackToken', function(accounts) {
       await cst.configure(web3.toHex("CardStack Token"),
                           web3.toHex("CST"),
                           web3.toWei(1, "ether"),
-                          web3.toWei(1, "ether"),
                           100,
                           10,
                           2,
@@ -450,7 +448,6 @@ contract('CardStackToken', function(accounts) {
       await ledger.mintTokens(100);
       await cst.configure(web3.toHex("CardStack Token"),
                           web3.toHex("CST"),
-                          web3.toWei(1, "ether"),
                           web3.toWei(1, "ether"),
                           100,
                           10,
@@ -508,7 +505,6 @@ contract('CardStackToken', function(accounts) {
       await cst.configure(web3.toHex("CardStack Token"),
                           web3.toHex("CST"),
                           web3.toWei(1, "ether"),
-                          web3.toWei(1, "ether"),
                           100,
                           10,
                           2,
@@ -546,7 +542,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("allows a purchase of CST when buyer buys more than the contribution minimum", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       await ledger.mintTokens(100);
       let buyerAccount = accounts[8];
       let txnValue = web3.toWei(1, "ether");
@@ -587,7 +583,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("allows a purchase of CST when the buyer has more than the contribution minimum as a CST balance, and makes a new purchase that is less than the contribution minimum", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"),  web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       await ledger.mintTokens(100);
       let buyerAccount = accounts[8];
       let txnValue = web3.toWei(0.2, "ether");
@@ -629,7 +625,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow a purchase when the buyer has no CST balance and make a purchase less than the contribution minimum", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
       await ledger.mintTokens(100);
       let buyerAccount = accounts[8];
       let txnValue = web3.toWei(0.2, "ether");

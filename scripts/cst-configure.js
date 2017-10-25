@@ -10,7 +10,6 @@ const optionsDefs = [
   { name: "tokenName", type: String },
   { name: "tokenSymbol", type: String },
   { name: "buyPriceEth", type: Number },
-  { name: "sellPriceEth", type: Number },
   { name: "sellCap", type: Number },
   { name: "buyerPool", type: Number },
   { name: "maximumBalancePercentage", type: String },
@@ -42,9 +41,6 @@ const usage = [
     },{
       name: "buyPriceEth",
       description: "The price to purchase 1 CST from the CST contract in units of ethers."
-    },{
-      name: "sellPriceEth",
-      description: "The price to sell 1 CST to the CST contract in units of ethers (current the sell capability is disabled)."
     },{
       name: "sellCap",
       description: "The maximum number of CST that can be purchased from the CST contract. (This is used to set the maximum number of CST avialable for each phase of CST purchase.)"
@@ -89,7 +85,6 @@ module.exports = async function(callback) {
   if (!tokenName ||
       !tokenSymbol ||
       !buyPriceEth ||
-      !sellPriceEth ||
       !sellCap ||
       !options.network ||
       !buyerPool ||
@@ -123,7 +118,6 @@ module.exports = async function(callback) {
   token name: ${tokenName}
   token symbol: ${tokenSymbol}
   buy price (ETH): ${buyPriceEth}
-  sell price: (ETH): ${sellPriceEth}
   sell cap: ${sellCap}
   buyer pool: ${buyerPool}
   maximum balance percentage: ${maximumBalancePercentage * 100}% (${maxBalance} CST)
@@ -133,7 +127,6 @@ module.exports = async function(callback) {
     let data = cst.contract.configure.getData(web3.toHex(tokenName),
                                               web3.toHex(tokenSymbol),
                                               web3.toWei(parseFloat(buyPriceEth), "ether"),
-                                              web3.toWei(parseFloat(sellPriceEth), "ether"),
                                               sellCap,
                                               buyerPool,
                                               maxBalance,
