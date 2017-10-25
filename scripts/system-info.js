@@ -233,7 +233,6 @@ Cardstack Token (${cst.address}):
   name: ${cstName}
   symbol: ${cstSymbol}
   buyPrice (ETH): ${web3.fromWei(buyPriceWei, "ether")}
-  sellPrice (ETH): ${web3.fromWei(sellPriceWei, "ether")}
   sellCap: ${sellCap}
   buyerPool: ${cstBuyerPool}
   contributionMinimum: ${contributionMinimum} CST
