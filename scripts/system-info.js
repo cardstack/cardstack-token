@@ -51,7 +51,7 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst, cstRegistry, cstFrozen, cstDeprecated, successor, cstStorageName, cstLedgerName, cstName,
-    cstSymbol, buyPriceWei, sellPriceWei, sellCap, foundation, balanceWei, totalSupply, cstFrozenCount,
+    cstSymbol, buyPriceWei, sellCap, foundation, balanceWei, totalSupply, cstFrozenCount,
     cstAdminCount, cstSuperAdminCount, cstBuyerCount, cstCustomBuyerCount, cstBuyerPool, cstBalanceLimit,
     contributionMinimum;
 
@@ -70,7 +70,6 @@ module.exports = async function(callback) {
     cstName = await cst.name();
     cstSymbol = await cst.symbol();
     buyPriceWei = await cst.buyPrice();
-    sellPriceWei = await cst.sellPrice();
     sellCap = await cst.sellCap();
     foundation = await cst.foundation();
     balanceWei = await web3.eth.getBalance(cst.address);

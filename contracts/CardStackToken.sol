@@ -30,7 +30,6 @@ contract CardStackToken is Ownable,
 
   // These are mirrored in external storage so that state can live in future version of this contract
   // we save on gas prices by having these available as instance variables
-  uint256 public sellPrice;
   uint256 public buyPrice;
   uint256 public sellCap;
   address public foundation;
@@ -103,7 +102,6 @@ contract CardStackToken is Ownable,
   function configure(bytes32 _tokenName,
                      bytes32 _tokenSymbol,
                      uint256 _buyPrice,
-                     uint256 _sellPrice,
                      uint256 _sellCap,
                      uint256 _buyerPool,
                      uint256 _balanceLimit,
@@ -112,15 +110,13 @@ contract CardStackToken is Ownable,
     externalStorage.setTokenName(_tokenName);
     externalStorage.setTokenSymbol(_tokenSymbol);
     externalStorage.setBuyPrice(_buyPrice);
-    externalStorage.setSellPrice(_sellPrice);
     externalStorage.setSellCap(_sellCap);
     externalStorage.setFoundation(_foundation);
 
-    if (sellPrice > 0 && sellPrice != _sellPrice) {
+    if (buyPrice > 0 && buyPrice != _buyPrice) {
       priceChangeBlockHeight = block.number;
     }
 
-    sellPrice = _sellPrice;
     buyPrice = _buyPrice;
     sellCap = _sellCap;
     foundation = _foundation;
@@ -133,7 +129,6 @@ contract CardStackToken is Ownable,
 
   function configureFromStorage() onlySuperAdmins unlessUpgraded initStorage returns (bool) {
     buyPrice = externalStorage.getBuyPrice();
-    sellPrice = externalStorage.getSellPrice();
     sellCap = externalStorage.getSellCap();
     foundation = externalStorage.getFoundation();
 
