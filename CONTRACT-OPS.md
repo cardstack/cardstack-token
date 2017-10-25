@@ -210,7 +210,7 @@ geth --rpc --rpcapi db,eth,net,web3,personal
 ```
 * From the terminal, in the cardstack token project directory execute this command to create the contract confugration transaction (note that you can't actually sell CST back to the contract, but the contract still needs to have a sellPriceEth set):
 ```
-truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --buyerPool=50000000 --maximumBalancePercentage=100% --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
+truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 sellCap=50000000 --buyerPool=50000000 --maximumBalancePercentage=100% --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
 ```
 (These numbers are examples, use the real values when the time comes. Also note that the foundation address is optional)
 * The result will be an Ethereum address, data, and estimated gas for the transaction. Copy paste these values into the www.myetherwallet.com. for the gas limit, use the estimated gas as your guide. The gas limit describes the units of gas that this transaction will allow to be consumed. You are not penalized for using a larger value than the estimated gas. You are only charged for gas that your transaction actually uses. Also, increasing this particular value does not make your tranaction process faster (that is a different field).
@@ -380,7 +380,7 @@ Accounts:
 In order to withdraw ETH from the CST contract, first ensure that the Cardstack Foundation's Ethereum wallet address is set on the CST contract using the `scripts/system-info.js` script, also make sure this address has enough of a balance to pay gas fees for the request. If the Cardstack Foundation address has not been set or is incorrect, then use the `scripts/cst-configure.js` script to set the foundation address:
 
 ```
-truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellPriceEth=0.005 sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
+truffle exec ./scripts/cst-configure.sh --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --sellCap=50000000 --foundation="<foundation address>" -r "<registry address>" -d --network=mainnet
 ```
 
 Then use the `scripts/cst-withdraw-info.js` to formulate the request that will be issued from the Cardstack Foundation, where the amount to withdraw is in units of ETH:
