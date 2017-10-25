@@ -51,7 +51,7 @@ const usage = [
       name: "maximumBalancePercentage",
       description: "this is the maximum amount of CST that an account is allowed to posses expressed as a percentage of the buyerPool for the current phase of the token sale, e.g. \"--maximumBalancePercentage=0.2%\""
     },{
-      name: "maximumBalance"
+      name: "maximumBalance",
       description: "this is the maximum amount of CST that an account is allowed to posses expressed as number of CST"
     },{
       name: "foundation",
@@ -148,7 +148,6 @@ module.exports = async function(callback) {
     await cst.configure(web3.toHex(tokenName),
                         web3.toHex(tokenSymbol),
                         web3.toWei(parseFloat(buyPriceEth), "ether"),
-                        web3.toWei(parseFloat(sellPriceEth), "ether"),
                         sellCap,
                         buyerPool,
                         maxBalance,
