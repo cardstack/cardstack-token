@@ -68,18 +68,25 @@ module.exports = async function(callback) {
   concurrency = concurrency || 100;
 
   let addressStr = fs.readFileSync(file);
-  let addresses = _.compact(addressStr.toString().split("\n"));
+  let rows = _.compact(addressStr.toString().split("\n"));
 
-  console.log(`Scheduling ${addresses.length} buyers to be added to the CST contract ${cst.address}.`);
+  console.log(`Scheduling ${rows.length} buyers to be added to the CST contract ${cst.address}.`);
 
   let counter = 0;
   try {
-    await Parallel.each(addresses, async address => {
+    await Parallel.each(rows, async row => {
       let count = ++counter;
       if (count % concurrency === 0) {
-        console.log(`Processing ${count} of ${addresses.length}, ${Math.round((count / addresses.length) * 100)}% complete...`);
+        console.log(`Processing ${count} of ${rows.length}, ${Math.round((count / rows.length) * 100)}% complete...`);
       }
-      await cst.addBuyer(address);
+
+      let [ address, holdCap ] = row.split(",");
+
+      if (holdCap && holdCap.trim()) {
+        await cst.setCustomBuyer(address.trim(), parseInt(holdCap, 10));
+      } else {
+        await cst.addBuyer(address.trim());
+      }
     }, concurrency);
 
     console.log("done.");
