@@ -528,6 +528,7 @@ contract('CardStackToken', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 1000);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address);
+      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
       await cst.mintTokens(1000);
     });
@@ -537,7 +538,7 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(totalBuyers.toNumber(), 0, 'the totalBuyers is correct');
 
-      await cst.addBuyer(approvedBuyer, { from: superAdmin });
+      let txn = await cst.addBuyer(approvedBuyer, { from: superAdmin });
 
       totalBuyers = await cst.totalBuyersMapping();
       let isBuyer = await cst.approvedBuyer(approvedBuyer);
@@ -546,6 +547,13 @@ contract('CardStackToken', function(accounts) {
       assert.equal(totalBuyers, 1, 'the totalBuyersMapping is correct');
       assert.ok(isBuyer, "the buyer is set");
       assert.equal(firstBuyer, approvedBuyer, "the approvedBuyerForIndex is correct");
+
+      assert.equal(txn.logs.length, 1, 'the number of events fired is correct');
+      let event = txn.logs[0];
+
+      assert.equal(event.event, "WhiteList", "the event type is correct");
+      assert.equal(event.args.buyer, approvedBuyer, "the whitelist address is correct");
+      assert.equal(event.args.holdCap, 1000000, "the hold cap is correct");
     });
 
     it("allows a super admin to remove an approved buyer", async function() {
@@ -687,6 +695,7 @@ contract('CardStackToken', function(accounts) {
       await ledger.addSuperAdmin(registry.address);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
       await registry.register("CST", cst.address);
+      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -695,7 +704,7 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(totalCustomBuyers, 0, 'the total custom buyers is correct');
 
-      await cst.setCustomBuyer(customBuyer, 30000, { from: superAdmin });
+      let txn = await cst.setCustomBuyer(customBuyer, 30000, { from: superAdmin });
 
       totalCustomBuyers = await cst.totalCustomBuyersMapping();
       let totalBuyers = await cst.totalBuyersMapping();
@@ -708,6 +717,13 @@ contract('CardStackToken', function(accounts) {
       assert.equal(customBuyerLimit, 30000, 'the custom buyer limit is correct');
       assert.ok(isBuyer, "the buyer is set");
       assert.equal(firstCustomBuyer, customBuyer, "the customBuyerForIndex is correct");
+
+      assert.equal(txn.logs.length, 1, 'the number of events fired is correct');
+      let event = txn.logs[0];
+
+      assert.equal(event.event, "WhiteList", "the event type is correct");
+      assert.equal(event.args.buyer, customBuyer, "the whitelist address is correct");
+      assert.equal(event.args.holdCap, 30000, "the hold cap is correct");
     });
 
     it("should not allow non-super admin to set custom buyer", async function() {

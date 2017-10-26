@@ -63,6 +63,7 @@ contract CardStackToken is Ownable,
   event Transfer(address indexed _from,
                  address indexed _to,
                  uint256 _value);
+  event WhiteList(address indexed buyer, uint256 holdCap);
 
   modifier onlyFoundation {
     if (msg.sender != owner && msg.sender != foundation) revert();
@@ -297,6 +298,13 @@ contract CardStackToken is Ownable,
       approvedBuyerForIndex[totalBuyersMapping] = buyer;
       totalBuyersMapping = totalBuyersMapping.add(1);
     }
+
+    uint256 balanceLimit = customBuyerLimit[buyer];
+    if (balanceLimit == 0) {
+      balanceLimit = cstBalanceLimit;
+    }
+
+    WhiteList(buyer, balanceLimit);
 
     return true;
   }
