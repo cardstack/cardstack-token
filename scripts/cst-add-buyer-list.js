@@ -80,7 +80,7 @@ module.exports = async function(callback) {
         console.log(`Processing ${count} of ${rows.length}, ${Math.round((count / rows.length) * 100)}% complete...`);
       }
 
-      let [ address, holdCap ] = row.split(",");
+      let [ address, holdCap ] = row.replace(/"/g, "").split(",");
 
       if (holdCap && holdCap.trim()) {
         await cst.setCustomBuyer(address.trim(), parseInt(holdCap, 10));
