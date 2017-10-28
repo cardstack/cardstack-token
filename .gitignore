@@ -14,4 +14,4 @@ testem.log
 .DS_Store
 .node-*
 accounts.txt
-whitelist-test.csv
+*.csv
