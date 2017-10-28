@@ -9,6 +9,7 @@ const optionsDefs = [
   { name: "network", type: String },
   { name: "address", alias: "a", type: String },
   { name: "maximumBalancePercentage", type: String },
+  { name: "maximumBalance", type: Number },
   { name: "registry", alias: "r", type: String },
   { name: "data", alias: "d", type: Boolean }
 ];
@@ -33,6 +34,9 @@ const usage = [
     },{
       name: "maximumBalancePercentage",
       description: "(OPTIONAL) this is the maximum amount of CST that an account is allowed to posses expressed as a percentage of the buyerPool for the current phase of the token sale, e.g. \"--maximumBalancePercentage=0.2%\". If this value is not specified, the the balance limit will be the default balance limit that is configured for the CST contract. If this value is set to \"0%\" then the limit for this account will leverage the contract default."
+    },{
+      name: "maximumBalance",
+      description: "(OPTIONAL) this is the maximum amount of CST that an account is allowed to posses expressed as number of CST"
     },{
       name: "registry",
       alias: "r",
@@ -65,11 +69,15 @@ module.exports = async function(callback) {
   let buyerPool = await cst.cstBuyerPool();
   buyerPool = buyerPool.toNumber();
 
-  let { address, maximumBalancePercentage } = options;
+  let { address, maximumBalancePercentage, maximumBalance } = options;
+  let maxBalance;
   if (maximumBalancePercentage) {
     maximumBalancePercentage = parseFloat(maximumBalancePercentage.replace("%", "")) / 100;
+    maxBalance = Math.floor(buyerPool * maximumBalancePercentage);
+  } else if (maximumBalance && buyerPool) {
+    maxBalance = maximumBalance;
+    maximumBalancePercentage = Math.round(maximumBalance * 100 / buyerPool ) / 100;
   }
-  let maxBalance = Math.floor(buyerPool * maximumBalancePercentage);
 
   if (options.data) {
     if (maximumBalancePercentage !== undefined && maximumBalancePercentage !== null) {

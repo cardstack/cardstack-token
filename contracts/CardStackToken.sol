@@ -218,7 +218,7 @@ contract CardStackToken is Ownable,
       balanceLimit = cstBalanceLimit;
     }
 
-    assert(balanceLimit >= buyerBalance.add(amount));
+    assert(balanceLimit > 0 && balanceLimit >= buyerBalance.add(amount));
 
     tokenLedger.debitAccount(msg.sender, amount);
     Transfer(this, msg.sender, amount);

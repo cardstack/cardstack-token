@@ -75,6 +75,7 @@ module.exports = async function(callback) {
         sellPriceEth,
         buyerPool,
         maximumBalancePercentage,
+        maximumBalance,
         sellCap,
         foundation } = options;
 
