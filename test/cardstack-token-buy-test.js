@@ -444,6 +444,48 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(balanceOfCstContract), 99, "The balanceOf the cst contract is correct");
     });
 
+    it("does not allow whitelisted buyer to buy CST when they have no custom balance limit and the default balance limit is 0", async function() {
+      let buyerAccount = accounts[1];
+      await ledger.mintTokens(100);
+      await ledger.debitAccount(buyerAccount, 1);
+      await cst.configure(web3.toHex("CardStack Token"),
+                          web3.toHex("CST"),
+                          web3.toWei(1, "ether"),
+                          100,
+                          10,
+                          0,
+                          NULL_ADDRESS);
+      let txnValue = web3.toWei(2, "ether");
+      let startBalance = await web3.eth.getBalance(buyerAccount);
+
+      startBalance = asInt(startBalance);
+      await cst.addBuyer(buyerAccount);
+
+      let exceptionThrown;
+      try {
+        await cst.buy({
+          from: buyerAccount,
+          value: txnValue,
+          gasPrice: GAS_PRICE
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let endBalance = await web3.eth.getBalance(buyerAccount);
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+      let balanceOfCstContract = await cst.balanceOf(cst.address);
+
+      endBalance = asInt(endBalance);
+
+      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
+      assert.equal(cstBalance, 1, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 1, "The CST total in circulation was not updated");
+      assert.equal(asInt(balanceOfCstContract), 99, "The balanceOf the cst contract is correct");
+    });
+
     it("allows a buyer to buy up to a custom balance limit", async function() {
       await ledger.mintTokens(100);
       await cst.configure(web3.toHex("CardStack Token"),
