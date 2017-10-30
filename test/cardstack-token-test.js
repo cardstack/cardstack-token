@@ -58,7 +58,7 @@ contract('CardStackToken', function(accounts) {
     it("should configure the CST correctly", async function() {
       await ledger.mintTokens(10000);
 
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 8000, 8000, 1000000, NULL_ADDRESS);
+      let txn = await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 8000, 8000, 1000000, NULL_ADDRESS);
 
       let name = await cst.name();
       let symbol = await cst.symbol();
@@ -87,6 +87,14 @@ contract('CardStackToken', function(accounts) {
       assert.equal(web3.toUtf8(storageTokenSymbol.toString()), "CST", "external storage is updated");
       assert.equal(storageBuyPrice.toNumber(), 2, "external storage is updated");
       assert.equal(storageSellCap.toNumber(), 8000, "external storage is updated");
+
+      console.log(JSON.stringify(txn, null, 2));
+      assert.equal(txn.logs.length, 1, "the correct number of events were fired");
+      let event = txn.logs[0];
+      assert.equal(event.event, "ConfigChanged", "the event name is correct");
+      assert.equal(event.args.buyPrice.toNumber(), 2, "the buyPrice is correct");
+      assert.equal(event.args.sellCap.toNumber(), 8000, "the sellCap is correct");
+      assert.equal(event.args.balanceLimit.toNumber(), 1000000, "the balanceLimit is correct");
     });
 
     it("non-owner cannot configure token", async function() {
