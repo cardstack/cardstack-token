@@ -64,6 +64,7 @@ contract CardStackToken is Ownable,
                  address indexed _to,
                  uint256 _value);
   event WhiteList(address indexed buyer, uint256 holdCap);
+  event ConfigChanged(uint256 buyPrice, uint256 sellCap, uint256 balanceLimit);
 
   modifier onlyFoundation {
     if (msg.sender != owner && msg.sender != foundation) revert();
@@ -124,6 +125,8 @@ contract CardStackToken is Ownable,
 
     cstBuyerPool = _buyerPool;
     cstBalanceLimit = _balanceLimit;
+
+    ConfigChanged(_buyPrice, _sellCap, _balanceLimit);
 
     return true;
   }
