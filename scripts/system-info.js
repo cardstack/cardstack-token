@@ -53,7 +53,7 @@ module.exports = async function(callback) {
   let cst, cstRegistry, cstFrozen, cstDeprecated, successor, cstStorageName, cstLedgerName, cstName,
     cstSymbol, buyPriceWei, sellCap, foundation, balanceWei, totalSupply, cstFrozenCount,
     cstAdminCount, cstSuperAdminCount, cstBuyerCount, cstCustomBuyerCount, cstBuyerPool, cstBalanceLimit,
-    contributionMinimum;
+    contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers;
 
   if (cstAddress === NULL_ADDRESS) {
     console.log(`There is no CST contract resgistered with the Registry at ${registry.address}`);
@@ -79,6 +79,7 @@ module.exports = async function(callback) {
     cstSuperAdminCount = await cst.totalSuperAdminsMapping();
     cstBuyerCount = await cst.totalBuyersMapping();
     cstCustomBuyerCount = await cst.totalCustomBuyersMapping();
+    cstWhitelistedTransfererCount = await cst.totalTransferWhitelistMapping();
     cstBuyerPool = await cst.cstBuyerPool();
     cstBalanceLimit = await cst.cstBalanceLimit();
     cstAllowTransfers = await cst.allowTransfers();
@@ -123,6 +124,8 @@ module.exports = async function(callback) {
       return `${address} (ledger)`;
     } else if (storage && address === storage.address) {
       return `${address} (storage)`;
+    } else if (foundation && address === foundation) {
+      return `${address} (Cardstack Foundation)`;
     }
 
     return address;
@@ -239,7 +242,7 @@ Cardstack Token (${cst.address}):
   balanceLimit: ${(cstBalanceLimit.toNumber() / cstBuyerPool.toNumber()) * 100}% (${cstBalanceLimit} CST)
   totalSupply: ${totalSupply}
   balance (ETH): ${web3.fromWei(balanceWei, "ether")}
-  foundation: ${foundation}
+  foundation: ${prettyAddress(foundation)}
 
   CST super admins:`);
     for (let i = 0; i < cstSuperAdminCount; i++) {
@@ -255,6 +258,15 @@ Cardstack Token (${cst.address}):
       let address = await cst.adminsForIndex(i);
       let isAdmin = await cst.admins(address);
       if (isAdmin) {
+        console.log(`    ${prettyAddress(address)}`);
+      }
+    }
+    console.log(`
+  CST Whitelisted Transferers :`);
+    for (let i = 0; i < cstWhitelistedTransfererCount; i++) {
+      let address = await cst.whitelistedTransfererForIndex(i);
+      let isWhitelisted = await cst.whitelistedTransferer(address);
+      if (isWhitelisted) {
         console.log(`    ${prettyAddress(address)}`);
       }
     }

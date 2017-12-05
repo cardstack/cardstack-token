@@ -100,6 +100,28 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
     });
 
+    it("should not be able to transfer 0 CST ", async function() {
+      let transferAmount = 0;
+
+      let exceptionThrown;
+      try {
+        await cst.transfer(recipientAccount, transferAmount, {
+          from: senderAccount
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let senderBalance = await cst.balanceOf(senderAccount);
+      let recipientBalance = await cst.balanceOf(recipientAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
+      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+    });
+
     it("should not be able to transfer when allowTransfers is false", async function() {
       await cst.setAllowTransfers(false);
       let transferAmount = 10;
@@ -123,5 +145,61 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
     });
 
+    it("should be able to transfer when allowTransfers is false but the transfer initiator is in the transfer whitelist", async function() {
+      await cst.setAllowTransfers(false);
+      await cst.setWhitelistedTransferer(senderAccount, true);
+
+      let transferAmount = 10;
+
+      let txn = await cst.transfer(recipientAccount, transferAmount, {
+        from: senderAccount
+      });
+
+      // console.log("TXN", JSON.stringify(txn, null, 2));
+      assert.ok(txn.receipt);
+      assert.ok(txn.logs);
+
+      let senderBalance = await cst.balanceOf(senderAccount);
+      let recipientBalance = await cst.balanceOf(recipientAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
+      assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+
+      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "Transfer", "The event type is correct");
+      assert.equal(event.args._value.toString(), "10", "The CST amount is correct");
+      assert.equal(event.args._from, senderAccount, "The sender is correct");
+      assert.equal(event.args._to, recipientAccount, "The recipient is correct");
+    });
+
+    it("should not be able to transfer when allowTransfers is false and a previously whitelisted transferer has been removed from the transfer whitelist", async function() {
+      await cst.setAllowTransfers(false);
+      await cst.setWhitelistedTransferer(senderAccount, true);
+      await cst.setWhitelistedTransferer(senderAccount, false);
+
+      let transferAmount = 10;
+
+      let exceptionThrown;
+      try {
+        await cst.transfer(recipientAccount, transferAmount, {
+          from: senderAccount
+        });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let senderBalance = await cst.balanceOf(senderAccount);
+      let recipientBalance = await cst.balanceOf(recipientAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
+      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+    });
   });
 });
