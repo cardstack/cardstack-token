@@ -51,6 +51,11 @@ contract CardStackToken is Ownable,
   mapping (uint256 => address) public approvedBuyerForIndex;
   mapping (address => bool) processedBuyer;
 
+  uint256 public totalTransferWhitelistMapping;
+  mapping (address => bool) public whitelistedTransferer;
+  mapping (uint256 => address) public whitelistedTransfererForIndex;
+  mapping (address => bool) processedWhitelistedTransferer;
+
   uint256 public decimals = 0;
   bool public allowTransfers;
 
@@ -174,7 +179,8 @@ contract CardStackToken is Ownable,
   }
 
   function transfer(address recipient, uint256 amount) unlessFrozen unlessUpgraded returns (bool) {
-    require(allowTransfers);
+    require(allowTransfers || whitelistedTransferer[msg.sender]);
+    require(amount > 0);
     require(!frozenAccount[recipient]);
 
     tokenLedger.transfer(msg.sender, recipient, amount);
@@ -204,6 +210,7 @@ contract CardStackToken is Ownable,
     require(approvedBuyer[msg.sender]);
     assert(priceChangeBlockHeight == 0 || block.number > priceChangeBlockHeight.add(1));
     assert(buyPrice > 0);
+    //TODO assert sellCap is greater than 0
 
     uint256 amount = msg.value.div(buyPrice);
     uint256 tokensAvailable = tokenLedger.tokensAvailable();
@@ -316,5 +323,14 @@ contract CardStackToken is Ownable,
     approvedBuyer[buyer] = false;
 
     return true;
+  }
+
+  function setWhitelistedTransferer(address transferer, bool allowTransfers) onlySuperAdmins unlessUpgraded returns (bool) {
+    whitelistedTransferer[transferer] = allowTransfers;
+    if (!processedWhitelistedTransferer[transferer]) {
+      processedWhitelistedTransferer[transferer] = true;
+      whitelistedTransfererForIndex[totalTransferWhitelistMapping] = transferer;
+      totalTransferWhitelistMapping = totalTransferWhitelistMapping.add(1);
+    }
   }
 }

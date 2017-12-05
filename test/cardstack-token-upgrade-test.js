@@ -937,7 +937,7 @@ contract('CardStackToken', function(accounts) {
 
       let exceptionThrown;
       try {
-        await cst.setAllowTransfers(false);
+        await cst1.setAllowTransfers(false);
       } catch (err) {
         exceptionThrown = true;
       }
@@ -950,7 +950,21 @@ contract('CardStackToken', function(accounts) {
 
       let exceptionThrown;
       try {
-        await cst.setContributionMinimum(10);
+        await cst1.setContributionMinimum(10);
+      } catch (err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Exception was thrown");
+    });
+
+    it("does not allow setWhitelistedTransferer when contract has been updated", async function() {
+      let whitelistedTransferer = accounts[17];
+      await cst1.upgradeTo(cst2.address, { from: admin });
+
+      let exceptionThrown;
+      try {
+        await cst1.setWhitelistedTransferer(whitelistedTransferer, true);
       } catch (err) {
         exceptionThrown = true;
       }

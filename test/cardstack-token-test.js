@@ -88,7 +88,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(storageBuyPrice.toNumber(), 2, "external storage is updated");
       assert.equal(storageSellCap.toNumber(), 8000, "external storage is updated");
 
-      console.log(JSON.stringify(txn, null, 2));
+      // console.log(JSON.stringify(txn, null, 2));
       assert.equal(txn.logs.length, 1, "the correct number of events were fired");
       let event = txn.logs[0];
       assert.equal(event.event, "ConfigChanged", "the event name is correct");
@@ -749,6 +749,57 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(totalCustomBuyers.toNumber(), 0, 'the totalCustomBuyers is correct');
       assert.notOk(isBuyer, "the buyer is not set");
+    });
+  });
+
+  describe("setWhitelistedTransferer", function() {
+    let whitelistedTransferer = accounts[10];
+
+    beforeEach(async function() {
+      ledger = await CstLedger.new();
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      await registry.register("CST", cst.address);
+      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000, 1000000, 0x0);
+      await cst.addSuperAdmin(superAdmin);
+    });
+
+    it("should allow super admin to set whitelisted transferer", async function() {
+      let totalWhitelistedTransferers = await cst.totalTransferWhitelistMapping();
+
+      assert.equal(totalWhitelistedTransferers, 0, 'the total whitelisted transferers is correct');
+
+      await cst.setWhitelistedTransferer(whitelistedTransferer, true, { from: superAdmin });
+
+      totalWhitelistedTransferers = await cst.totalTransferWhitelistMapping();
+      let isWhitelistedTransferer = await cst.whitelistedTransferer(whitelistedTransferer);
+      let firstWhitelistedTransferer = await cst.whitelistedTransfererForIndex(0);
+
+      assert.equal(totalWhitelistedTransferers, 1, 'the total whitelisted transferers is correct');
+      assert.ok(isWhitelistedTransferer, "the whitelisted transferer is set");
+      assert.equal(firstWhitelistedTransferer, whitelistedTransferer, "the whitelistedTransfererForIndex is correct");
+    });
+
+    it("should not allow non-super admin to set whitelisted transferer", async function() {
+      let exceptionThrown;
+      try {
+        await cst.setWhitelistedTransferer(whitelistedTransferer, true, { from: whitelistedTransferer });
+      } catch(err) {
+        exceptionThrown = true;
+      }
+
+      assert.ok(exceptionThrown, "Transaction should fire exception");
+
+      let totalWhitelistedTransferers = await cst.totalTransferWhitelistMapping();
+      let isWhitelistedTransferer = await cst.whitelistedTransferer(whitelistedTransferer);
+
+      assert.equal(totalWhitelistedTransferers.toNumber(), 0, 'the totalTransferWhitelistMapping is correct');
+      assert.notOk(isWhitelistedTransferer, "the whitelisted transferer is not set");
     });
   });
 
