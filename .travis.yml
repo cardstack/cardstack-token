@@ -2,7 +2,7 @@
 language: node_js
 
 node_js:
-  - "7.6"
+  - "8.7"
 
 cache:
   yarn: true
@@ -15,10 +15,6 @@ before_install:
 
 install:
   - yarn install
-  - npm run testrpc > /dev/null &
-  - sleep 10
-  - npm run oraclize > /dev/null &
-  - sleep 120
 
 script:
-  - npm test
+  - npm run ci-tests

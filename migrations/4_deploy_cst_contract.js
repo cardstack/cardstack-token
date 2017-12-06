@@ -7,7 +7,7 @@ module.exports = async function(deployer) {
   if (deployer.network === 'development') {
     await deployer.deploy(CstLibrary);
     await deployer.link(CstLibrary, CardStackToken);
-    await deployer.deploy(CardStackToken);
+    await deployer.deploy(CardStackToken, { gas: 5900000 });
   } else {
     let registry = await RegistryContract.deployed();
     await deployer.deploy(CstLibrary);

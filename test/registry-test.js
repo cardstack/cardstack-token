@@ -1,6 +1,8 @@
 const {
   NULL_ADDRESS,
   GAS_PRICE,
+  CST_DEPLOY_GAS_LIMIT,
+  assertRevert,
   asInt
 } = require("../lib/utils");
 const { isAddress } = require("./utils");
@@ -36,8 +38,12 @@ contract('Registry', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 100, { from: superAdmin });
       await registry.setStorageAddressValue("cstStorage", "cstFoundation", foundation, { from: superAdmin });
 
-      cst1 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
-      cst2 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst1 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
+      cst2 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await cst1.setAllowTransfers(true);
       await cst2.setAllowTransfers(true);
       await ledger.mintTokens(100);
@@ -65,15 +71,8 @@ contract('Registry', function(accounts) {
 
     it("does not allow a non-owner to register a contract", async function() {
       let nonOwner = accounts[3];
-      let exceptionThrown;
 
-      try {
-        await registry.register("CardStack Token", cst1.address, { from: nonOwner });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Exception was thrown");
+      await assertRevert(async () => await registry.register("CardStack Token", cst1.address, { from: nonOwner }));
 
       let hash = web3.sha3("CardStack Token");
       let count = await registry.numContracts();
@@ -87,15 +86,8 @@ contract('Registry', function(accounts) {
 
     it("does not allow a contract to be registered more than once", async function() {
       await registry.register("CardStack Token", cst1.address, { from: superAdmin });
-      let exceptionThrown;
 
-      try {
-        await registry.register("CardStack Token", cst1.address, { from: superAdmin });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Exception was thrown");
+      await assertRevert(async () => await registry.register("CardStack Token", cst1.address, { from: superAdmin }));
 
       let hash = web3.sha3("CardStack Token");
       let count = await registry.numContracts();
@@ -153,15 +145,8 @@ contract('Registry', function(accounts) {
       await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
       let nonOwner = accounts[3];
-      let exceptionThrown;
 
-      try {
-        await registry.upgradeContract("CardStack Token", cst2.address, { from: nonOwner });
-      } catch (err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Exception was thrown");
+      await assertRevert(async () => await registry.upgradeContract("CardStack Token", cst2.address, { from: nonOwner }));
 
       let hash = web3.sha3("CardStack Token");
       let count = await registry.numContracts();
@@ -187,15 +172,8 @@ contract('Registry', function(accounts) {
       await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
       let nonSuperAdmin = accounts[11];
-      let exceptionThrown;
 
-      try {
-        await registry.upgradeContract("CardStack Token", cst2.address, { from: nonSuperAdmin });
-      } catch (err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Exception was thrown");
+      await assertRevert(async () => await registry.upgradeContract("CardStack Token", cst2.address, { from: nonSuperAdmin }));
 
       let hash = web3.sha3("CardStack Token");
       let count = await registry.numContracts();
@@ -218,15 +196,8 @@ contract('Registry', function(accounts) {
     });
 
     it("does not allow a contract that hasnt been registered to be upgraded", async function() {
-      let exceptionThrown;
 
-      try {
-        await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Exception was thrown");
+      await assertRevert(async () => await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin }));
 
       let hash = web3.sha3("CardStack Token");
       let count = await registry.numContracts();
@@ -365,50 +336,30 @@ contract('Registry', function(accounts) {
 
     it("does not allow non-superAdmin to delete storage", async function() {
       let nonSuperAdmin = accounts[8];
-      let exceptionThrown;
       let cstStorage = await registry.getStorage("cstStorage");
       assert.ok(isAddress(cstStorage), "storage exists");
 
-      try {
-        await registry.removeStorage("cstStorage", { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.removeStorage("cstStorage", { from: nonSuperAdmin }));
       cstStorage = await registry.getStorage("cstStorage");
       assert.ok(isAddress(cstStorage), "storage was not deleted");
     });
 
     it("does not allow non-superAdmin to addStorage", async function() {
       let nonSuperAdmin = accounts[8];
-      let exceptionThrown;
+      let newStorage = await Storage.new();
 
-      try {
-        await registry.addStorage("lmnopStorage", { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.addStorage("lmnopStorage", newStorage.address, { from: nonSuperAdmin }));
       let lmnopStorage = await registry.getStorage("lmnopStorage");
       assert.notOk(isAddress(lmnopStorage), "storage was not added");
     });
 
     it("does not allow non-superAdmin to register", async function() {
       let nonSuperAdmin = accounts[8];
-      let exceptionThrown;
 
       let numContracts = await registry.numContracts();
       assert.equal(numContracts, 0, "there are no contracts");
 
-      try {
-        await registry.register("Stanley Nickel", cst1.address, { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.register("Stanley Nickel", cst1.address, { from: nonSuperAdmin }));
       numContracts = await registry.numContracts();
       assert.equal(numContracts, 0, "there are still no contracts");
     });
@@ -466,17 +417,10 @@ contract('Registry', function(accounts) {
 
     it("does not allow non-superAdmin to set uint value", async function() {
       let nonSuperAdmin = accounts[8];
-      let exceptionThrown;
 
       await registry.register("CardStack Token", cst1.address, { from: superAdmin });
 
-      try {
-        await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.2, "ether"), { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.2, "ether"), { from: nonSuperAdmin }));
 
       await cst1.configureFromStorage();
       let buyPrice = await cst1.buyPrice();
@@ -492,20 +436,33 @@ contract('Registry', function(accounts) {
 
     it("does not allow non-superAdmin to set bytes32 value", async function() {
       let nonSuperAdmin = accounts[8];
-      let exceptionThrown;
 
       let cstTokenSymbol = await storage.getBytes32Value("cstTokenSymbol");
       assert.equal(web3.toUtf8(cstTokenSymbol.toString()), "CST", "bytes32 value is set");
 
-      try {
-        await registry.setStorageBytes32Value("cstStorage", "cstTokenSymbol", web3.toHex("XYZ"), { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.setStorageBytes32Value("cstStorage", "cstTokenSymbol", web3.toHex("XYZ"), { from: nonSuperAdmin }));
       cstTokenSymbol = await storage.getBytes32Value("cstTokenSymbol");
       assert.equal(web3.toUtf8(cstTokenSymbol.toString()), "CST", "bytes32 value has not changed");
+    });
+
+    it("allows superAdmin to set boolean ledger value", async function () {
+      let someAccount = accounts[9];
+      await registry.setBooleanLedgerValue("cstStorage", "isActive", someAccount, true, { from: superAdmin });
+
+      let isActive = await storage.getBooleanLedgerValue("isActive", someAccount);
+      assert.equal(isActive, true, "boolean value was set by super admin");
+    });
+
+    it("does not allow non-superAdmin to set boolean ledger value", async function() {
+      let nonSuperAdmin = accounts[8];
+      let someAccount = accounts[9];
+
+      let isActive = await storage.getBooleanLedgerValue("isActive", someAccount);
+      assert.equal(isActive, false, "value is false");
+
+      await assertRevert(async () => await registry.setBooleanLedgerValue("cstStorage", "isActive", someAccount, true, { from: nonSuperAdmin }));
+      isActive = await storage.getBooleanLedgerValue("cstBalance", someAccount);
+      assert.equal(isActive, false, "value is still false");
     });
 
     it("allows superAdmin to set ledger value", async function () {
@@ -519,18 +476,11 @@ contract('Registry', function(accounts) {
     it("does not allow non-superAdmin to set ledger value", async function() {
       let nonSuperAdmin = accounts[8];
       let someAccount = accounts[9];
-      let exceptionThrown;
 
       let balance = await storage.getLedgerValue("cstBalance", someAccount);
       assert.equal(balance, 0, "ledger value is 0");
 
-      try {
-        await registry.setLedgerValue("cstStorage", "cstBalance", someAccount, 30, { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.setLedgerValue("cstStorage", "cstBalance", someAccount, 30, { from: nonSuperAdmin }));
       balance = await storage.getLedgerValue("cstBalance", someAccount);
       assert.equal(balance, 0, "ledger value is still 0");
     });
@@ -544,18 +494,11 @@ contract('Registry', function(accounts) {
 
     it("does not allow non-superAdmin to set address value", async function() {
       let nonSuperAdmin = accounts[8];
-      let exceptionThrown;
 
       let cstAddress = await storage.getAddressValue("cstAddress");
       assert.equal(web3.toUtf8(cstAddress), "", "storage address value is empty");
 
-      try {
-        await registry.setStorageAddressValue("cstStorage", "cstAddress", cst1.address, { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.setStorageAddressValue("cstStorage", "cstAddress", cst1.address, { from: nonSuperAdmin }));
       cstAddress = await storage.getAddressValue("cstAddress");
       assert.equal(web3.toUtf8(cstAddress), "", "storage address value is still empty");
     });
@@ -569,18 +512,11 @@ contract('Registry', function(accounts) {
 
     it("does not allow non-superAdmin to set bytes value", async function() {
       let nonSuperAdmin = accounts[8];
-      let exceptionThrown;
 
       let somebytes = await storage.getBytesValue("somebytes");
       assert.equal(web3.toUtf8(somebytes.toString()), "", "bytes value is empty");
 
-      try {
-        await registry.setStorageBytesValue("cstStorage", "somebytes", "lmnop", { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.setStorageBytesValue("cstStorage", "somebytes", "lmnop", { from: nonSuperAdmin }));
       somebytes = await storage.getBytesValue("somebytes");
       assert.equal(web3.toUtf8(somebytes.toString()), "", "bytes value is still empty");
     });
@@ -594,18 +530,11 @@ contract('Registry', function(accounts) {
 
     it("does not allow non-superAdmin to set boolean value", async function() {
       let nonSuperAdmin = accounts[8];
-      let exceptionThrown;
 
       let somebool = await storage.getBooleanValue("somebool");
       assert.equal(somebool, false, "boolean value is not set");
 
-      try {
-        await registry.setStorageBooleanValue("cstStorage", "somebool", true, { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.setStorageBooleanValue("cstStorage", "somebool", true, { from: nonSuperAdmin }));
       somebool = await storage.getBooleanValue("somebool");
       assert.equal(somebool, false, "boolean value is still not set");
     });
@@ -619,18 +548,11 @@ contract('Registry', function(accounts) {
 
     it("does not allow non-superAdmin to set int value", async function() {
       let nonSuperAdmin = accounts[8];
-      let exceptionThrown;
 
       let someint = await storage.getIntValue("someint");
       assert.equal(someint, 0, "int value is not set");
 
-      try {
-        await registry.setStorageIntValue("cstStorage", "someint", 23, { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.setStorageIntValue("cstStorage", "someint", 23, { from: nonSuperAdmin }));
       someint = await storage.getIntValue("someint");
       assert.equal(someint, 0, "int value is still not set");
     });
@@ -648,18 +570,11 @@ contract('Registry', function(accounts) {
       let nonSuperAdmin = accounts[8];
       let someAccount = accounts[9];
       let anotherAccount = accounts[19];
-      let exceptionThrown;
 
       let balance = await storage.getMultiLedgerValue("allowance", someAccount, anotherAccount);
       assert.equal(balance, 0, "ledger value is 0");
 
-      try {
-        await registry.setMultiLedgerValue("cstStorage", "allowance", someAccount, anotherAccount, 30, { from: nonSuperAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception is thrown");
+      await assertRevert(async () => await registry.setMultiLedgerValue("cstStorage", "allowance", someAccount, anotherAccount, 30, { from: nonSuperAdmin }));
       balance = await storage.getMultiLedgerValue("allowance", someAccount, anotherAccount);
       assert.equal(balance, 0, "ledger value is still 0");
     });
@@ -677,189 +592,110 @@ contract('Registry', function(accounts) {
       });
 
       it("does not allow superAdmin to register if registry is upgraded", async function() {
-        let exceptionThrown;
 
         let numContracts = await registry.numContracts();
         assert.equal(numContracts, 1, "there is one contract");
 
-        try {
-          await registry.register("Stanley Nickel", cst2.address, { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.register("Stanley Nickel", cst2.address, { from: superAdmin }));
         numContracts = await registry.numContracts();
-        assert.equal(numContracts, 1, "there is still one contract")
+        assert.equal(numContracts, 1, "there is still one contract");
       });
 
       it("does not allow superAdmin to upgrade contract if registry is upgraded", async function() {
-        let exceptionThrown;
-
-        try {
-          await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.upgradeContract("CardStack Token", cst2.address, { from: superAdmin }));
       });
 
       it("does not allow superAdmin to delete storage if registry is upgraded", async function() {
-        let exceptionThrown;
-
-        try {
-          await registry.removeStorage("cstStorage", { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.removeStorage("cstStorage", { from: superAdmin }));
       });
 
       it("does not allow superAdmin to addStorage if registry is upgraded", async function() {
-        let exceptionThrown;
-
-        try {
-          await registry.addStorage("lmnopStorage", { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        let newStorage = await Storage.new();
+        await assertRevert(async () => await registry.addStorage("lmnopStorage", newStorage.address, { from: superAdmin }));
       });
 
       it("does not allow superAdmin to getStorage if registry is upgraded", async function() {
-        let exceptionThrown;
-
-        try {
-          await registry.getStorage("cstStorage", { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.getStorage("cstStorage", { from: superAdmin }));
       });
 
       it("does not allow superAdmin to set uint value if registry upgraded", async function() {
-        let exceptionThrown;
-
         let cstSellPrice = await storage.getBytes32Value("cstSellPrice");
         assert.equal(cstSellPrice, 0, "uint value is not set");
 
-        try {
-          await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.2, "ether"), { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.2, "ether"), { from: superAdmin }));
         cstSellPrice = await storage.getBytes32Value("cstSellPrice");
         assert.equal(cstSellPrice, 0, "uint value is still not set");
       });
 
       it("does not allow superAdmin to set bytes32 value if registry upgraded", async function() {
-        let exceptionThrown;
-
         let cstTokenSymbol = await storage.getBytes32Value("cstTokenSymbol");
         assert.equal(web3.toUtf8(cstTokenSymbol.toString()), "CST", "bytes32 value is set");
 
-        try {
-          await registry.setStorageBytes32Value("cstStorage", "cstTokenSymbol", web3.toHex("XYZ"), { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.setStorageBytes32Value("cstStorage", "cstTokenSymbol", web3.toHex("XYZ"), { from: superAdmin }));
         cstTokenSymbol = await storage.getBytes32Value("cstTokenSymbol");
         assert.equal(web3.toUtf8(cstTokenSymbol.toString()), "CST", "bytes32 value has not changed");
       });
 
+      it("does not allow superAdmin to set boolean ledger value if registry upgraded", async function() {
+        let someAccount = accounts[9];
+
+        let isActive = await storage.getBooleanLedgerValue("isActive", someAccount);
+        assert.equal(isActive, 0, "value is 0");
+
+        await assertRevert(async () => await registry.setBooleanLedgerValue("cstStorage", "isActive", someAccount, true, { from: superAdmin }));
+        isActive = await storage.getBooleanLedgerValue("isActive", someAccount);
+        assert.equal(isActive, false, "value is still false");
+      });
+
       it("does not allow superAdmin to set ledger balance value if registry upgraded", async function() {
         let someAccount = accounts[9];
-        let exceptionThrown;
 
         let balance = await storage.getLedgerValue("cstBalance", someAccount);
         assert.equal(balance, 0, "ledger balance is 0");
 
-        try {
-          await registry.setLedgerValue("cstStorage", "cstBalance", someAccount, 30, { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.setLedgerValue("cstStorage", "cstBalance", someAccount, 30, { from: superAdmin }));
         balance = await storage.getLedgerValue("cstBalance", someAccount);
         assert.equal(balance, 0, "ledger balance is still 0");
       });
 
       it("does not allow superAdmin to set address value if registry upgraded", async function() {
-        let exceptionThrown;
 
         let cstAddress = await storage.getAddressValue("cstAddress");
         assert.equal(web3.toUtf8(cstAddress), "", "storage address value is empty");
 
-        try {
-          await registry.setStorageAddressValue("cstStorage", "cstAddress", cst1.address, { from: uperAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.setStorageAddressValue("cstStorage", "cstAddress", cst1.address, { from: superAdmin }));
         cstAddress = await storage.getAddressValue("cstAddress");
         assert.equal(web3.toUtf8(cstAddress), "", "storage address value is still empty");
       });
 
       it("does not allow superAdmin to set bytes value if registry upgraded", async function() {
-        let exceptionThrown;
-
         let somebytes = await storage.getBytesValue("somebytes");
         assert.equal(web3.toUtf8(somebytes.toString()), "", "bytes value is empty");
 
-        try {
-          await registry.setStorageBytesValue("cstStorage", "somebytes", "lmnop", { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.setStorageBytesValue("cstStorage", "somebytes", "lmnop", { from: superAdmin }));
         somebytes = await storage.getBytesValue("somebytes");
         assert.equal(web3.toUtf8(somebytes.toString()), "", "bytes value is still empty");
       });
 
       it("does not allow superAdmin to set boolean value if registry upgraded", async function() {
-        let exceptionThrown;
-
         let somebool = await storage.getBooleanValue("somebool");
         assert.equal(somebool, false, "boolean value is not set");
 
-        try {
-          await registry.setStorageBooleanValue("cstStorage", "somebool", true, { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.setStorageBooleanValue("cstStorage", "somebool", true, { from: superAdmin }));
         somebool = await storage.getBooleanValue("somebool");
         assert.equal(somebool, false, "boolean value is still not set");
       });
 
       it("does not allow superAdmin to set int value if registry upgraded", async function() {
-        let exceptionThrown;
 
         let someint = await storage.getIntValue("someint");
         assert.equal(someint, 0, "int value is not set");
 
-        try {
-          await registry.setStorageIntValue("cstStorage", "someint", 23, { from: superAdmin });
-        } catch(e) {
-          exceptionThrown = true;
-        }
-
-        assert.ok(exceptionThrown, "exception is thrown");
+        await assertRevert(async () => await registry.setStorageIntValue("cstStorage", "someint", 23, { from: superAdmin }));
         someint = await storage.getIntValue("someint");
         assert.equal(someint, 0, "int value is still not set");
       });
     });
+
   });
 });

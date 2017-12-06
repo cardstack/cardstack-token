@@ -4,6 +4,8 @@ const Storage = artifacts.require("./ExternalStorage.sol");
 const Registry = artifacts.require("./Registry.sol");
 const {
   NULL_ADDRESS,
+  CST_DEPLOY_GAS_LIMIT,
+  assertRevert,
   asInt
 } = require("../lib/utils");
 
@@ -26,7 +28,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await ledger.mintTokens(100);
       await ledger.debitAccount(grantor, 50);
@@ -49,13 +53,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow an account to approve itself as a spender", async function() {
-      let exceptionThrown;
-      try {
-        await cst.approve(grantor, 10, { from: grantor });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.approve(grantor, 10, { from: grantor }));
       let allowance = await cst.allowance(grantor, grantor);
 
       assert.equal(asInt(allowance), 0, "the allowance is correct");
@@ -84,13 +82,7 @@ contract('CardStackToken', function(accounts) {
     it("does not allow a spender to transferFrom an account that they have not been approved for", async function() {
       let unauthorizedAccount = accounts[9];
       await cst.approve(spender, 10, { from: grantor });
-      let exceptionThrown;
-      try {
-        await cst.transferFrom(unauthorizedAccount, recipient, 10, { from: spender });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.transferFrom(unauthorizedAccount, recipient, 10, { from: spender }));
 
       let grantorBalance = await cst.balanceOf(grantor);
       let recipientBalance = await cst.balanceOf(recipient);
@@ -104,13 +96,7 @@ contract('CardStackToken', function(accounts) {
     it("does not allow a spender to transferFrom an account that they have not been approved for 0 CST", async function() {
       let unauthorizedAccount = accounts[9];
       await cst.approve(spender, 10, { from: grantor });
-      let exceptionThrown;
-      try {
-        await cst.transferFrom(unauthorizedAccount, recipient, 0, { from: spender });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.transferFrom(unauthorizedAccount, recipient, 0, { from: spender }));
 
       let grantorBalance = await cst.balanceOf(grantor);
       let recipientBalance = await cst.balanceOf(recipient);
@@ -123,13 +109,7 @@ contract('CardStackToken', function(accounts) {
 
     it("does not allow a spender to transferFrom more than their allowance", async function() {
       await cst.approve(spender, 10, { from: grantor });
-      let exceptionThrown;
-      try {
-        await cst.transferFrom(grantor, recipient, 11, { from: spender });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.transferFrom(grantor, recipient, 11, { from: spender }));
 
       let grantorBalance = await cst.balanceOf(grantor);
       let recipientBalance = await cst.balanceOf(recipient);
@@ -142,13 +122,7 @@ contract('CardStackToken', function(accounts) {
 
     it("does not allow a spender to transferFrom more than the balance in the approved account", async function() {
       await cst.approve(spender, 10, { from: grantor });
-      let exceptionThrown;
-      try {
-        await cst.transferFrom(grantor, recipient, 51, { from: spender });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.transferFrom(grantor, recipient, 51, { from: spender }));
 
       let grantorBalance = await cst.balanceOf(grantor);
       let recipientBalance = await cst.balanceOf(recipient);
@@ -162,13 +136,7 @@ contract('CardStackToken', function(accounts) {
     it("should not be able to transferFrom when allowTransfers is false", async function() {
       await cst.setAllowTransfers(false);
       await cst.approve(spender, 10, { from: grantor });
-      let exceptionThrown;
-      try {
-        await cst.transferFrom(grantor, recipient, 10, { from: spender });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.transferFrom(grantor, recipient, 10, { from: spender }));
 
       let grantorBalance = await cst.balanceOf(grantor);
       let recipientBalance = await cst.balanceOf(recipient);

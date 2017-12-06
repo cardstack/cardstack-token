@@ -70,6 +70,9 @@ contract CardStackToken is Ownable,
                  uint256 _value);
   event WhiteList(address indexed buyer, uint256 holdCap);
   event ConfigChanged(uint256 buyPrice, uint256 sellCap, uint256 balanceLimit);
+  event VestedTokenGrant(address indexed beneficiary, uint256 startDate, uint256 cliffDate, uint256 durationSec, uint256 fullyVestedAmount, bool isRevocable);
+  event VestedTokenRevocation(address indexed beneficiary);
+  event VestedTokenRelease(address indexed beneficiary, uint256 amount);
 
   modifier onlyFoundation {
     if (msg.sender != owner && msg.sender != foundation) revert();
@@ -162,17 +165,21 @@ contract CardStackToken is Ownable,
   }
 
   function totalInCirculation() constant unlessFrozen unlessUpgraded returns(uint256) {
-    return tokenLedger.totalInCirculation();
+    return tokenLedger.totalInCirculation().add(totalUnvestedAndUnreleasedTokens());
   }
 
   function totalSupply() constant unlessFrozen unlessUpgraded returns(uint256) {
     return tokenLedger.totalTokens();
   }
 
+  function tokensAvailable() constant unlessFrozen unlessUpgraded returns(uint256) {
+    return totalSupply().sub(totalInCirculation());
+  }
+
   function balanceOf(address account) constant unlessUpgraded unlessFrozen returns (uint256) {
     address thisAddress = this;
     if (thisAddress == account) {
-      return tokenLedger.tokensAvailable();
+      return tokensAvailable();
     } else {
       return tokenLedger.balanceOf(account);
     }
@@ -197,7 +204,8 @@ contract CardStackToken is Ownable,
   }
 
   function grantTokens(address recipient, uint256 amount) onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
-    require(amount <= tokenLedger.totalTokens().sub(tokenLedger.totalInCirculation()));           // make sure there are enough tokens to grant
+    require(amount <= tokensAvailable());
+    require(!frozenAccount[recipient]);
 
     tokenLedger.debitAccount(recipient, amount);
     Transfer(this, recipient, amount);
@@ -210,12 +218,12 @@ contract CardStackToken is Ownable,
     require(approvedBuyer[msg.sender]);
     assert(priceChangeBlockHeight == 0 || block.number > priceChangeBlockHeight.add(1));
     assert(buyPrice > 0);
-    //TODO assert sellCap is greater than 0
+    //TODO test assert sellCap is greater than 0
+    assert(sellCap > 0);
 
     uint256 amount = msg.value.div(buyPrice);
-    uint256 tokensAvailable = tokenLedger.tokensAvailable();
-    assert(tokenLedger.totalInCirculation().add(amount) <= sellCap);
-    assert(amount <= tokensAvailable);
+    assert(totalInCirculation().add(amount) <= sellCap);
+    assert(amount <= tokensAvailable());
 
     uint256 balanceLimit;
     uint256 buyerBalance = tokenLedger.balanceOf(msg.sender);
@@ -277,6 +285,107 @@ contract CardStackToken is Ownable,
 
     Approval(msg.sender, spender, value);
     return true;
+  }
+
+  function grantVestedTokens(address beneficiary,
+                             uint256 fullyVestedAmount,
+                             uint256 startDate, // 0 indicates start "now"
+                             uint256 cliffSec,
+                             uint256 durationSec,
+                             bool isRevocable) onlySuperAdmins unlessUpgraded unlessFrozen returns(bool) {
+
+    require(beneficiary != address(0));
+    require(!frozenAccount[beneficiary]);
+    require(durationSec >= cliffSec);
+    require(totalInCirculation().add(fullyVestedAmount) <= sellCap);
+    require(fullyVestedAmount <= tokensAvailable());
+
+    uint256 _now = now;
+    if (startDate == 0) {
+      startDate = _now;
+    }
+
+    uint256 cliffDate = startDate.add(cliffSec);
+
+    externalStorage.setVestingSchedule(beneficiary,
+                                       fullyVestedAmount,
+                                       startDate,
+                                       cliffDate,
+                                       durationSec,
+                                       isRevocable);
+
+    VestedTokenGrant(beneficiary, startDate, cliffDate, durationSec, fullyVestedAmount, isRevocable);
+
+    return true;
+  }
+
+
+  function revokeVesting(address beneficiary) onlySuperAdmins unlessUpgraded unlessFrozen returns (bool) {
+    externalStorage.revokeVesting(beneficiary);
+
+    releaseVestedTokensForBeneficiary(beneficiary);
+
+    VestedTokenRevocation(beneficiary);
+
+    return true;
+  }
+
+  function releaseVestedTokens() unlessFrozen unlessUpgraded returns (bool) {
+    return releaseVestedTokensForBeneficiary(msg.sender);
+  }
+
+  function releaseVestedTokensForBeneficiary(address beneficiary) unlessFrozen unlessUpgraded returns (bool) {
+    require(!frozenAccount[beneficiary]);
+
+    uint256 unreleased = releasableAmount(beneficiary);
+
+    if (unreleased == 0) { return true; }
+
+    externalStorage.releaseVestedTokens(beneficiary);
+
+    tokenLedger.debitAccount(beneficiary, unreleased);
+    Transfer(this, beneficiary, unreleased);
+
+    VestedTokenRelease(beneficiary, unreleased);
+
+    return true;
+  }
+
+  function releasableAmount(address beneficiary) constant unlessUpgraded returns (uint256) {
+    return externalStorage.releasableAmount(beneficiary);
+  }
+
+  function totalUnvestedAndUnreleasedTokens() constant unlessUpgraded returns (uint256) {
+    return externalStorage.getTotalUnvestedAndUnreleasedTokens();
+  }
+
+  function vestingMappingSize() constant unlessUpgraded returns (uint256) {
+    return externalStorage.vestingMappingSize();
+  }
+
+  function vestingBeneficiaryForIndex(uint256 index) constant unlessUpgraded returns (address) {
+    return externalStorage.vestingBeneficiaryForIndex(index);
+  }
+
+  function getVestingSchedule(address _beneficiary) constant unlessUpgraded returns (uint256 startDate,
+                                                                                     uint256 cliffDate,
+                                                                                     uint256 durationSec,
+                                                                                     uint256 fullyVestedAmount,
+                                                                                     uint256 vestedAmount,
+                                                                                     uint256 releasedAmount,
+                                                                                     uint256 revokeDate,
+                                                                                     bool isRevocable) {
+    (
+      startDate,
+      cliffDate,
+      durationSec,
+      fullyVestedAmount,
+      releasedAmount,
+      revokeDate,
+      isRevocable
+    ) =  externalStorage.getVestingSchedule(_beneficiary);
+
+    vestedAmount = externalStorage.vestedAmount(_beneficiary);
   }
 
   function setCustomBuyer(address buyer, uint256 balanceLimit) onlySuperAdmins unlessUpgraded returns (bool) {

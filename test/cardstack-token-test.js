@@ -3,7 +3,9 @@ const {
   MAX_FAILED_TXN_GAS,
   ROUNDING_ERROR_WEI,
   NULL_ADDRESS,
+  CST_DEPLOY_GAS_LIMIT,
   asInt,
+  assertRevert,
   checkBalance
 } = require("../lib/utils");
 
@@ -33,7 +35,9 @@ contract('CardStackToken', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.1, "ether"));
       await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.1, "ether"));
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 100);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
 
       let isRegistrySuperAdmin = await cst.superAdmins(registry.address);
       let superAdminCount = await cst.totalSuperAdminsMapping();
@@ -102,15 +106,9 @@ contract('CardStackToken', function(accounts) {
 
       await ledger.mintTokens(10000);
 
-      let exceptionThrown;
-      try {
-        await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 8000, 8000, 1000000, NULL_ADDRESS, {
-          from: nonOwner
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 8000, 8000, 1000000, NULL_ADDRESS, {
+        from: nonOwner
+      }));
     });
 
     it("does not allow non-superAdmin to configure using external storage", async function() {
@@ -123,13 +121,7 @@ contract('CardStackToken', function(accounts) {
       await storage.setBytes32Value(web3.sha3("cstTokenSymbol"), web3.toHex("CST1"));
       await storage.setBytes32Value(web3.sha3("cstTokenName"), web3.toHex("New CardStack Token"));
 
-      let exceptionThrown;
-      try {
-        await cst.configureFromStorage({ from: nonOwner });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.configureFromStorage({ from: nonOwner }));
     });
 
     it("can allow superAdmin to update storage", async function() {
@@ -196,14 +188,7 @@ contract('CardStackToken', function(accounts) {
       await newStorage.addAdmin(cst.address);
       await newLedger.addAdmin(cst.address);
 
-      let exceptionThrown;
-      try {
-        await cst.updateStorage("newStorage", "newLedger", { from: nonOwner });
-      } catch (err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Expected exception to be thrown");
+      await assertRevert(async () => await cst.updateStorage("newStorage", "newLedger", { from: nonOwner }));
 
       let name = await cst.name();
       let symbol = await cst.symbol();
@@ -233,7 +218,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await cst.addSuperAdmin(superAdmin);
     });
@@ -269,15 +256,9 @@ contract('CardStackToken', function(accounts) {
       await ledger.mintTokens(100);
       let nonOwnerAccount = accounts[9];
 
-      let exceptionThrown;
-      try {
-        await cst.mintTokens(100, {
-          from: nonOwnerAccount
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.mintTokens(100, {
+        from: nonOwnerAccount
+      }));
 
       let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
@@ -296,7 +277,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await cst.addSuperAdmin(superAdmin);
     });
@@ -336,15 +319,9 @@ contract('CardStackToken', function(accounts) {
       await ledger.mintTokens(100);
       let recipientAccount = accounts[9];
 
-      let exceptionThrown;
-      try {
-        await cst.grantTokens(recipientAccount, 101, {
-          from: superAdmin
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.grantTokens(recipientAccount, 101, {
+        from: superAdmin
+      }));
 
       let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
@@ -359,15 +336,9 @@ contract('CardStackToken', function(accounts) {
       await ledger.mintTokens(100);
       let recipientAccount = accounts[9];
 
-      let exceptionThrown;
-      try {
-        await cst.grantTokens(recipientAccount, 10, {
-          from: recipientAccount
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.grantTokens(recipientAccount, 10, {
+        from: recipientAccount
+      }));
 
       let totalTokens = await cst.totalSupply();
       let totalInCirculation = await cst.totalInCirculation();
@@ -395,7 +366,9 @@ contract('CardStackToken', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.1, "ether"));
       await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.1, "ether"));
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 1000);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await cst.addSuperAdmin(superAdmin);
       await cst.mintTokens(1000);
@@ -466,17 +439,10 @@ contract('CardStackToken', function(accounts) {
       let startNonFoundationBalance = await web3.eth.getBalance(nonFoundation);
       startNonFoundationBalance = asInt(startNonFoundationBalance);
 
-      let exceptionThrown;
-      try {
-        await cst.foundationWithdraw(txnValue, {
-          from: nonFoundation,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.foundationWithdraw(txnValue, {
+        from: nonFoundation,
+        gasPrice: GAS_PRICE
+      }));
 
       let endCstBalance = await web3.eth.getBalance(cst.address);
       let endNonFoundationBalance = await web3.eth.getBalance(nonFoundation);
@@ -534,7 +500,9 @@ contract('CardStackToken', function(accounts) {
       await registry.setStorageUIntValue("cstStorage", "cstBuyPrice", web3.toWei(0.1, "ether"));
       await registry.setStorageUIntValue("cstStorage", "cstSellPrice", web3.toWei(0.1, "ether"));
       await registry.setStorageUIntValue("cstStorage", "cstSellCap", 1000);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
@@ -575,14 +543,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow a non-super admin to add an approved buyer", async function() {
-      let exceptionThrown;
-      try {
-        await cst.addBuyer(approvedBuyer, { from: approvedBuyer });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.addBuyer(approvedBuyer, { from: approvedBuyer }));
 
       let totalBuyers = await cst.totalBuyersMapping();
       let isBuyer = await cst.approvedBuyer(approvedBuyer);
@@ -594,14 +555,7 @@ contract('CardStackToken', function(accounts) {
     it("does not allow a non-super admin to remove an approved buyer", async function() {
       await cst.addBuyer(approvedBuyer, { from: superAdmin });
 
-      let exceptionThrown;
-      try {
-        await cst.removeBuyer(approvedBuyer, { from: approvedBuyer });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.removeBuyer(approvedBuyer, { from: approvedBuyer }));
 
       let totalBuyers = await cst.totalBuyersMapping();
       let isBuyer = await cst.approvedBuyer(approvedBuyer);
@@ -621,7 +575,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await cst.addSuperAdmin(superAdmin);
     });
@@ -638,12 +594,8 @@ contract('CardStackToken', function(accounts) {
 
     it("does not allow non-super admin to call setContributionMinimum", async function() {
       let nonSuperAdmin = accounts[33];
-      let exceptionThrown;
-      try {
-        await cst.setContributionMinimum(10, { from: nonSuperAdmin });
-      } catch(err) {
-        exceptionThrown = true;
-      }
+
+      await assertRevert(async () => await cst.setContributionMinimum(10, { from: nonSuperAdmin }));
 
       let contributionMinimum = await cst.contributionMinimum();
       assert.equal(contributionMinimum.toNumber(), 0, "The contributionMinimum is correct");
@@ -659,7 +611,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await cst.addSuperAdmin(superAdmin);
     });
@@ -677,12 +631,8 @@ contract('CardStackToken', function(accounts) {
 
     it("does not allow non-super admin to call setAllowTransfers", async function() {
       let nonSuperAdmin = accounts[33];
-      let exceptionThrown;
-      try {
-        await cst.setAllowTransfers(true, { from: nonSuperAdmin });
-      } catch(err) {
-        exceptionThrown = true;
-      }
+
+      await assertRevert(async () => await cst.setAllowTransfers(true, { from: nonSuperAdmin }));
 
       let allowTransfers = await cst.allowTransfers();
       assert.notOk(allowTransfers, "setAllowTransfers is not changed by non-super admin");
@@ -701,7 +651,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
@@ -735,14 +687,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("should not allow non-super admin to set custom buyer", async function() {
-      let exceptionThrown;
-      try {
-        await cst.setCustomBuyer(approvedBuyer, { from: approvedBuyer });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.setCustomBuyer(approvedBuyer, 30000, { from: approvedBuyer }));
 
       let totalCustomBuyers = await cst.totalCustomBuyersMapping();
       let isBuyer = await cst.approvedBuyer(approvedBuyer);
@@ -763,7 +708,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
@@ -786,14 +733,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("should not allow non-super admin to set whitelisted transferer", async function() {
-      let exceptionThrown;
-      try {
-        await cst.setWhitelistedTransferer(whitelistedTransferer, true, { from: whitelistedTransferer });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.setWhitelistedTransferer(whitelistedTransferer, true, { from: whitelistedTransferer }));
 
       let totalWhitelistedTransferers = await cst.totalTransferWhitelistMapping();
       let isWhitelistedTransferer = await cst.whitelistedTransferer(whitelistedTransferer);

@@ -1,6 +1,8 @@
 const {
   GAS_PRICE,
   NULL_ADDRESS,
+  CST_DEPLOY_GAS_LIMIT,
+  assertRevert,
   checkBalance
 } = require("../lib/utils");
 
@@ -26,7 +28,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await registry.register("rewards", rewards.address);
 
@@ -45,14 +49,7 @@ contract('CardStackToken', function(accounts) {
 
     it("does not allow a non-super admin to add a rewards contract", async function() {
       let nonSuperAdmin = accounts[7];
-      let exceptionThrown;
-      try {
-        await cst.setRewardsContractName("rewards", { from: nonSuperAdmin });
-      } catch (err) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "Exception was thrown");
+      await assertRevert(async () => await cst.setRewardsContractName("rewards", { from: nonSuperAdmin }));
       let observedRewards = await cst.rewardsContract();
 
       assert.equal(observedRewards, NULL_ADDRESS, "the rewards contract is correct");

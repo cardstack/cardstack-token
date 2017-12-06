@@ -62,6 +62,31 @@ contract ExternalStorage is administratable {
     LedgerStorage[hash][_address] = value;
   }
 
+  mapping(bytes32 => mapping(address => bool)) BooleanLedgerStorage;
+  mapping(bytes32 => uint256) public booleanLedgerCount;
+  mapping(bytes32 => mapping(address => bool)) public booleanLedgerAccounts;
+  mapping(bytes32 => mapping(uint256 => address)) public booleanLedgerEntryForIndex;
+
+  function getBooleanLedgerValue(string record, address _address) constant returns (bool) {
+    return BooleanLedgerStorage[sha3(record)][_address];
+  }
+
+  function getBooleanLedgerCount(string record) constant returns (uint256) {
+    return booleanLedgerCount[sha3(record)];
+  }
+
+  function setBooleanLedgerValue(string record, address _address, bool value) onlyAdmins {
+    bytes32 hash = sha3(record);
+    if (!booleanLedgerAccounts[hash][_address]) {
+      uint256 ledgerIndex = booleanLedgerCount[hash];
+      booleanLedgerEntryForIndex[hash][ledgerIndex] = _address;
+      booleanLedgerCount[hash] = ledgerIndex.add(1);
+      booleanLedgerAccounts[hash][_address] = true;
+    }
+
+    BooleanLedgerStorage[hash][_address] = value;
+  }
+
   mapping(bytes32 => uint256) UIntStorage;
 
   function getUIntValue(string record) constant returns (uint256) {
