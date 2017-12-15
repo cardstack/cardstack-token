@@ -1,5 +1,9 @@
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
+const moment = require('moment');
+
+const dateFormat = "YYYY-MM-DD HH:mm Z";
+
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 let RegistryContract = artifacts.require("./Registry.sol");
 let ExternalStorage = artifacts.require("./ExternalStorage.sol");
@@ -53,7 +57,7 @@ module.exports = async function(callback) {
   let cst, cstRegistry, cstFrozen, cstDeprecated, successor, cstStorageName, cstLedgerName, cstName,
     cstSymbol, buyPriceWei, sellCap, foundation, balanceWei, totalSupply, cstFrozenCount,
     cstAdminCount, cstSuperAdminCount, cstBuyerCount, cstCustomBuyerCount, cstBuyerPool, cstBalanceLimit,
-    contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers;
+    contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers, vestingCount, cstAvailable;
 
   if (cstAddress === NULL_ADDRESS) {
     console.log(`There is no CST contract resgistered with the Registry at ${registry.address}`);
@@ -84,6 +88,8 @@ module.exports = async function(callback) {
     cstBalanceLimit = await cst.cstBalanceLimit();
     cstAllowTransfers = await cst.allowTransfers();
     contributionMinimum = await cst.contributionMinimum();
+    vestingCount = await cst.vestingMappingSize();
+    cstAvailable = await cst.tokensAvailable();
   }
 
   let registryAdminCount = await registry.totalAdminsMapping();
@@ -223,26 +229,57 @@ Storage (${storage.address})
   }
 
   if (cst) {
+    let vestingSchedules = "";
+    let totalUnvested = 0;
+    let totalVestedUnreleased = 0;
+    for (let i = 0; i < vestingCount; i++) {
+      let beneficiary = await cst.vestingBeneficiaryForIndex(i);
+      let releasableAmount = await cst.releasableAmount(beneficiary);
+      totalVestedUnreleased += releasableAmount.toNumber();
+      let [ startDate,
+            cliffDate,
+            durationSec,
+            fullyVestedAmount,
+            vestedAmount,
+            releasedAmount,
+            revokeDate,
+            isRevocable ] = await cst.getVestingSchedule(beneficiary);
+      totalUnvested += (fullyVestedAmount.toNumber() - vestedAmount.toNumber());
+      vestingSchedules = `${vestingSchedules}
+    beneficiary: ${beneficiary} ${revokeDate.toNumber() > 0 ? "Revoked on " + moment.unix(revokeDate.toNumber()).format(dateFormat) : ""}
+      start date: ${moment.unix(startDate.toNumber()).format(dateFormat)}
+      cliff date: ${moment.unix(cliffDate.toNumber()).format(dateFormat)}
+      fully vested date: ${moment.unix(startDate.toNumber() + durationSec.toNumber()).format(dateFormat)}
+      fully vested amount: ${fullyVestedAmount} CST
+      vested amount as of now (${moment().format(dateFormat)}): ${vestedAmount} CST
+      vested amount already released: ${releasedAmount} CST
+      vested amount not yet released ${releasableAmount} CST
+      is revocable: ${isRevocable}\n`;
+    }
+
     console.log(`
 
 Cardstack Token (${cst.address}):
   registry: ${prettyAddress(cstRegistry)}
-  storageName: ${cstStorageName}
-  ledgerName: ${cstLedgerName}
-  isFrozen: ${cstFrozen}
-  allowTransfers: ${cstAllowTransfers}
+  storage name: ${cstStorageName}
+  ledger name: ${cstLedgerName}
+  is frozen: ${cstFrozen}
+  allow transfers: ${cstAllowTransfers}
   deprecated: ${cstDeprecated}
   successor: ${successor}
   name: ${cstName}
   symbol: ${cstSymbol}
-  buyPrice (ETH): ${web3.fromWei(buyPriceWei, "ether")}
-  sellCap: ${sellCap}
-  buyerPool: ${cstBuyerPool}
-  contributionMinimum: ${contributionMinimum} CST
-  balanceLimit: ${(cstBalanceLimit.toNumber() / cstBuyerPool.toNumber()) * 100}% (${cstBalanceLimit} CST)
-  totalSupply: ${totalSupply}
+  buy price (ETH): ${web3.fromWei(buyPriceWei, "ether")}
+  sell cap: ${sellCap} CST
+  total tokens available: ${cstAvailable} CST
+  total unvested tokens: ${totalUnvested} CST
+  total vested and unreleased tokens: ${totalVestedUnreleased} CST
+  buyer pool: ${cstBuyerPool} CST
+  contribution minimum: ${contributionMinimum} CST
+  balance limit: ${(cstBalanceLimit.toNumber() / cstBuyerPool.toNumber()) * 100}% (${cstBalanceLimit} CST)
+  total supply: ${totalSupply} CST
   balance (ETH): ${web3.fromWei(balanceWei, "ether")}
-  foundation: ${prettyAddress(foundation)}
+  foundation address: ${prettyAddress(foundation)}
 
   CST super admins:`);
     for (let i = 0; i < cstSuperAdminCount; i++) {
@@ -262,7 +299,7 @@ Cardstack Token (${cst.address}):
       }
     }
     console.log(`
-  CST Whitelisted Transferers :`);
+  CST Whitelisted Transferers:`);
     for (let i = 0; i < cstWhitelistedTransfererCount; i++) {
       let address = await cst.whitelistedTransfererForIndex(i);
       let isWhitelisted = await cst.whitelistedTransferer(address);
@@ -271,7 +308,8 @@ Cardstack Token (${cst.address}):
       }
     }
     console.log(`
-  CST Buyers with custom balance limit:`);
+  CST Vesting: ${vestingSchedules}`);
+    console.log(`  CST Buyers with custom balance limit:`);
     for (let i = 0; i < cstCustomBuyerCount; i++) {
       let address = await cst.customBuyerForIndex(i);
       let limit = await cst.customBuyerLimit(address);

@@ -116,6 +116,11 @@ contract Registry is Ownable, administratable, upgradeable {
     ExternalStorage(storageAddress).setLedgerValue(fieldName, account, value);
   }
 
+  function setBooleanLedgerValue(string storageName, string fieldName, address account, bool value) onlySuperAdmins unlessUpgraded {
+    address storageAddress = getStorage(storageName);
+    ExternalStorage(storageAddress).setBooleanLedgerValue(fieldName, account, value);
+  }
+
   function setStorageBytes32Value(string storageName, string fieldName, bytes32 value) onlySuperAdmins unlessUpgraded {
     address storageAddress = getStorage(storageName);
     ExternalStorage(storageAddress).setBytes32Value(fieldName, value);

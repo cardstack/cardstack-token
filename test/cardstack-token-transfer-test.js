@@ -5,6 +5,8 @@ const Registry = artifacts.require("./Registry.sol");
 const {
   GAS_PRICE,
   NULL_ADDRESS,
+  CST_DEPLOY_GAS_LIMIT,
+  assertRevert,
   asInt,
   checkBalance
 } = require("../lib/utils");
@@ -27,7 +29,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await ledger.mintTokens(100);
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
@@ -81,15 +85,9 @@ contract('CardStackToken', function(accounts) {
     it("should not be able to transfer more CST than is in the sender's account", async function() {
       let transferAmount = 11;
 
-      let exceptionThrown;
-      try {
-        await cst.transfer(recipientAccount, transferAmount, {
-          from: senderAccount
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
+        from: senderAccount
+      }));
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);
@@ -103,15 +101,9 @@ contract('CardStackToken', function(accounts) {
     it("should not be able to transfer 0 CST ", async function() {
       let transferAmount = 0;
 
-      let exceptionThrown;
-      try {
-        await cst.transfer(recipientAccount, transferAmount, {
-          from: senderAccount
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
+        from: senderAccount
+      }));
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);
@@ -126,15 +118,9 @@ contract('CardStackToken', function(accounts) {
       await cst.setAllowTransfers(false);
       let transferAmount = 10;
 
-      let exceptionThrown;
-      try {
-        await cst.transfer(recipientAccount, transferAmount, {
-          from: senderAccount
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
+        from: senderAccount
+      }));
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);
@@ -183,15 +169,9 @@ contract('CardStackToken', function(accounts) {
 
       let transferAmount = 10;
 
-      let exceptionThrown;
-      try {
-        await cst.transfer(recipientAccount, transferAmount, {
-          from: senderAccount
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
+        from: senderAccount
+      }));
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);

@@ -3,7 +3,9 @@ const {
   ROUNDING_ERROR_WEI,
   MAX_FAILED_TXN_GAS,
   NULL_ADDRESS,
+  CST_DEPLOY_GAS_LIMIT,
   asInt,
+  assertRevert,
   checkBalance
 } = require("../lib/utils");
 
@@ -27,7 +29,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
 
       for (let i = 0; i < accounts.length; i++) {
@@ -75,7 +79,7 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 170000, "Less than 170000 gas was used for the txn");
       assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 2, 'the ether balance for the CST contract is correct');
       assert.equal(cstBalance, 2, "The CST balance is correct");
@@ -101,17 +105,11 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -138,17 +136,11 @@ contract('CardStackToken', function(accounts) {
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
       let txnValue = web3.toWei(0.2, "ether");
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -199,7 +191,7 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 170000, "Less than 170000 gas was used for the txn");
       assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 2, 'the ether balance for the CST contract is correct');
       assert.equal(cstBalance, 2, "The CST balance is correct");
@@ -212,8 +204,8 @@ contract('CardStackToken', function(accounts) {
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
 
       let buyerAccount = accounts[1];
-      let txnValue = web3.toWei(1000, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
+      let txnValue = web3.toWei(web3.fromWei(startBalance, "ether") + 1, "ether");
 
       await cst.addBuyer(buyerAccount);
 
@@ -223,17 +215,11 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }), "sender doesn't have enough funds");
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -257,17 +243,11 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -291,17 +271,11 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -325,17 +299,11 @@ contract('CardStackToken', function(accounts) {
 
       startBalance = asInt(startBalance);
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -386,7 +354,7 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 170000, "Less than 170000 gas was used for the txn");
       assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 2, 'the ether balance for the CST contract is correct');
       assert.equal(cstBalance, 2, "The CST balance is correct");
@@ -419,17 +387,11 @@ contract('CardStackToken', function(accounts) {
       startBalance = asInt(startBalance);
       await cst.addBuyer(buyerAccount);
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -461,17 +423,11 @@ contract('CardStackToken', function(accounts) {
       startBalance = asInt(startBalance);
       await cst.addBuyer(buyerAccount);
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -524,7 +480,7 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 170000, "Less than 170000 gas was used for the txn");
       assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 4, 'the ether balance for the CST contract is correct');
       assert.equal(cstBalance, 4, "The CST balance is correct");
@@ -558,17 +514,11 @@ contract('CardStackToken', function(accounts) {
 
       await cst.setCustomBuyer(buyerAccount, 4);
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);
@@ -616,7 +566,7 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 170000, "Less than 170000 gas was used for the txn");
       assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 1, 'the ether balance for the CST contract is correct');
       assert.equal(cstBalance, 10, "The CST balance is correct");
@@ -658,7 +608,7 @@ contract('CardStackToken', function(accounts) {
 
       endBalance = asInt(endBalance);
 
-      assert.ok(cumulativeGasUsed < 160000, "Less than 160000 gas was used for the txn");
+      assert.ok(cumulativeGasUsed < 170000, "Less than 170000 gas was used for the txn");
       assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
       assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 0.2, 'the ether balance for the CST contract is correct');
       assert.equal(cstBalance, 7, "The CST balance is correct");
@@ -673,24 +623,17 @@ contract('CardStackToken', function(accounts) {
       let txnValue = web3.toWei(0.2, "ether");
 
       let startBalance = await web3.eth.getBalance(buyerAccount);
-      let startCstEth = await web3.eth.getBalance(cst.address);
 
       startBalance = asInt(startBalance);
 
       await cst.addBuyer(buyerAccount);
       await cst.setContributionMinimum(5);
 
-      let exceptionThrown;
-      try {
-        await cst.buy({
-          from: buyerAccount,
-          value: txnValue,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(buyerAccount);
       let cstBalance = await cst.balanceOf(buyerAccount);

@@ -3,7 +3,9 @@ const {
   ROUNDING_ERROR_WEI,
   MAX_FAILED_TXN_GAS,
   NULL_ADDRESS,
+  CST_DEPLOY_GAS_LIMIT,
   asInt,
+  assertRevert,
   checkBalance
 } = require("../lib/utils");
 
@@ -35,7 +37,9 @@ contract('CardStackToken', function(accounts) {
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger");
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
       await registry.register("CST", cst.address);
       await ledger.mintTokens(100);
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
@@ -109,16 +113,10 @@ contract('CardStackToken', function(accounts) {
       let sellAmount = 11;
       startBalance = asInt(startBalance);
 
-      let exceptionThrown;
-      try {
-        await cst.sell(sellAmount, {
-          from: sellerAccount,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "Transaction should fire exception");
+      await assertRevert(async () => await cst.sell(sellAmount, {
+        from: sellerAccount,
+        gasPrice: GAS_PRICE
+      }));
 
       let endBalance = await web3.eth.getBalance(sellerAccount);
       let cstBalance = await cst.balanceOf(sellerAccount);
@@ -150,17 +148,12 @@ contract('CardStackToken', function(accounts) {
 
       await cst.setMinimumBalance(web3.toWei(0.5, "ether"));
 
-      let exceptionThrown;
-      try {
-        await cst.sell(sellAmount, {
-          from: sellerAccount,
-          gasPrice: GAS_PRICE
-        });
-      } catch(err) {
-        exceptionThrown = true;
-      }
+      await assertRevert(async () => await cst.sell(sellAmount, {
+        from: sellerAccount,
+        gasPrice: GAS_PRICE
+      }));
+
       cstEth = await web3.eth.getBalance(cst.address);
-      assert.ok(exceptionThrown, "Transaction should fire exception");
 
       let endBalance = await web3.eth.getBalance(sellerAccount);
       let cstBalance = await cst.balanceOf(sellerAccount);

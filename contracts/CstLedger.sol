@@ -6,7 +6,6 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 contract ITokenLedger {
   function totalTokens() constant returns (uint256);
   function totalInCirculation() constant returns (uint256);
-  function tokensAvailable() constant returns (uint256);
   function balanceOf(address account) constant returns (uint256);
   function mintTokens(uint256 amount);
   function transfer(address sender, address reciever, uint256 amount);
@@ -20,7 +19,7 @@ contract CstLedger is ITokenLedger, administratable {
 
   using SafeMath for uint256;
 
-  uint256 public _totalInCirculation;
+  uint256 public _totalInCirculation; // warning this does not take into account unvested nor vested-unreleased tokens into consideration
   uint256 public _totalTokens;
   mapping (address => uint256) public _balanceOf;
   uint256 public ledgerCount;
@@ -33,10 +32,6 @@ contract CstLedger is ITokenLedger, administratable {
 
   function totalInCirculation() constant returns (uint256) {
     return _totalInCirculation;
-  }
-
-  function tokensAvailable() constant returns (uint256) {
-    return _totalTokens.sub(_totalInCirculation);
   }
 
   function balanceOf(address account) constant returns (uint256) {

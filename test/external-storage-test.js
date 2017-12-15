@@ -1,5 +1,6 @@
 const {
   NULL_ADDRESS,
+  assertRevert
 } = require("../lib/utils");
 const ExternalStorage = artifacts.require("./ExternalStorage.sol");
 
@@ -41,19 +42,13 @@ contract('ExternalStorage', function(accounts) {
 
     it("non-owner cannot add admins", async function() {
       let nonOwner = accounts[7];
-      let exceptionThrown;
 
-      try {
-        await storage.addAdmin(admin, { from: nonOwner });
-      } catch(err) {
-        exceptionThrown = true;
-      }
+      await assertRevert(async () => await storage.addAdmin(admin, { from: nonOwner }));
 
       let isAdmin = await storage.admins(admin);
       let adminCount = await storage.totalAdminsMapping();
       let firstAdminAddress = await storage.adminsForIndex(0);
 
-      assert.ok(exceptionThrown, "Exception was thrown");
       assert.notOk(isAdmin, "admin was not added");
       assert.equal(adminCount, 0, 'the admin count is correct');
       assert.equal(firstAdminAddress, NULL_ADDRESS, 'the admin address is correct');
@@ -69,15 +64,8 @@ contract('ExternalStorage', function(accounts) {
 
     it("does not allow non-admin to set uint value", async function() {
       let nonAdmin = accounts[17];
-      let exceptionThrown;
 
-      try {
-        await storage.setUIntValue("cstBuyPrice", 11, { from: nonAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to set uint as non-admin");
+      await assertRevert(async () => await storage.setUIntValue("cstBuyPrice", 11, { from: nonAdmin }));
       let storageBuyPrice = await storage.getUIntValue("cstBuyPrice");
       assert.equal(storageBuyPrice.toNumber(), 0, "uint value was not set");
     });
@@ -102,15 +90,8 @@ contract('ExternalStorage', function(accounts) {
 
     it("does not allow non-admin to set bytes32 value", async function() {
       let nonAdmin = accounts[17];
-      let exceptionThrown;
 
-      try {
-        await storage.setBytes32Value("cstTokenSymbol", web3.toHex("CST"), { from: nonAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to set bytes32 as non-admin");
+      await assertRevert(async () => await storage.setBytes32Value("cstTokenSymbol", web3.toHex("CST"), { from: nonAdmin }));
       let storageTokenSymbol = await storage.getBytes32Value("cstTokenSymbol");
       assert.equal(web3.toUtf8(storageTokenSymbol.toString()), "", "bytes32 value was not set");
     });
@@ -138,15 +119,8 @@ contract('ExternalStorage', function(accounts) {
     it("does not allow non-admin to set address value", async function() {
       let rewardPool = accounts[8];
       let someUser = accounts[13];
-      let exceptionThrown;
 
-      try {
-        await storage.setAddressValue("cstRewardPool", rewardPool, { from: someUser });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to set address as non-admin");
+      await assertRevert(async () => await storage.setAddressValue("cstRewardPool", rewardPool, { from: someUser }));
       let storageRewardPool = await storage.getAddressValue("cstRewardPool");
       assert.equal(storageRewardPool.toString(), NULL_ADDRESS, "address value was not set by non-admin");
     });
@@ -172,15 +146,8 @@ contract('ExternalStorage', function(accounts) {
 
     it("does not allow non-admin to set bytes value", async function() {
       let someUser = accounts[11];
-      let exceptionThrown;
 
-      try {
-        await storage.setBytesValue("somebytes", "lmnop", { from: someUser });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to set bytes as non-admin");
+      await assertRevert(async () => await storage.setBytesValue("somebytes", "lmnop", { from: someUser }));
       let storageSomebytes = await storage.getBytesValue("somebytes");
       assert.equal(web3.toUtf8(storageSomebytes.toString()), "", "bytes value was not set by non-admin");
     });
@@ -205,15 +172,8 @@ contract('ExternalStorage', function(accounts) {
 
     it("does not allow non-admin to set boolean value", async function() {
       let someUser = accounts[11];
-      let exceptionThrown;
 
-      try {
-        await storage.setBooleanValue("somebool", true, { from: someUser });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to set boolean as non-admin");
+      await assertRevert(async () => await storage.setBooleanValue("somebool", true, { from: someUser }));
       let storageSomebool = await storage.getBooleanValue("somebool");
       assert.notOk(storageSomebool, "boolean value was not set by non-admin");
     });
@@ -238,13 +198,8 @@ contract('ExternalStorage', function(accounts) {
 
     it("does not allow non-admin to set int value", async function() {
       let someUser = accounts[11];
-      let exceptionThrown;
 
-      try {
-        await storage.setIntValue("someint", 37, { from: someUser });
-      } catch(e) {
-        exceptionThrown = true;
-      }
+      await assertRevert(async () => await storage.setIntValue("someint", 37, { from: someUser }));
 
       let storageSomeint = await storage.getIntValue("someint");
       assert.equal(storageSomeint, 0, "int value was not set by non-admin");
@@ -270,18 +225,21 @@ contract('ExternalStorage', function(accounts) {
       assert.equal(storageSomevalue, 37, "ledger value was set by admin");
     });
 
+    it("allows admin to set ledger value", async function () {
+      let someUser = [12];
+
+      await storage.addAdmin(admin);
+      await storage.setLedgerValue("someledger", someUser, 37, { from: admin });
+
+      let storageSomevalue = await storage.getLedgerValue("someledger", someUser);
+      assert.equal(storageSomevalue, 37, "ledger value was set by admin");
+    });
+
     it("does not allow non-admin to set ledger value", async function() {
       let someUser = accounts[12];
       let nonAdmin = accounts[14];
-      let exceptionThrown;
 
-      try {
-        await storage.setLedgerValue("someledger", someUser, 37, { from: nonAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown");
+      await assertRevert(async () => await storage.setLedgerValue("someledger", someUser, 37, { from: nonAdmin }));
       let storageSomevalue = await storage.getLedgerValue("someledger", someUser);
       assert.equal(storageSomevalue, 0, "ledger value was not set by non-admin");
     });
@@ -323,6 +281,62 @@ contract('ExternalStorage', function(accounts) {
       assert.equal(ledgerEntry, someUser, "ledger entry was getted by index");
     });
 
+    it("allows admin to set boolean ledger value", async function () {
+      let someUser = [12];
+
+      await storage.addAdmin(admin);
+      await storage.setBooleanLedgerValue("someledger", someUser, true, { from: admin });
+
+      let storageSomevalue = await storage.getBooleanLedgerValue("someledger", someUser);
+      assert.equal(storageSomevalue, true, "value was set by admin");
+    });
+
+    it("does not allow non-admin to set boolean ledger value", async function() {
+      let someUser = accounts[12];
+      let nonAdmin = accounts[14];
+
+      await assertRevert(async () => await storage.setBooleanLedgerValue("someledger", someUser, true, { from: nonAdmin }));
+      let storageSomevalue = await storage.getBooleanLedgerValue("someledger", someUser);
+      assert.equal(storageSomevalue, false, "boolean value was not set by non-admin");
+    });
+
+    it("gets boolean ledger value", async function () {
+      let someUser = accounts[12];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setBooleanLedgerValue("someledger", someUser, true, { from: admin });
+
+      let storageSomevalue = await storage.getBooleanLedgerValue("someledger", someUser, { from: nonAdmin });
+      assert.equal(storageSomevalue, true, "boolean value was getted by non-admin");
+    });
+
+    it("gets boolean ledger count", async function() {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setBooleanLedgerValue("someledger", someUser, true, { from: admin });
+      await storage.setBooleanLedgerValue("someledger", otherUser, false, { from: admin });
+
+      let ledgerCount = await storage.getBooleanLedgerCount("someledger", { from: nonAdmin });
+      assert.equal(ledgerCount, 2, "count was getted");
+    });
+
+    it("gets boolean ledger address by index", async function() {
+      let someUser = accounts[12];
+      let otherUser = accounts[13];
+      let nonAdmin = accounts[14];
+
+      await storage.addAdmin(admin);
+      await storage.setBooleanLedgerValue("someledger", someUser, true, { from: admin });
+      await storage.setBooleanLedgerValue("someledger", otherUser, false, { from: admin });
+
+      let ledgerEntry = await storage.booleanLedgerEntryForIndex(web3.sha3("someledger"), 0, { from: nonAdmin });
+      assert.equal(ledgerEntry, someUser, "entry was retrieved by index");
+    });
+
     it("allows admin to set multi-ledger value", async function () {
       let someUser = accounts[12];
       let otherUser = accounts[13];
@@ -338,18 +352,11 @@ contract('ExternalStorage', function(accounts) {
       let someUser = accounts[12];
       let otherUser = accounts[13];
       let nonAdmin = accounts[19];
-      let exceptionThrown;
 
       let storageSomevalue = await storage.getMultiLedgerValue("allowance", someUser, otherUser);
       assert.equal(storageSomevalue, 0, "multi-ledger value is 0");
 
-      try {
-        await storage.setMultiLedgerValue("allowance", someUser, otherUser, 10, { from: nonAdmin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown");
+      await assertRevert(async () => await storage.setMultiLedgerValue("allowance", someUser, otherUser, 10, { from: nonAdmin }));
       storageSomevalue = await storage.getMultiLedgerValue("allowance", someUser, otherUser);
       assert.equal(storageSomevalue, 0, "multi-ledger value is still 0");
     });

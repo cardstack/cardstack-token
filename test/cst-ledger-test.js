@@ -1,5 +1,5 @@
 const CstLedger = artifacts.require("./CstLedger.sol");
-const { NULL_ADDRESS } = require("../lib/utils");
+const { NULL_ADDRESS, assertRevert } = require("../lib/utils");
 
 contract('CstLedger', function(accounts) {
   let ledger;
@@ -40,19 +40,12 @@ contract('CstLedger', function(accounts) {
 
     it("non-owner cannot add admins", async function() {
       let nonOwner = accounts[7];
-      let exceptionThrown;
-
-      try {
-        await ledger.addAdmin(admin, { from: nonOwner });
-      } catch(err) {
-        exceptionThrown = true;
-      }
+      await assertRevert(async () => await ledger.addAdmin(admin, { from: nonOwner }));
 
       let isAdmin = await ledger.admins(admin);
       let adminCount = await ledger.totalAdminsMapping();
       let firstAdminAddress = await ledger.adminsForIndex(0);
 
-      assert.ok(exceptionThrown, "Exception was thrown");
       assert.notOk(isAdmin, "admin was not added");
       assert.equal(adminCount, 0, 'the admin count is correct');
       assert.equal(firstAdminAddress, NULL_ADDRESS, 'the admin address is correct');
@@ -96,7 +89,6 @@ contract('CstLedger', function(accounts) {
     it("does not allow transfer of more tokens than in the sender's account", async function() {
       let senderAccount = accounts[5];
       let recipientAccount = accounts[9];
-      let exceptionThrown;
 
       await ledger.addAdmin(admin);
       await ledger.debitAccount(senderAccount, 100);
@@ -108,13 +100,7 @@ contract('CstLedger', function(accounts) {
       assert.equal(senderBalance, 100, "sender balance is 100");
       assert.equal(recipientBalance, 100, "recipient balance is 100");
 
-      try {
-        await ledger.transfer(senderAccount, recipientAccount, 137, { from: admin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to transfer more tokens than in sender's account");
+      await assertRevert(async () => await ledger.transfer(senderAccount, recipientAccount, 137, { from: admin }));
     });
 
     it("allows admin to debit accounts", async function() {
@@ -146,81 +132,46 @@ contract('CstLedger', function(accounts) {
 
     it("does not allow crediting more tokens than are in the account", async function() {
       let otherAccount = accounts[6];
-      let exceptionThrown;
       await ledger.addAdmin(admin);
       await ledger.debitAccount(otherAccount, 100, { from: admin }); // need to debit so that we can credit
 
-      try {
-        await ledger.creditAccount(otherAccount, 150, { from: admin });
-      } catch(e) {
-        exceptionThrown = true;
-      }
+      await assertRevert(async () => await ledger.creditAccount(otherAccount, 150, { from: admin }));
 
       let otherBalance = await ledger.balanceOf(otherAccount);
       assert.equal(otherBalance, 100, "account balance is 100");
-      assert.ok(exceptionThrown, "exception was thrown trying to credit more than was in account");
     });
 
     it("non-admins cannot credit accounts", async function() {
       let otherAccount = accounts[5];
       let nonAdminAccount = accounts[13];
-      let exceptionThrown;
       await ledger.addAdmin(admin);
       await ledger.debitAccount(otherAccount, 100, { from: admin });
 
 
-      try {
-        await ledger.creditAccount(otherAccount, 50, { from: nonAdminAccount });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to credit account as non-admin");
+      await assertRevert(async () => await ledger.creditAccount(otherAccount, 50, { from: nonAdminAccount }));
     });
 
     it("non-admins cannot debit accounts", async function() {
       let otherAccount = accounts[5];
       let nonAdminAccount = accounts[13];
-      let exceptionThrown;
-
-      try {
-        await ledger.debitAccount(otherAccount, 100, { from: nonAdminAccount });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to debit account as non-admin");
+      await assertRevert(async () => await ledger.debitAccount(otherAccount, 100, { from: nonAdminAccount }));
     });
 
     it("non-admins cannot mint tokens", async function() {
       let nonAdminAccount = accounts[17];
-      let exceptionThrown;
 
-      try {
-        await ledger.mintTokens(234, { from: nonAdminAccount });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to mint tokens as non-admin");
+      await assertRevert(async () => await ledger.mintTokens(234, { from: nonAdminAccount }));
     });
 
     it("non-admins cannot transfer tokens", async function() {
       let senderAccount = accounts[5];
       let recipientAccount = accounts[9];
       let nonAdminAccount = accounts[13];
-      let exceptionThrown;
 
       await ledger.debitAccount(senderAccount, 100);
       await ledger.debitAccount(recipientAccount, 100);
 
-      try {
-        await ledger.transfer(senderAccount, recipientAccount, 37, { from: nonAdminAccount });
-      } catch(e) {
-        exceptionThrown = true;
-      }
-
-      assert.ok(exceptionThrown, "exception was thrown trying to transfer as non-admin");
+      await assertRevert(async () => await ledger.transfer(senderAccount, recipientAccount, 37, { from: nonAdminAccount }));
     });
 
     it("returns ledgerCount correctly when debit to a new account", async function() {

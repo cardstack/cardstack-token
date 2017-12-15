@@ -1,14 +1,13 @@
-const Bluebird = require("bluebird");
 const request = require("request-promise");
 const _ = require("lodash");
 
-const { wait, waitForContractEvent } = require("../lib/utils");
+const { assertRevert, wait, waitForContractEvent } = require("../lib/utils");
 
 const EthToUsdOracle = artifacts.require("./EthToUsdOracle.sol");
 
 contract("EthToUsdOracle", function(accounts) {
 
-  describe("ETH to USD exchange rate", function() {
+  xdescribe("ETH to USD exchange rate", function() {
 
     it("should set the price of an ETH in hundred-thousandth of a cent USD when contract is created ($308.56893 -> 30856893)", async function() {
       let owner = accounts[0];
@@ -114,13 +113,7 @@ contract("EthToUsdOracle", function(accounts) {
 
       await waitForContractEvent(oracle, "ETHPriceUpdated");
 
-      let exceptionThrown;
-      try {
-        await oracle.__callback("0x3a6c8157a8dc8bda28e5ed2023653a6b080b17696add3481dee168b367a8a15b","306.18988","QmfNEh4BBredUiyvg9MKv34QxAeLm5Spir72ifv5geysT2");
-      } catch (e) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "exception is thrown invoking the oraclize callback");
+      await assertRevert(async () => await oracle.__callback("0x3a6c8157a8dc8bda28e5ed2023653a6b080b17696add3481dee168b367a8a15b","306.18988","QmfNEh4BBredUiyvg9MKv34QxAeLm5Spir72ifv5geysT2"));
     });
 
     it("should not allow non-owner be able to change the update frequency", async function() {
@@ -134,15 +127,9 @@ contract("EthToUsdOracle", function(accounts) {
 
       await waitForContractEvent(oracle, "ETHPriceUpdated");
 
-      let exceptionThrown;
-      try {
-        await oracle.setUpdateFrequency(1, {
-          from: nonOwner
-        });
-      } catch (e) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "exception is thrown when non-owner tries to change update frequency");
+      await assertRevert(async () => await oracle.setUpdateFrequency(1, {
+        from: nonOwner
+      }));
 
       let updateFrequencySeconds = await oracle.updateFrequencySeconds();
 
@@ -159,13 +146,7 @@ contract("EthToUsdOracle", function(accounts) {
 
       await waitForContractEvent(oracle, "ETHPriceUpdated");
 
-      let exceptionThrown;
-      try {
-        await oracle.setUpdateFrequency(0);
-      } catch (e) {
-        exceptionThrown = true;
-      }
-      assert.ok(exceptionThrown, "exception is thrown when update frequency is set to 0");
+      await assertRevert(async () => await oracle.setUpdateFrequency(0));
 
       let updateFrequencySeconds = await oracle.updateFrequencySeconds();
 
