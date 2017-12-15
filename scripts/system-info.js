@@ -55,8 +55,8 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst, cstRegistry, cstFrozen, cstDeprecated, successor, cstStorageName, cstLedgerName, cstName,
-    cstSymbol, buyPriceWei, sellCap, foundation, balanceWei, totalSupply, cstFrozenCount,
-    cstAdminCount, cstSuperAdminCount, cstBuyerCount, cstCustomBuyerCount, cstBuyerPool, cstBalanceLimit,
+    cstSymbol, buyPriceWei, circulationCap, foundation, balanceWei, totalSupply, cstFrozenCount,
+    cstAdminCount, cstSuperAdminCount, cstBuyerCount, cstCustomBuyerCount, cstBalanceLimit,
     contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers, vestingCount, cstAvailable;
 
   if (cstAddress === NULL_ADDRESS) {
@@ -74,7 +74,7 @@ module.exports = async function(callback) {
     cstName = await cst.name();
     cstSymbol = await cst.symbol();
     buyPriceWei = await cst.buyPrice();
-    sellCap = await cst.sellCap();
+    circulationCap = await cst.circulationCap();
     foundation = await cst.foundation();
     balanceWei = await web3.eth.getBalance(cst.address);
     totalSupply = await cst.totalSupply();
@@ -84,7 +84,6 @@ module.exports = async function(callback) {
     cstBuyerCount = await cst.totalBuyersMapping();
     cstCustomBuyerCount = await cst.totalCustomBuyersMapping();
     cstWhitelistedTransfererCount = await cst.totalTransferWhitelistMapping();
-    cstBuyerPool = await cst.cstBuyerPool();
     cstBalanceLimit = await cst.cstBalanceLimit();
     cstAllowTransfers = await cst.allowTransfers();
     contributionMinimum = await cst.contributionMinimum();
@@ -270,13 +269,12 @@ Cardstack Token (${cst.address}):
   name: ${cstName}
   symbol: ${cstSymbol}
   buy price (ETH): ${web3.fromWei(buyPriceWei, "ether")}
-  sell cap: ${sellCap} CST
+  circulation cap: ${circulationCap} CST
   total tokens available: ${cstAvailable} CST
   total unvested tokens: ${totalUnvested} CST
   total vested and unreleased tokens: ${totalVestedUnreleased} CST
-  buyer pool: ${cstBuyerPool} CST
   contribution minimum: ${contributionMinimum} CST
-  balance limit: ${(cstBalanceLimit.toNumber() / cstBuyerPool.toNumber()) * 100}% (${cstBalanceLimit} CST)
+  balance limit: ${cstBalanceLimit} CST
   total supply: ${totalSupply} CST
   balance (ETH): ${web3.fromWei(balanceWei, "ether")}
   foundation address: ${prettyAddress(foundation)}
@@ -315,7 +313,7 @@ Cardstack Token (${cst.address}):
       let limit = await cst.customBuyerLimit(address);
       limit = limit.toNumber();
       if (limit) {
-        console.log(`    ${prettyAddress(address)}: ${(limit/cstBuyerPool.toNumber()) * 100}% (${limit} CST)`);
+        console.log(`    ${prettyAddress(address)}: ${limit} CST`);
       }
     }
     console.log(`

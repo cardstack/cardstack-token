@@ -285,55 +285,55 @@ contract('ExternalStorage', function(accounts) {
       let someUser = [12];
 
       await storage.addAdmin(admin);
-      await storage.setBooleanLedgerValue("someledger", someUser, true, { from: admin });
+      await storage.setBooleanMapValue("someledger", someUser, true, { from: admin });
 
-      let storageSomevalue = await storage.getBooleanLedgerValue("someledger", someUser);
+      let storageSomevalue = await storage.getBooleanMapValue("someledger", someUser);
       assert.equal(storageSomevalue, true, "value was set by admin");
     });
 
-    it("does not allow non-admin to set boolean ledger value", async function() {
+    it("does not allow non-admin to set boolean map value", async function() {
       let someUser = accounts[12];
       let nonAdmin = accounts[14];
 
-      await assertRevert(async () => await storage.setBooleanLedgerValue("someledger", someUser, true, { from: nonAdmin }));
-      let storageSomevalue = await storage.getBooleanLedgerValue("someledger", someUser);
+      await assertRevert(async () => await storage.setBooleanMapValue("someledger", someUser, true, { from: nonAdmin }));
+      let storageSomevalue = await storage.getBooleanMapValue("someledger", someUser);
       assert.equal(storageSomevalue, false, "boolean value was not set by non-admin");
     });
 
-    it("gets boolean ledger value", async function () {
+    it("gets boolean map value", async function () {
       let someUser = accounts[12];
       let nonAdmin = accounts[14];
 
       await storage.addAdmin(admin);
-      await storage.setBooleanLedgerValue("someledger", someUser, true, { from: admin });
+      await storage.setBooleanMapValue("someledger", someUser, true, { from: admin });
 
-      let storageSomevalue = await storage.getBooleanLedgerValue("someledger", someUser, { from: nonAdmin });
+      let storageSomevalue = await storage.getBooleanMapValue("someledger", someUser, { from: nonAdmin });
       assert.equal(storageSomevalue, true, "boolean value was getted by non-admin");
     });
 
-    it("gets boolean ledger count", async function() {
+    it("gets boolean map count", async function() {
       let someUser = accounts[12];
       let otherUser = accounts[13];
       let nonAdmin = accounts[14];
 
       await storage.addAdmin(admin);
-      await storage.setBooleanLedgerValue("someledger", someUser, true, { from: admin });
-      await storage.setBooleanLedgerValue("someledger", otherUser, false, { from: admin });
+      await storage.setBooleanMapValue("someledger", someUser, true, { from: admin });
+      await storage.setBooleanMapValue("someledger", otherUser, false, { from: admin });
 
-      let ledgerCount = await storage.getBooleanLedgerCount("someledger", { from: nonAdmin });
+      let ledgerCount = await storage.getBooleanMapCount("someledger", { from: nonAdmin });
       assert.equal(ledgerCount, 2, "count was getted");
     });
 
-    it("gets boolean ledger address by index", async function() {
+    it("gets boolean map address by index", async function() {
       let someUser = accounts[12];
       let otherUser = accounts[13];
       let nonAdmin = accounts[14];
 
       await storage.addAdmin(admin);
-      await storage.setBooleanLedgerValue("someledger", someUser, true, { from: admin });
-      await storage.setBooleanLedgerValue("someledger", otherUser, false, { from: admin });
+      await storage.setBooleanMapValue("someledger", someUser, true, { from: admin });
+      await storage.setBooleanMapValue("someledger", otherUser, false, { from: admin });
 
-      let ledgerEntry = await storage.booleanLedgerEntryForIndex(web3.sha3("someledger"), 0, { from: nonAdmin });
+      let ledgerEntry = await storage.booleanMapEntryForIndex(web3.sha3("someledger"), 0, { from: nonAdmin });
       assert.equal(ledgerEntry, someUser, "entry was retrieved by index");
     });
 

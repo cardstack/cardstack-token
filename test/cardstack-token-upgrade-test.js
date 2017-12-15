@@ -43,8 +43,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
-      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
-      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
+      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
       await cst1.addAdmin(admin);
       await cst2.addAdmin(admin);
       await cst1.setAllowTransfers(true);
@@ -112,7 +112,7 @@ contract('CardStackToken', function(accounts) {
 
     it("does not allow a non-admin to invoke upgradeTo", async function() {
       let nonAdmin = accounts[8];
-      await assertRevert(async () => await cst1.upgradeTo(cst2.address, { from: nonAdmin }));
+      await assertRevert(async () => await cst1.upgradeTo(cst2.address, 100, { from: nonAdmin }));
 
       let isDeprecatedCst1 = await cst1.isDeprecated();
       let cst1Successor = await cst1.successor();
@@ -125,7 +125,7 @@ contract('CardStackToken', function(accounts) {
 
     it("does not allow a non-admin to invoke upgradeFrom", async function() {
       let nonAdmin = accounts[8];
-      await assertRevert(async () => await cst2.upgradeTo(cst1.address, { from: nonAdmin }));
+      await assertRevert(async () => await cst2.upgradeTo(cst1.address, 100, { from: nonAdmin }));
 
       let isDeprecatedCst2 = await cst2.isDeprecated();
       let cst2Successor = await cst2.successor();
@@ -151,7 +151,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(cst1Successor, NULL_ADDRESS, 'the contract address is correct');
       assert.equal(cst2Successor, NULL_ADDRESS, 'the contract address is correct');
 
-      let upgradeToTxn = await cst1.upgradeTo(cst2.address);
+      let upgradeToTxn = await cst1.upgradeTo(cst2.address, 100);
       let upgradedFromTxn = await cst2.upgradedFrom(cst1.address);
 
       isDeprecatedCst1 = await cst1.isDeprecated();
@@ -168,10 +168,17 @@ contract('CardStackToken', function(accounts) {
       assert.equal(cst1Successor, cst2.address, 'the contract address is correct');
       assert.equal(cst2Successor, NULL_ADDRESS, 'the contract address is correct');
 
-      assert.equal(upgradeToTxn.logs.length, 1, 'the correct number of events were fired');
+      assert.equal(upgradeToTxn.logs.length, 2, 'the correct number of events were fired');
       assert.equal(upgradedFromTxn.logs.length, 1, 'the correct number of events were fired');
-      assert.equal(upgradeToTxn.logs[0].event, "Upgraded", "the event type is correct");
-      assert.equal(upgradeToTxn.logs[0].args.successor, cst2.address);
+
+      assert.equal(upgradeToTxn.logs[0].event, "Transfer", "the event type is correct");
+      assert.equal(upgradeToTxn.logs[0].args._from, cst1.address);
+      assert.equal(upgradeToTxn.logs[0].args._to, cst2.address);
+      assert.equal(upgradeToTxn.logs[0].args._value.toNumber(), 100);
+
+      assert.equal(upgradeToTxn.logs[1].event, "Upgraded", "the event type is correct");
+      assert.equal(upgradeToTxn.logs[1].args.successor, cst2.address);
+
       assert.equal(upgradedFromTxn.logs[0].event, "UpgradedFrom", "the event type is correct");
       assert.equal(upgradedFromTxn.logs[0].args.predecessor, cst1.address);
     });
@@ -199,8 +206,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
-      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
-      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
+      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
       await cst1.addSuperAdmin(admin);
       await cst2.addSuperAdmin(admin);
       await cst1.setAllowTransfers(true);
@@ -211,7 +218,7 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst2.address);
 
-      await cst2.configure(0x0, 0x0, 0, 0, 0, 1000000, accounts[0]);
+      await cst2.configure(0x0, 0x0, 0, 0, 1000000, accounts[0]);
       await cst2.foundationWithdraw(cstEth.toNumber());
     });
 
@@ -238,7 +245,7 @@ contract('CardStackToken', function(accounts) {
 
     it("allows purchase of CST for successor contract", async function() {
       await cst2.upgradedFrom(cst1.address, { from: admin });
-      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
+      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 1000000, NULL_ADDRESS);
 
       let buyerAccount = accounts[8];
       checkBalance(buyerAccount, 2);
@@ -336,11 +343,11 @@ contract('CardStackToken', function(accounts) {
       assert.ok(txn.receipt);
 
       let totalTokens = await cst2.totalSupply();
-      let sellCap = await cst2.sellCap();
+      let circulationCap = await cst2.circulationCap();
       let totalInCirculation = await cst2.totalInCirculation();
 
       assert.equal(asInt(totalTokens), 200, "The totalTokens is correct");
-      assert.equal(asInt(sellCap), 100, "The sellCap is correct");
+      assert.equal(asInt(circulationCap), 100, "The circulationCap is correct");
       assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
     });
 
@@ -363,7 +370,7 @@ contract('CardStackToken', function(accounts) {
 
     it("allows foundationWithdraw and foundationDeposit for successor contract", async function() {
       let foundation = accounts[24];
-      await cst2.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation);
+      await cst2.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, foundation);
 
       let txnValue = web3.toWei(1, "ether");
       let startFoundationBalance = await web3.eth.getBalance(foundation);
@@ -670,8 +677,8 @@ contract('CardStackToken', function(accounts) {
       await ledger.addAdmin(cst1.address);
       await ledger.addAdmin(cst2.address);
       await ledger.mintTokens(100);
-      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
-      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
+      await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
       await cst1.addSuperAdmin(admin);
       await cst2.addSuperAdmin(admin);
       await cst1.setAllowTransfers(true);
@@ -680,7 +687,7 @@ contract('CardStackToken', function(accounts) {
 
     it("does not allow adding a buyer for a successor contract", async function() {
       let approvedBuyer = accounts[11];
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.addBuyer(approvedBuyer, { from: admin }));
 
       let isBuyer = await cst1.approvedBuyer(approvedBuyer);
@@ -691,7 +698,7 @@ contract('CardStackToken', function(accounts) {
     it("does not allow removing a buyer for a successor contract", async function() {
       let approvedBuyer = accounts[11];
       await cst1.addBuyer(approvedBuyer, { from: admin });
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => await cst1.removeBuyer(approvedBuyer, { from: admin }));
 
@@ -703,7 +710,7 @@ contract('CardStackToken', function(accounts) {
     it("does not allow purchase of CST when the contract has been upgraded", async function() {
       let buyerAccount = accounts[4];
       await cst1.addBuyer(buyerAccount);
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       checkBalance(buyerAccount, 1);
       let txnValue = web3.toWei(0.1, "ether");
@@ -730,7 +737,7 @@ contract('CardStackToken', function(accounts) {
 
     /* removing sell until after phase 2*/
     xit("does not allow selling of CST when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       let sellerAccount = accounts[2];
       await ledger.debitAccount(sellerAccount, 10);
@@ -755,7 +762,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow transfer of CST when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       let transferAmount = 10;
       let senderAccount = accounts[8];
@@ -777,7 +784,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow minting of CST when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => await cst1.mintTokens(1000));
 
@@ -789,7 +796,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow token grant of CST when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       let recipientAccount = accounts[9];
 
       await assertRevert(async () => await cst1.grantTokens(recipientAccount, 10));
@@ -804,45 +811,45 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow updateStorage when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       let newStorage = await Storage.new();
       let newLedger = await CstLedger.new();
       await assertRevert(async () => await cst1.updateStorage(newStorage.address, newLedger.address));
     });
 
     it("does not allow configure when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
-      await assertRevert(async () => await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS));
+      await assertRevert(async () => await cst1.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS));
     });
 
     it("does not allow configureFromStorage when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.configureFromStorage());
     });
 
     it("does not allow name() when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.name());
     });
 
     it("does not allow symbol() when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.symbol());
     });
 
     it("does not allow totalInCirculation() when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.totalInCirculation());
     });
 
     it("does not allow totalSupply() when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.totalSupply());
     });
 
     it("does not allow balanceOf() when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.balanceOf(accounts[5]));
     });
 
@@ -850,13 +857,13 @@ contract('CardStackToken', function(accounts) {
     it("does allow foundationWithdraw when contract has been upgraded", async function() {
       let foundation = accounts[34];
       let txnValue = web3.toWei(0.1, "ether");
-      await cst1.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000, 1000000, foundation);
+      await cst1.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, foundation);
       await cst1.foundationDeposit({
         from: foundation,
         value: txnValue,
         gasPrice: GAS_PRICE
       });
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       let startFoundationBalance = await web3.eth.getBalance(foundation);
       startFoundationBalance = asInt(startFoundationBalance);
@@ -888,7 +895,7 @@ contract('CardStackToken', function(accounts) {
     it("does not allow foundationDeposit when contract has been upgraded", async function() {
       let foundation = accounts[34];
       let txnValue = web3.toWei(0.1, "ether");
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       let startFoundationBalance = await web3.eth.getBalance(foundation);
 
@@ -909,7 +916,7 @@ contract('CardStackToken', function(accounts) {
       let grantor = accounts[3];
       let spender = accounts[4];
 
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => await cst1.approve(spender, 10, { from: grantor }));
     });
@@ -922,7 +929,7 @@ contract('CardStackToken', function(accounts) {
       await ledger.debitAccount(grantor, 50);
       await cst1.approve(spender, 10, { from: grantor });
 
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.transferFrom(grantor, recipient, 10, { from: spender }));
 
       let grantorBalance = await ledger.balanceOf(grantor);
@@ -935,7 +942,7 @@ contract('CardStackToken', function(accounts) {
     it("does not allow setCustomBuyer when contract has been upgraded", async function() {
       let customBuyerAccount = accounts[29];
 
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => await cst1.setCustomBuyer(customBuyerAccount, 30000, { from: admin }));
 
@@ -945,27 +952,27 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("does not allow setAllowTransfers when contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => await cst1.setAllowTransfers(false));
     });
 
     it("does not allow setContributionMinimum when contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => await cst1.setContributionMinimum(10));
     });
 
     it("does not allow setWhitelistedTransferer when contract has been upgraded", async function() {
       let whitelistedTransferer = accounts[17];
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => await cst1.setWhitelistedTransferer(whitelistedTransferer, true));
     });
 
     it("does not allow vested token grant when contract has been upgraded", async function() {
       let beneficiary = accounts[9];
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.grantVestedTokens(beneficiary,
                                                                  10,
                                                                  0,
@@ -1001,7 +1008,7 @@ contract('CardStackToken', function(accounts) {
                                   true);
       await increaseTimeTo(this.start + duration.years(1.5));
 
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.releaseVestedTokens({ from: beneficiary }));
 
       let balance = await cst2.balanceOf(beneficiary);
@@ -1018,7 +1025,7 @@ contract('CardStackToken', function(accounts) {
                                   true);
       await increaseTimeTo(this.start + duration.years(1.5));
 
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.releaseVestedTokensForBeneficiary(beneficiary));
 
       let balance = await cst2.balanceOf(beneficiary);
@@ -1035,7 +1042,7 @@ contract('CardStackToken', function(accounts) {
                                   true);
       await increaseTimeTo(this.start + duration.years(1.5));
 
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
       await assertRevert(async () => await cst1.revokeVesting(beneficiary));
 
       let balance = await cst2.balanceOf(beneficiary);
@@ -1052,7 +1059,7 @@ contract('CardStackToken', function(accounts) {
                                   true);
       await increaseTimeTo(this.start + duration.years(1.5));
 
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => cst1.releasableAmount(beneficiary));
     });
@@ -1065,7 +1072,7 @@ contract('CardStackToken', function(accounts) {
                                   duration.years(1),
                                   duration.years(2),
                                   true);
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => cst1.getVestingSchedule(beneficiary));
     });
@@ -1078,7 +1085,7 @@ contract('CardStackToken', function(accounts) {
                                   duration.years(1),
                                   duration.years(2),
                                   true);
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => cst1.totalUnvestedAndUnreleasedTokens());
     });
@@ -1091,7 +1098,7 @@ contract('CardStackToken', function(accounts) {
                                   duration.years(1),
                                   duration.years(2),
                                   true);
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => cst1.vestingMappingSize());
     });
@@ -1104,7 +1111,7 @@ contract('CardStackToken', function(accounts) {
                                   duration.years(1),
                                   duration.years(2),
                                   true);
-      await cst1.upgradeTo(cst2.address, { from: admin });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
       await assertRevert(async () => cst1.vestingBeneficiaryForIndex(0));
     });

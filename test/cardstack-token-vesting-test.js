@@ -34,7 +34,7 @@ contract('CardStackToken', function(accounts) {
       });
       await registry.register("CST", cst.address);
       await ledger.mintTokens(100);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -151,8 +151,8 @@ contract('CardStackToken', function(accounts) {
     });
 
 
-    it("should not allow a vested token grant to be created that would exceed the sellCap when fully vested", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 10, 10, 1000000, NULL_ADDRESS);
+    it("should not allow a vested token grant to be created that would exceed the circulationCap when fully vested", async function() {
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 10, 1000000, NULL_ADDRESS);
 
       let start = this.start;
       await assertRevert(async () => await cst.grantVestedTokens(beneficiary,
@@ -187,7 +187,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("should not allow a vested token grant to be created that would exceed the total number of tokens minted when fully vested", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 200, 200, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 200, 1000000, NULL_ADDRESS);
 
       let start = this.start;
       await assertRevert(async () => await cst.grantVestedTokens(beneficiary,

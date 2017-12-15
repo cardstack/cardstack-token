@@ -34,7 +34,7 @@ contract('CardStackToken', function(accounts) {
       });
       await registry.register("CST", cst.address);
       await ledger.mintTokens(100);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 100, 1000000, NULL_ADDRESS);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
 
       await cst.setAllowTransfers(true);
       await checkBalance(senderAccount, 1);
@@ -50,7 +50,7 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst.address);
 
-      await cst.configure(0x0, 0x0, 0, 0, 0, 1000000, accounts[0]);
+      await cst.configure(0x0, 0x0, 0, 0, 1000000, accounts[0]);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
 

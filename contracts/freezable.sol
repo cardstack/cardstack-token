@@ -22,7 +22,7 @@ contract freezable is Ownable {
     _;
   }
 
-  function freezeAccount(address target, bool freeze) onlyOwner {
+  function freezeAccount(address target, bool freeze) public onlyOwner {
     frozenAccount[target] = freeze;
     if (!processedAccount[target]) {
       processedAccount[target] = true;
@@ -32,7 +32,7 @@ contract freezable is Ownable {
     FrozenFunds(target, freeze);
   }
 
-  function freezeToken(bool freeze) onlyOwner {
+  function freezeToken(bool freeze) public onlyOwner {
     frozenToken = freeze;
     FrozenToken(frozenToken);
   }
