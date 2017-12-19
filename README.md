@@ -32,11 +32,6 @@ For testing we leverage a local private blockchain [testrpc](https://github.com/
 npm run testrpc
 ```
 
-Additionally, we use the [Oraclize](http://www.oraclize.it/) service to create own own oracles from trusted web feeds. In order to test contracts that rely on these oracle functions we need to deploy a local Oraclize service within our private blockchain. After the testrpc has been started, start up the local Oraclize service:
-```
-npm run oraclize
-```
-
 then execute the tests:
 ```
 npm test
@@ -93,6 +88,10 @@ You can execute this script to get the purchase information for CST:
 truffle exec ./scripts/cst-buy-info.js --network=testrpc -r <Registry's address>
 ```
 
+You can execute this script to get information on how to release vested tokens for CST:
+```
+truffle exec ./scripts/cst-release-info.js --network=testrpc -r <Registry's address>
+```
 
 
 ### Rinkeby

@@ -62,33 +62,6 @@ contract('CardStackToken', function(accounts) {
       freezeEvent = await cst.freezeAccount(frozenAccount, true);
     });
 
-    /* removing sell until after phase 2 */
-    xit("cannot sell CST when frozen", async function() {
-      let sellerAccount = frozenAccount;
-      let startBalance = await web3.eth.getBalance(sellerAccount);
-      let sellAmount = 1;
-      startBalance = asInt(startBalance);
-
-      await assertRevert(async () => await cst.sell(sellAmount, {
-        from: sellerAccount,
-        gasPrice: GAS_PRICE
-      }));
-
-      let endBalance = await web3.eth.getBalance(sellerAccount);
-      let cstBalance = await cst.balanceOf(sellerAccount);
-      let totalInCirculation = await cst.totalInCirculation();
-
-      endBalance = asInt(endBalance);
-
-      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was only charged for gas"); // actually it will be charged gas, but that's hard to test with truffle
-      assert.equal(asInt(cstBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation was not updated");
-
-      assert.equal(freezeEvent.logs[0].event, 'FrozenFunds', 'the account freeze event is correct');
-      assert.equal(freezeEvent.logs[0].args.target, frozenAccount, 'the target value is correct');
-      assert.equal(freezeEvent.logs[0].args.frozen, true, 'the frozen value is correct');
-    });
-
     it("cannot buy CST when frozen", async function() {
       let buyerAccount = frozenAccount;
       let txnValue = web3.toWei(1, "ether");
@@ -400,34 +373,6 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
       assert.equal(asInt(totalInCirculation), 10, "The totalInCirculation is correct");
       assert.equal(asInt(recipientBalance), 10, "The balance is correct");
-    });
-
-    /* removing sell() until after phase 2 */
-    xit("cannot sell CST when frozen", async function() {
-      freezeEvent = await cst.freezeToken(true);
-
-      let sellerAccount = frozenAccount;
-      let startBalance = await web3.eth.getBalance(sellerAccount);
-      let sellAmount = 1;
-      startBalance = asInt(startBalance);
-
-      await assertRevert(async () => await cst.sell(sellAmount, {
-        from: sellerAccount,
-        gasPrice: GAS_PRICE
-      }));
-
-      let endBalance = await web3.eth.getBalance(sellerAccount);
-      let cstBalance = await ledger.balanceOf(sellerAccount);
-      let totalInCirculation = await ledger.totalInCirculation();
-
-      endBalance = asInt(endBalance);
-
-      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was only charged for gas"); // actually it will be charged gas, but that's hard to test with truffle
-      assert.equal(asInt(cstBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation was not updated");
-
-      assert.equal(freezeEvent.logs[0].event, 'FrozenToken', 'the account freeze event is correct');
-      assert.equal(freezeEvent.logs[0].args.frozen, true, 'the frozen value is correct');
     });
 
     it("cannot buy CST when frozen", async function() {

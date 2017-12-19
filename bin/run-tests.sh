@@ -67,7 +67,6 @@ OPT49=--account="0x7a72e9f3b1c9c2f312812500fe8e88de27f410ad1aa0cc46a465f4d798435
 OPT50=--account="0xad0238822521d44c58eb60a80b9afcdc1dc4ee4cbb089a00b31720d5b9286c60,100000000000000000000"
 
 rm -rf "$BUILD"
-rm -f "$DIR/../node_modules/ethereum-bridge/config/instance/*.json"
 
 function finish {
   kill -9 $TESTRPC_PID
