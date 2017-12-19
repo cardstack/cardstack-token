@@ -26,19 +26,19 @@ contract CstLedger is ITokenLedger, administratable {
   mapping (uint256 => address) public accountForIndex;
   mapping (address => bool) public accounts;
 
-  function totalTokens() constant returns (uint256) {
+  function totalTokens() public constant returns (uint256) {
     return _totalTokens;
   }
 
-  function totalInCirculation() constant returns (uint256) {
+  function totalInCirculation() public constant returns (uint256) {
     return _totalInCirculation;
   }
 
-  function balanceOf(address account) constant returns (uint256) {
+  function balanceOf(address account) public constant returns (uint256) {
     return _balanceOf[account];
   }
 
-  function mintTokens(uint256 amount) onlyAdmins {
+  function mintTokens(uint256 amount) public onlyAdmins {
     _totalTokens = _totalTokens.add(amount);
   }
 
@@ -50,7 +50,7 @@ contract CstLedger is ITokenLedger, administratable {
     }
   }
 
-  function transfer(address sender, address recipient, uint256 amount) onlyAdmins {
+  function transfer(address sender, address recipient, uint256 amount) public onlyAdmins {
     require(_balanceOf[sender] >= amount);
 
     _balanceOf[sender] = _balanceOf[sender].sub(amount);
@@ -58,14 +58,14 @@ contract CstLedger is ITokenLedger, administratable {
     makeAccountIterable(recipient);
   }
 
-  function creditAccount(address account, uint256 amount) onlyAdmins { // remove tokens
+  function creditAccount(address account, uint256 amount) public onlyAdmins { // remove tokens
     require(_balanceOf[account] >= amount);
 
     _totalInCirculation = _totalInCirculation.sub(amount);
     _balanceOf[account] = _balanceOf[account].sub(amount);
   }
 
-  function debitAccount(address account, uint256 amount) onlyAdmins { // add tokens
+  function debitAccount(address account, uint256 amount) public onlyAdmins { // add tokens
     _totalInCirculation = _totalInCirculation.add(amount);
     _balanceOf[account] = _balanceOf[account].add(amount);
     makeAccountIterable(account);

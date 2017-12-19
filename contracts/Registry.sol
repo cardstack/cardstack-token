@@ -9,6 +9,7 @@ import "./administratable.sol";
 import "./configurable.sol";
 import "./storable.sol";
 import "./freezable.sol";
+import "./ERC20.sol";
 
 contract Registry is Ownable, administratable, upgradeable {
   using SafeMath for uint256;
@@ -20,12 +21,14 @@ contract Registry is Ownable, administratable, upgradeable {
 
   event ContractRegistered(address indexed _contract, string _name);
   event ContractUpgraded(address indexed successor, address indexed predecessor, string name);
+  event StorageAdded(address indexed storageAddress, string name);
+  event StorageRemoved(address indexed storageAddress, string name);
 
-  function getContractHash(string name) constant unlessUpgraded returns (bytes32) {
+  function getContractHash(string name) public constant unlessUpgraded returns (bytes32) {
     return sha3(name);
   }
 
-  function register(string name, address contractAddress) onlySuperAdmins unlessUpgraded returns (bytes32) {
+  function register(string name, address contractAddress) public onlySuperAdmins unlessUpgraded returns (bytes32) {
     bytes32 hash = sha3(name);
     require(bytes(name).length > 0);
     require(contractAddress != 0x0);
@@ -52,7 +55,7 @@ contract Registry is Ownable, administratable, upgradeable {
     return hash;
   }
 
-  function upgradeContract(string name, address successor) onlySuperAdmins unlessUpgraded returns (bytes32) {
+  function upgradeContract(string name, address successor) public onlySuperAdmins unlessUpgraded returns (bytes32) {
     bytes32 hash = sha3(name);
     require(successor != 0x0);
     require(contractForHash[hash] != 0x0);
@@ -60,7 +63,15 @@ contract Registry is Ownable, administratable, upgradeable {
     address predecessor = contractForHash[hash];
     contractForHash[hash] = successor;
 
-    upgradeable(predecessor).upgradeTo(successor);
+    uint256 remainingContractBalance;
+    // we need https://github.com/ethereum/EIPs/issues/165
+    // to be able to see if a contract is ERC20 or not...
+    if (hash == sha3("cst")) {
+      remainingContractBalance = ERC20(predecessor).balanceOf(predecessor);
+    }
+
+    upgradeable(predecessor).upgradeTo(successor,
+                                       remainingContractBalance);
     upgradeable(successor).upgradedFrom(predecessor);
 
     address successorStorageAddress = storageForHash[storable(successor).getStorageNameHash()];
@@ -88,63 +99,22 @@ contract Registry is Ownable, administratable, upgradeable {
     return hash;
   }
 
-  function addStorage(string name, address storageAddress) onlySuperAdmins unlessUpgraded {
+  function addStorage(string name, address storageAddress) public onlySuperAdmins unlessUpgraded {
     bytes32 hash = sha3(name);
     storageForHash[hash] = storageAddress;
+
+    StorageAdded(storageAddress, name);
   }
 
-  function getStorage(string name) constant unlessUpgraded returns (address) {
+  function getStorage(string name) public constant unlessUpgraded returns (address) {
     return storageForHash[sha3(name)];
   }
 
-  function removeStorage(string name) onlySuperAdmins unlessUpgraded {
+  function removeStorage(string name) public onlySuperAdmins unlessUpgraded {
+    address storageAddress = storageForHash[sha3(name)];
     delete storageForHash[sha3(name)];
-  }
 
-  function setStorageUIntValue(string storageName, string fieldName, uint256 value) onlySuperAdmins unlessUpgraded {
-    address storageAddress = getStorage(storageName);
-    ExternalStorage(storageAddress).setUIntValue(fieldName, value);
+    StorageRemoved(storageAddress, name);
   }
-
-  function setMultiLedgerValue(string storageName, string fieldName, address primaryAddress, address secondaryAddress, uint256 value) onlySuperAdmins unlessUpgraded {
-    address storageAddress = getStorage(storageName);
-    ExternalStorage(storageAddress).setMultiLedgerValue(fieldName, primaryAddress, secondaryAddress, value);
-  }
-
-  function setLedgerValue(string storageName, string fieldName, address account, uint256 value) onlySuperAdmins unlessUpgraded {
-    address storageAddress = getStorage(storageName);
-    ExternalStorage(storageAddress).setLedgerValue(fieldName, account, value);
-  }
-
-  function setBooleanLedgerValue(string storageName, string fieldName, address account, bool value) onlySuperAdmins unlessUpgraded {
-    address storageAddress = getStorage(storageName);
-    ExternalStorage(storageAddress).setBooleanLedgerValue(fieldName, account, value);
-  }
-
-  function setStorageBytes32Value(string storageName, string fieldName, bytes32 value) onlySuperAdmins unlessUpgraded {
-    address storageAddress = getStorage(storageName);
-    ExternalStorage(storageAddress).setBytes32Value(fieldName, value);
-  }
-
-  function setStorageBytesValue(string storageName, string fieldName, bytes value) onlySuperAdmins unlessUpgraded {
-    address storageAddress = getStorage(storageName);
-    ExternalStorage(storageAddress).setBytesValue(fieldName, value);
-  }
-
-  function setStorageAddressValue(string storageName, string fieldName, address value) onlySuperAdmins unlessUpgraded {
-    address storageAddress = getStorage(storageName);
-    ExternalStorage(storageAddress).setAddressValue(fieldName, value);
-  }
-
-  function setStorageBooleanValue(string storageName, string fieldName, bool value) onlySuperAdmins unlessUpgraded {
-    address storageAddress = getStorage(storageName);
-    ExternalStorage(storageAddress).setBooleanValue(fieldName, value);
-  }
-
-  function setStorageIntValue(string storageName, string fieldName, int value) onlySuperAdmins unlessUpgraded {
-    address storageAddress = getStorage(storageName);
-    ExternalStorage(storageAddress).setIntValue(fieldName, value);
-  }
-
 }
 

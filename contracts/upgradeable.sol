@@ -8,6 +8,7 @@ contract upgradeable is administratable {
 
   event Upgraded(address indexed successor);
   event UpgradedFrom(address indexed predecessor);
+  event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
   modifier unlessUpgraded() {
     if (successor != 0x0) revert();
@@ -24,18 +25,21 @@ contract upgradeable is administratable {
     _;
   }
 
-  function isDeprecated() constant returns (bool) {
+  function isDeprecated() public constant returns (bool) {
     return successor != 0x0;
   }
 
-  function upgradeTo(address _successor) onlySuperAdmins unlessUpgraded returns (bool){
+  function upgradeTo(address _successor, uint256 remainingContractBalance) public onlySuperAdmins unlessUpgraded returns (bool){
     successor = _successor;
+    if (remainingContractBalance > 0) {
+      Transfer(this, _successor, remainingContractBalance);
+    }
 
     Upgraded(_successor);
     return true;
   }
 
-  function upgradedFrom(address _predecessor) onlySuperAdmins returns (bool) {
+  function upgradedFrom(address _predecessor) public onlySuperAdmins returns (bool) {
     require(_predecessor != 0x0);
 
     predecessor = _predecessor;

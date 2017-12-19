@@ -8,8 +8,7 @@ const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
   { name: "address", alias: "a", type: String },
-  { name: "maximumBalancePercentage", type: String },
-  { name: "maximumBalance", type: Number },
+  { name: "maxBalance", type: Number },
   { name: "registry", alias: "r", type: String },
   { name: "data", alias: "d", type: Boolean }
 ];
@@ -32,10 +31,7 @@ const usage = [
       alias: "a",
       description: "The address of the buyer to add"
     },{
-      name: "maximumBalancePercentage",
-      description: "(OPTIONAL) this is the maximum amount of CST that an account is allowed to posses expressed as a percentage of the buyerPool for the current phase of the token sale, e.g. \"--maximumBalancePercentage=0.2%\". If this value is not specified, the the balance limit will be the default balance limit that is configured for the CST contract. If this value is set to \"0%\" then the limit for this account will leverage the contract default."
-    },{
-      name: "maximumBalance",
+      name: "maxBalance",
       description: "(OPTIONAL) this is the maximum amount of CST that an account is allowed to posses expressed as number of CST"
     },{
       name: "registry",
@@ -66,27 +62,17 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
-  let buyerPool = await cst.cstBuyerPool();
-  buyerPool = buyerPool.toNumber();
 
-  let { address, maximumBalancePercentage, maximumBalance } = options;
-  let maxBalance;
-  if (maximumBalancePercentage) {
-    maximumBalancePercentage = parseFloat(maximumBalancePercentage.replace("%", "")) / 100;
-    maxBalance = Math.floor(buyerPool * maximumBalancePercentage);
-  } else if (maximumBalance && buyerPool) {
-    maxBalance = maximumBalance;
-    maximumBalancePercentage = Math.round(maximumBalance * 100 / buyerPool ) / 100;
-  }
+  let { address, maxBalance } = options;
 
   if (options.data) {
-    if (maximumBalancePercentage !== undefined && maximumBalancePercentage !== null) {
+    if (maxBalance !== undefined && maxBalance !== null) {
       let data = cst.contract.setCustomBuyer.getData(address, maxBalance);
       let estimatedGas = web3.eth.estimateGas({
         to: cst.address,
         data
       });
-      console.log(`Data for adding buyer "${address}" with maximumBalancePercentage ${maximumBalancePercentage * 100}% (${maxBalance} CST ) for CST ${cst.address}:`);
+      console.log(`Data for adding buyer "${address}" with maximum balance ${maxBalance} CST  for CST ${cst.address}:`);
       console.log(`\nAddress: ${cst.address}`);
       console.log(`Data: ${data}`);
       console.log(`Estimated gas: ${estimatedGas}`);
@@ -107,8 +93,8 @@ module.exports = async function(callback) {
   }
 
   try {
-    if (maximumBalancePercentage !== undefined && maximumBalancePercentage !== null) {
-      console.log(`Adding buyer "${address}" with maximumBalancePercentage ${maximumBalancePercentage * 100}% (${maxBalance} CST) for CST ${cst.address}...`);
+    if (maxBalance !== undefined && maxBalance !== null) {
+      console.log(`Adding buyer "${address}" with maximum balance ${maxBalance} CST for CST ${cst.address}...`);
       await cst.setCustomBuyer(address, maxBalance);
     } else {
       console.log(`Adding buyer "${address}" for CST ${cst.address}...`);

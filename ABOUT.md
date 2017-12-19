@@ -38,7 +38,7 @@ The CardSTack Team Smart Contract is used to distribute CST rewards amongst the 
     * The price for which the CST smart contract will buy CST (in units of wei)
     
 2. After the CST smart contract has been created, the CardStack Foundation can adjust any of the parameters that were initially specified during the creation of the CST smart contract including:
-    * Changing the CST sell cap
+    * Changing the CST circulation cap
     * Changing the price for which CST are bought or sold from the CST smart contract
     * Minting new CST tokens
     
@@ -59,7 +59,7 @@ The CardSTack Team Smart Contract is used to distribute CST rewards amongst the 
 
    b) A CardStack user uses ethers to purchase SSC from the SSC smart contract.
    
-      * the SSC smart contract will, behind the scenes, use the CST Custodial smart contract to perform a custodial purchase of CST with the ethers sent to the buy function of the SSC smart contract. There is a special cap on the amount of CST that are available to be purchased from the CST Custodial smart contract that is treated separately from the sell cap for direct CST purchases.
+      * the SSC smart contract will, behind the scenes, use the CST Custodial smart contract to perform a custodial purchase of CST with the ethers sent to the buy function of the SSC smart contract. There is a special cap on the amount of CST that are available to be purchased from the CST Custodial smart contract that is treated separately from the circulation cap for direct CST purchases.
          
       * The CST custodial start contract will use take CST purchased in this manner will then be presented to the CST->SSC exchange smart contract, so that the CST can be captured as part of the reward pool, and the CardStack user will be given SSC
 

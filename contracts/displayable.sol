@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
 contract displayable {
-  function bytes32ToString(bytes32 x) constant returns (string) {
+  function bytes32ToString(bytes32 x) public constant returns (string) {
     bytes memory bytesString = new bytes(32);
     uint256 charCount = 0;
     for (uint256 j = 0; j < 32; j++) {
