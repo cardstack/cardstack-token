@@ -279,40 +279,6 @@ contract('CardStackToken', function(accounts) {
       assert.equal(totalInCirculation, 2, "The CST total in circulation was updated correctly");
     });
 
-    /* removing sell until after phase 2 */
-    xit("allows selling of CST for successor contract", async function() {
-      let sellerAccount = accounts[2];
-      await cst2.upgradedFrom(cst1.address, { from: admin });
-      await cst2.buy({
-        from: sellerAccount,
-        value: web3.toWei(1, "ether"),
-        gasPrice: GAS_PRICE
-      });
-
-      let startWalletBalance = await web3.eth.getBalance(sellerAccount);
-      let sellAmount = 10;
-      startWalletBalance = asInt(startWalletBalance);
-
-      let txn = await cst2.sell(sellAmount, {
-        from: sellerAccount,
-        gasPrice: GAS_PRICE
-      });
-
-      assert.ok(txn.receipt);
-
-      let { cumulativeGasUsed } = txn.receipt;
-      let endWalletBalance = await web3.eth.getBalance(sellerAccount);
-      let endCstBalance = await cst2.balanceOf(sellerAccount);
-      let totalInCirculation = await cst2.totalInCirculation();
-
-      endWalletBalance = asInt(endWalletBalance);
-
-      assert.ok(cumulativeGasUsed < 50000, "Less than 50000 gas was used for the txn");
-      assert.ok(Math.abs(startWalletBalance + (sellAmount * web3.toWei(0.1, "ether")) - (GAS_PRICE * cumulativeGasUsed) - endWalletBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet credited correctly");
-      assert.equal(asInt(endCstBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was updated correctly");
-    });
-
     it("allows transfer of CST for successor contract", async function() {
       let senderAccount = accounts[3];
       let recipientAccount = accounts[4];
@@ -733,32 +699,6 @@ contract('CardStackToken', function(accounts) {
       assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
       assert.equal(cstBalance, 0, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
-    });
-
-    /* removing sell until after phase 2*/
-    xit("does not allow selling of CST when the contract has been upgraded", async function() {
-      await cst1.upgradeTo(cst2.address, 100, { from: admin });
-
-      let sellerAccount = accounts[2];
-      await ledger.debitAccount(sellerAccount, 10);
-      let startBalance = await web3.eth.getBalance(sellerAccount);
-      let sellAmount = 10;
-      startBalance = asInt(startBalance);
-
-      await assertRevert(async () => await cst1.sell(sellAmount, {
-        from: sellerAccount,
-        gasPrice: GAS_PRICE
-      }));
-
-      let endBalance = await web3.eth.getBalance(sellerAccount);
-      let cstBalance = await ledger.balanceOf(sellerAccount);
-      let totalInCirculation = await ledger.totalInCirculation();
-
-      endBalance = asInt(endBalance);
-
-      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The seller's account was changed for just gas");
-      assert.equal(cstBalance, 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation was not updated");
     });
 
     it("does not allow transfer of CST when the contract has been upgraded", async function() {
