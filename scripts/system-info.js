@@ -55,7 +55,7 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst, cstRegistry, cstFrozen, cstDeprecated, successor, cstStorageName, cstLedgerName, cstName,
-    cstSymbol, buyPriceWei, circulationCap, foundation, balanceWei, totalSupply, cstFrozenCount,
+    cstSymbol = "", buyPriceWei, circulationCap, foundation, balanceWei, totalSupply, cstFrozenCount,
     cstAdminCount, cstSuperAdminCount, cstBuyerCount, cstCustomBuyerCount, cstBalanceLimit,
     contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers, vestingCount, cstAvailable;
 
@@ -249,10 +249,10 @@ Storage (${storage.address})
       start date: ${moment.unix(startDate.toNumber()).format(dateFormat)}
       cliff date: ${moment.unix(cliffDate.toNumber()).format(dateFormat)}
       fully vested date: ${moment.unix(startDate.toNumber() + durationSec.toNumber()).format(dateFormat)}
-      fully vested amount: ${fullyVestedAmount} CST
-      vested amount as of now (${moment().format(dateFormat)}): ${vestedAmount} CST
-      vested amount already released: ${releasedAmount} CST
-      vested amount not yet released ${releasableAmount} CST
+      fully vested amount: ${fullyVestedAmount} ${cstSymbol}
+      vested amount as of now (${moment().format(dateFormat)}): ${vestedAmount} ${cstSymbol}
+      vested amount already released: ${releasedAmount} ${cstSymbol}
+      vested amount not yet released ${releasableAmount} ${cstSymbol}
       is revocable: ${isRevocable}\n`;
     }
 
@@ -269,13 +269,13 @@ Cardstack Token (${cst.address}):
   name: ${cstName}
   symbol: ${cstSymbol}
   buy price (ETH): ${web3.fromWei(buyPriceWei, "ether")}
-  circulation cap: ${circulationCap} CST
-  total tokens available: ${cstAvailable} CST
-  total unvested tokens: ${totalUnvested} CST
-  total vested and unreleased tokens: ${totalVestedUnreleased} CST
-  contribution minimum: ${contributionMinimum} CST
-  balance limit: ${cstBalanceLimit} CST
-  total supply: ${totalSupply} CST
+  circulation cap: ${circulationCap} ${cstSymbol}
+  total tokens available: ${cstAvailable} ${cstSymbol}
+  total unvested tokens: ${totalUnvested} ${cstSymbol}
+  total vested and unreleased tokens: ${totalVestedUnreleased} ${cstSymbol}
+  contribution minimum: ${contributionMinimum} ${cstSymbol}
+  balance limit: ${cstBalanceLimit} ${cstSymbol}
+  total supply: ${totalSupply} ${cstSymbol}
   balance (ETH): ${web3.fromWei(balanceWei, "ether")}
   foundation address: ${prettyAddress(foundation)}
 
@@ -306,14 +306,14 @@ Cardstack Token (${cst.address}):
       }
     }
     console.log(`
-  CST Vesting: ${vestingSchedules}`);
+  CST Vesting: ${vestingSchedules || '\n'}`);
     console.log(`  CST Buyers with custom balance limit:`);
     for (let i = 0; i < cstCustomBuyerCount; i++) {
       let address = await cst.customBuyerForIndex(i);
       let limit = await cst.customBuyerLimit(address);
       limit = limit.toNumber();
       if (limit) {
-        console.log(`    ${prettyAddress(address)}: ${limit} CST`);
+        console.log(`    ${prettyAddress(address)}: ${limit} ${cstSymbol}`);
       }
     }
     console.log(`
