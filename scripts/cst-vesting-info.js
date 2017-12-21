@@ -70,15 +70,17 @@ module.exports = async function(callback) {
     revokeDate,
     isRevocable ] = await cst.getVestingSchedule(address);
   let releasableAmount = cst.releasableAmount(address);
+  let cstSymbol = await cst.symbol();
+  cstSymbol = cstSymbol || '';
   console.log(`
   Vesting information for beneficiary: ${address} ${revokeDate.toNumber() > 0 ? "Revoked on " + moment.unix(revokeDate.toNumber()).format(dateFormat) : ""}
       start date: ${moment.unix(startDate.toNumber()).format(dateFormat)}
       cliff date: ${moment.unix(cliffDate.toNumber()).format(dateFormat)}
       fully vested date: ${moment.unix(startDate.toNumber() + durationSec.toNumber()).format(dateFormat)}
-      fully vested amount: ${fullyVestedAmount} CST
-      vested amount as of now (${moment().format(dateFormat)}): ${vestedAmount} CST
-      vested amount already released: ${releasedAmount} CST
-      vested amount not yet released ${releasableAmount} CST
+      fully vested amount: ${fullyVestedAmount} ${cstSymbol}
+      vested amount as of now (${moment().format(dateFormat)}): ${vestedAmount} ${cstSymbol}
+      vested amount already released: ${releasedAmount} ${cstSymbol}
+      vested amount not yet released ${releasableAmount} ${cstSymbol}
       is revocable: ${isRevocable}
   `);
 
