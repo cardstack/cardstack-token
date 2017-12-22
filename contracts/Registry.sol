@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.18;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -30,25 +30,25 @@ contract Registry is Ownable, administratable, upgradeable {
   event StorageRemoved(address indexed storageAddress, string name);
   event AddrChanged(bytes32 indexed node, address a);
 
-  function() {
+  function() public {
     revert();
   }
 
-  function supportsInterface(bytes4 interfaceId) constant returns (bool) {
+  function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
     return interfaceId == ADDR_INTERFACE_ID ||
            interfaceId == INTERFACE_META_ID;
   }
 
-  function addr(bytes32 node) constant returns (address) {
+  function addr(bytes32 node) public view returns (address) {
     return contractForHash[hashForNamehash[node]];
   }
 
-  function getContractHash(string name) public constant unlessUpgraded returns (bytes32) {
-    return sha3(name);
+  function getContractHash(string name) public view unlessUpgraded returns (bytes32) {
+    return keccak256(name);
   }
 
   function register(string name, address contractAddress, bytes32 namehash) public onlySuperAdmins unlessUpgraded returns (bool) {
-    bytes32 hash = sha3(name);
+    bytes32 hash = keccak256(name);
     require(bytes(name).length > 0);
     require(contractAddress != 0x0);
     require(contractForHash[hash] == 0x0);
@@ -86,7 +86,7 @@ contract Registry is Ownable, administratable, upgradeable {
   }
 
   function upgradeContract(string name, address successor) public onlySuperAdmins unlessUpgraded returns (bytes32) {
-    bytes32 hash = sha3(name);
+    bytes32 hash = keccak256(name);
     require(successor != 0x0);
     require(contractForHash[hash] != 0x0);
 
@@ -96,7 +96,7 @@ contract Registry is Ownable, administratable, upgradeable {
     uint256 remainingContractBalance;
     // we need https://github.com/ethereum/EIPs/issues/165
     // to be able to see if a contract is ERC20 or not...
-    if (hash == sha3("cst")) {
+    if (hash == keccak256("cst")) {
       remainingContractBalance = ERC20(predecessor).balanceOf(predecessor);
     }
 
@@ -134,19 +134,19 @@ contract Registry is Ownable, administratable, upgradeable {
   }
 
   function addStorage(string name, address storageAddress) public onlySuperAdmins unlessUpgraded {
-    bytes32 hash = sha3(name);
+    bytes32 hash = keccak256(name);
     storageForHash[hash] = storageAddress;
 
     StorageAdded(storageAddress, name);
   }
 
-  function getStorage(string name) public constant unlessUpgraded returns (address) {
-    return storageForHash[sha3(name)];
+  function getStorage(string name) public view unlessUpgraded returns (address) {
+    return storageForHash[keccak256(name)];
   }
 
   function removeStorage(string name) public onlySuperAdmins unlessUpgraded {
-    address storageAddress = storageForHash[sha3(name)];
-    delete storageForHash[sha3(name)];
+    address storageAddress = storageForHash[keccak256(name)];
+    delete storageForHash[keccak256(name)];
 
     StorageRemoved(storageAddress, name);
   }

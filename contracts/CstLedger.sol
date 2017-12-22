@@ -1,18 +1,18 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.18;
 
 import "./administratable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract ITokenLedger {
-  function totalTokens() constant returns (uint256);
-  function totalInCirculation() constant returns (uint256);
-  function balanceOf(address account) constant returns (uint256);
-  function mintTokens(uint256 amount);
-  function transfer(address sender, address reciever, uint256 amount);
-  function creditAccount(address account, uint256 amount);
-  function debitAccount(address account, uint256 amount);
-  function addAdmin(address admin);
-  function removeAdmin(address admin);
+  function totalTokens() public view returns (uint256);
+  function totalInCirculation() public view returns (uint256);
+  function balanceOf(address account) public view returns (uint256);
+  function mintTokens(uint256 amount) public;
+  function transfer(address sender, address reciever, uint256 amount) public;
+  function creditAccount(address account, uint256 amount) public;
+  function debitAccount(address account, uint256 amount) public;
+  function addAdmin(address admin) public;
+  function removeAdmin(address admin) public;
 }
 
 contract CstLedger is ITokenLedger, administratable {
@@ -26,15 +26,15 @@ contract CstLedger is ITokenLedger, administratable {
   mapping (uint256 => address) public accountForIndex;
   mapping (address => bool) public accounts;
 
-  function totalTokens() public constant returns (uint256) {
+  function totalTokens() public view returns (uint256) {
     return _totalTokens;
   }
 
-  function totalInCirculation() public constant returns (uint256) {
+  function totalInCirculation() public view returns (uint256) {
     return _totalInCirculation;
   }
 
-  function balanceOf(address account) public constant returns (uint256) {
+  function balanceOf(address account) public view returns (uint256) {
     return _balanceOf[account];
   }
 

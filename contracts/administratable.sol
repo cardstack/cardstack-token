@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.18;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -30,7 +30,7 @@ contract administratable is Ownable {
     _;
   }
 
-  function addSuperAdmin(address admin) onlyOwner {
+  function addSuperAdmin(address admin) public onlyOwner {
     superAdmins[admin] = true;
     if (!processedSuperAdmin[admin]) {
       processedSuperAdmin[admin] = true;
@@ -41,13 +41,13 @@ contract administratable is Ownable {
     AddSuperAdmin(admin);
   }
 
-  function removeSuperAdmin(address admin) onlyOwner {
+  function removeSuperAdmin(address admin) public onlyOwner {
     superAdmins[admin] = false;
 
     RemoveSuperAdmin(admin);
   }
 
-  function addAdmin(address admin) onlySuperAdmins {
+  function addAdmin(address admin) public onlySuperAdmins {
     admins[admin] = true;
     if (!processedAdmin[admin]) {
       processedAdmin[admin] = true;
@@ -58,7 +58,7 @@ contract administratable is Ownable {
     AddAdmin(admin);
   }
 
-  function removeAdmin(address admin) onlySuperAdmins {
+  function removeAdmin(address admin) public onlySuperAdmins {
     admins[admin] = false;
 
     RemoveAdmin(admin);

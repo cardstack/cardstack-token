@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.18;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -98,16 +98,16 @@ contract CardStackToken is ERC20,
   }
 
   /* This unnamed function is called whenever someone tries to send ether to it */
-  function () {
+  function () public {
     revert();     // Prevents accidental sending of ether
   }
 
-  function getLedgerNameHash() public constant returns (bytes32) {
-    return sha3(ledgerName);
+  function getLedgerNameHash() public view returns (bytes32) {
+    return keccak256(ledgerName);
   }
 
-  function getStorageNameHash() public constant returns (bytes32) {
-    return sha3(storageName);
+  function getStorageNameHash() public view returns (bytes32) {
+    return keccak256(storageName);
   }
 
   function configure(bytes32 _tokenName,
@@ -158,27 +158,27 @@ contract CardStackToken is ERC20,
     return true;
   }
 
-  function name() public constant unlessUpgraded returns(string) {
+  function name() public view unlessUpgraded returns(string) {
     return bytes32ToString(externalStorage.getTokenName());
   }
 
-  function symbol() public constant unlessUpgraded returns(string) {
+  function symbol() public view unlessUpgraded returns(string) {
     return bytes32ToString(externalStorage.getTokenSymbol());
   }
 
-  function totalInCirculation() public constant unlessFrozen unlessUpgraded returns(uint256) {
+  function totalInCirculation() public view unlessFrozen unlessUpgraded returns(uint256) {
     return tokenLedger.totalInCirculation().add(totalUnvestedAndUnreleasedTokens());
   }
 
-  function totalSupply() public constant unlessFrozen unlessUpgraded returns(uint256) {
+  function totalSupply() public view unlessFrozen unlessUpgraded returns(uint256) {
     return tokenLedger.totalTokens();
   }
 
-  function tokensAvailable() public constant unlessFrozen unlessUpgraded returns(uint256) {
+  function tokensAvailable() public view unlessFrozen unlessUpgraded returns(uint256) {
     return totalSupply().sub(totalInCirculation());
   }
 
-  function balanceOf(address account) public constant unlessUpgraded unlessFrozen returns (uint256) {
+  function balanceOf(address account) public view unlessUpgraded unlessFrozen returns (uint256) {
     address thisAddress = this;
     if (thisAddress == account) {
       return tokensAvailable();
@@ -260,7 +260,7 @@ contract CardStackToken is ERC20,
     return true;
   }
 
-  function allowance(address owner, address spender) public constant unlessUpgraded returns (uint256) {
+  function allowance(address owner, address spender) public view unlessUpgraded returns (uint256) {
     return externalStorage.getAllowance(owner, spender);
   }
 
@@ -355,24 +355,24 @@ contract CardStackToken is ERC20,
     return true;
   }
 
-  function releasableAmount(address beneficiary) public constant unlessUpgraded returns (uint256) {
+  function releasableAmount(address beneficiary) public view unlessUpgraded returns (uint256) {
     return externalStorage.releasableAmount(beneficiary);
   }
 
-  function totalUnvestedAndUnreleasedTokens() public constant unlessUpgraded returns (uint256) {
+  function totalUnvestedAndUnreleasedTokens() public view unlessUpgraded returns (uint256) {
     return externalStorage.getTotalUnvestedAndUnreleasedTokens();
   }
 
-  function vestingMappingSize() public constant unlessUpgraded returns (uint256) {
+  function vestingMappingSize() public view unlessUpgraded returns (uint256) {
     return externalStorage.vestingMappingSize();
   }
 
-  function vestingBeneficiaryForIndex(uint256 index) public constant unlessUpgraded returns (address) {
+  function vestingBeneficiaryForIndex(uint256 index) public view unlessUpgraded returns (address) {
     return externalStorage.vestingBeneficiaryForIndex(index);
   }
 
   function getVestingSchedule(address _beneficiary) public
-                                                    constant unlessUpgraded returns (uint256 startDate,
+                                                    view unlessUpgraded returns (uint256 startDate,
                                                                                      uint256 cliffDate,
                                                                                      uint256 durationSec,
                                                                                      uint256 fullyVestedAmount,
@@ -439,8 +439,8 @@ contract CardStackToken is ERC20,
     return true;
   }
 
-  function setWhitelistedTransferer(address transferer, bool allowTransfers) public onlySuperAdmins unlessUpgraded returns (bool) {
-    whitelistedTransferer[transferer] = allowTransfers;
+  function setWhitelistedTransferer(address transferer, bool _allowTransfers) public onlySuperAdmins unlessUpgraded returns (bool) {
+    whitelistedTransferer[transferer] = _allowTransfers;
     if (!processedWhitelistedTransferer[transferer]) {
       processedWhitelistedTransferer[transferer] = true;
       whitelistedTransfererForIndex[totalTransferWhitelistMapping] = transferer;

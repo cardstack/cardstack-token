@@ -73,7 +73,7 @@ function finish {
 }
 
 for filename in $TEST_DIR/*-test.js; do
-  $TESTRPC --gasLimit 6100000 \
+  $TESTRPC --gasLimit 6721975 --gasPrice 20000000000 \
            $OPT1 \
            $OPT2 \
            $OPT3 \

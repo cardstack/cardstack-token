@@ -1,4 +1,10 @@
 module.exports = {
+  solc: {
+    optimizer: {
+      enabled: true,
+      runs: 200
+    }
+  },
   networks: {
     // this is for auotmated testing and development
     development: {

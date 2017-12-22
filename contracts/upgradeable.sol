@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.18;
 
 import "./administratable.sol";
 
@@ -25,7 +25,7 @@ contract upgradeable is administratable {
     _;
   }
 
-  function isDeprecated() public constant returns (bool) {
+  function isDeprecated() public view returns (bool) {
     return successor != 0x0;
   }
 
