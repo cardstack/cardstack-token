@@ -5,6 +5,7 @@ const Registry = artifacts.require("./Registry.sol");
 const {
   NULL_ADDRESS,
   CST_DEPLOY_GAS_LIMIT,
+  CARDSTACK_NAMEHASH,
   assertRevert,
   asInt
 } = require("../lib/utils");
@@ -31,7 +32,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await ledger.mintTokens(100);
       await ledger.debitAccount(grantor, 50);
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);

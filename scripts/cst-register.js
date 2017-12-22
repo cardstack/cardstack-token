@@ -1,4 +1,4 @@
-const { CST_NAME } = require("../lib/constants");
+const { CST_NAME, CARDSTACK_NAMEHASH } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 let RegistryContract = artifacts.require("./Registry.sol");
@@ -57,7 +57,7 @@ module.exports = async function(callback) {
   console.log(`Using registry at ${registry.address}`);
 
   if (options.data) {
-    let data = registry.contract.register.getData(CST_NAME, cstAddress);
+    let data = registry.contract.register.getData(CST_NAME, cstAddress, CARDSTACK_NAMEHASH);
     let estimatedGas = web3.eth.estimateGas({
       to: registry.address,
       data
@@ -73,7 +73,7 @@ module.exports = async function(callback) {
   console.log(`Registering contract ${cstAddress}...`);
 
   try {
-    await registry.register(CST_NAME, cstAddress);
+    await registry.register(CST_NAME, cstAddress, CARDSTACK_NAMEHASH);
     console.log(`\nRegistered CST (${cstAddress}) as contract "${CST_NAME}" with registry (${registry.address})`);
   } catch (err) {
     console.error(`\nError registering CST contract with registry (${registry.address}, ${err.message}`);
