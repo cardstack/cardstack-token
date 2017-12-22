@@ -2,6 +2,8 @@ const {
   NULL_ADDRESS,
   GAS_PRICE,
   CST_DEPLOY_GAS_LIMIT,
+  CARDSTACK_NAMEHASH,
+  STANLEYNICKEL_NAMEHASH,
   assertRevert,
   asInt
 } = require("../lib/utils");
@@ -50,19 +52,23 @@ contract('Registry', function(accounts) {
     });
 
     it("allows the registry superadmin to add a contract to the registry", async function() {
-      let txn = await registry.register("cst", cst1.address, { from: superAdmin });
+      let txn = await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
 
       let hash = await registry.getContractHash("cst");
       let count = await registry.numContracts();
       let contractName = await registry.contractNameForIndex(0);
       let contractAddress = await registry.contractForHash(hash);
+      let namehash = await registry.namehashForHash(hash);
+      let ensResolvedAddr = await registry.addr(CARDSTACK_NAMEHASH);
 
-      assert.equal(txn.logs.length, 3, 'the correct number of events was fired');
+      assert.equal(txn.logs.length, 4, 'the correct number of events was fired');
 
       assert.equal(count, 1, "contract count is correct");
       assert.equal(contractName.toString(), "cst", "contract name is correct");
       assert.equal(contractAddress.toString(), cst1.address, "The contract address is correct");
       assert.equal(hash, web3.sha3("cst"), "The contract hash is correct");
+      assert.equal(namehash, CARDSTACK_NAMEHASH, "The contract namehash is correct");
+      assert.equal(ensResolvedAddr, cst1.address, "The ENS resolved contract address is correct");
 
       assert.equal(txn.logs[0].event, "AddAdmin");
       assert.equal(txn.logs[0].args.admin, cst1.address, "the CST contract is added as an admin of storage");
@@ -73,12 +79,16 @@ contract('Registry', function(accounts) {
       assert.equal(txn.logs[2].event, "ContractRegistered");
       assert.equal(txn.logs[2].args._contract, cst1.address, "the contract address is correct");
       assert.equal(txn.logs[2].args._name, "cst", "the contract name is correct");
+
+      assert.equal(txn.logs[3].event, "AddrChanged");
+      assert.equal(txn.logs[3].args.node, CARDSTACK_NAMEHASH, "the namehash is correct");
+      assert.equal(txn.logs[3].args.a, cst1.address, "the contract address is correct");
     });
 
     it("does not allow a non-owner to register a contract", async function() {
       let nonOwner = accounts[3];
 
-      await assertRevert(async () => await registry.register("cst", cst1.address, { from: nonOwner }));
+      await assertRevert(async () => await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: nonOwner }));
 
       let hash = web3.sha3("cst");
       let count = await registry.numContracts();
@@ -91,9 +101,60 @@ contract('Registry', function(accounts) {
     });
 
     it("does not allow a contract to be registered more than once", async function() {
-      await registry.register("cst", cst1.address, { from: superAdmin });
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
 
-      await assertRevert(async () => await registry.register("cst", cst1.address, { from: superAdmin }));
+      await assertRevert(async () => await registry.register("cst", cst1.address, STANLEYNICKEL_NAMEHASH, { from: superAdmin }));
+
+      let hash = web3.sha3("cst");
+      let count = await registry.numContracts();
+      let contractName = await registry.contractNameForIndex(0);
+      let contractAddress = await registry.contractForHash(hash);
+      let isRegistrySuperAdmin = await cst1.superAdmins(registry.address);
+      let superAdminCount = await cst1.totalSuperAdminsMapping();
+      let firstSuperAdmin = await cst1.superAdminsForIndex(0);
+
+      assert.equal(count, 1, "contract count is correct");
+      assert.equal(contractName.toString(), "cst", "contract name is correct");
+      assert.equal(contractAddress.toString(), cst1.address, "The contract address is correct");
+      assert.ok(isRegistrySuperAdmin, "the registry is the super admin for the cst contract");
+      assert.equal(superAdminCount, 1, "the super admin count is correct for the cst contract");
+      assert.equal(firstSuperAdmin, registry.address, "the super admin by index is correct for the cst contract");
+    });
+
+    it("allows a contract to be registered without a namehash", async function() {
+      let txn = await registry.register("cst", cst1.address, NULL_ADDRESS, { from: superAdmin });
+
+      let hash = await registry.getContractHash("cst");
+      let count = await registry.numContracts();
+      let contractName = await registry.contractNameForIndex(0);
+      let contractAddress = await registry.contractForHash(hash);
+      let namehash = await registry.namehashForHash(hash);
+      let ensResolvedAddr = await registry.addr(CARDSTACK_NAMEHASH);
+
+      assert.equal(txn.logs.length, 3, 'the correct number of events was fired');
+
+      assert.equal(count, 1, "contract count is correct");
+      assert.equal(contractName.toString(), "cst", "contract name is correct");
+      assert.equal(contractAddress.toString(), cst1.address, "The contract address is correct");
+      assert.equal(hash, web3.sha3("cst"), "The contract hash is correct");
+      assert.equal(namehash, "0x0000000000000000000000000000000000000000000000000000000000000000", "The contract namehash is 0x0");
+      assert.equal(ensResolvedAddr, NULL_ADDRESS, "The ENS resolved contract address is 0x0");
+
+      assert.equal(txn.logs[0].event, "AddAdmin");
+      assert.equal(txn.logs[0].args.admin, cst1.address, "the CST contract is added as an admin of storage");
+
+      assert.equal(txn.logs[1].event, "AddAdmin");
+      assert.equal(txn.logs[1].args.admin, cst1.address, "the CST contract is added as an admin of ledger");
+
+      assert.equal(txn.logs[2].event, "ContractRegistered");
+      assert.equal(txn.logs[2].args._contract, cst1.address, "the contract address is correct");
+      assert.equal(txn.logs[2].args._name, "cst", "the contract name is correct");
+    });
+
+    it("does not allow a contract to be registered with a duplicate namehash", async function() {
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+
+      await assertRevert(async () => await registry.register("cst2", cst2.address, CARDSTACK_NAMEHASH, { from: superAdmin }));
 
       let hash = web3.sha3("cst");
       let count = await registry.numContracts();
@@ -112,7 +173,7 @@ contract('Registry', function(accounts) {
     });
 
     it("allows the registry superAdmin to upgrade a contract", async function() {
-      await registry.register("cst", cst1.address, { from: superAdmin });
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
 
       let txn = await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
 
@@ -120,6 +181,7 @@ contract('Registry', function(accounts) {
       let count = await registry.numContracts();
       let contractName = await registry.contractNameForIndex(0);
       let contractAddress = await registry.contractForHash(hash);
+      let ensResolvedAddr = await registry.addr(CARDSTACK_NAMEHASH);
 
       let cst1Predecessor = await cst1.predecessor();
       let cst1Successor = await cst1.successor();
@@ -133,6 +195,7 @@ contract('Registry', function(accounts) {
       assert.equal(contractName.toString(), "cst", "contract name is correct");
       assert.equal(contractAddress.toString(), cst2.address, "The contract address is correct");
       assert.equal(hash, web3.sha3("cst"), "The contract hash is correct");
+      assert.equal(ensResolvedAddr, cst2.address, "The ENS resolved contract address is correct");
 
       assert.equal(cst1Predecessor, NULL_ADDRESS, "the address is correct");
       assert.equal(cst1Successor, cst2.address, "the address is correct");
@@ -151,10 +214,62 @@ contract('Registry', function(accounts) {
       assert.equal(asInt(event.args._value), 100, "The amount minted is correct");
       assert.equal(event.args._from, cst1.address, "The from address is correct");
       assert.equal(event.args._to, cst2.address, "The to address is correct");
+
+      event = txn.logs.find(event => event.event === "AddrChanged");
+      assert.equal(event.event, "AddrChanged");
+      assert.equal(event.args.node, CARDSTACK_NAMEHASH, "the namehash is correct");
+      assert.equal(event.args.a, cst2.address, "the contract address is correct");
+    });
+
+    it("allows the registry superAdmin to upgrade a contract that doesnt have a namehash", async function() {
+      await registry.register("cst", cst1.address, NULL_ADDRESS, { from: superAdmin });
+
+      let txn = await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
+
+      let hash = await registry.getContractHash("cst");
+      let count = await registry.numContracts();
+      let contractName = await registry.contractNameForIndex(0);
+      let contractAddress = await registry.contractForHash(hash);
+      let ensResolvedAddr = await registry.addr(CARDSTACK_NAMEHASH);
+
+      let cst1Predecessor = await cst1.predecessor();
+      let cst1Successor = await cst1.successor();
+      let cst2Predecessor = await cst2.predecessor();
+      let cst2Successor = await cst2.successor();
+
+
+      assert.ok(txn.logs.length > 0, 'an event was fired');
+
+      assert.equal(count, 1, "contract count is correct");
+      assert.equal(contractName.toString(), "cst", "contract name is correct");
+      assert.equal(contractAddress.toString(), cst2.address, "The contract address is correct");
+      assert.equal(hash, web3.sha3("cst"), "The contract hash is correct");
+      assert.equal(ensResolvedAddr, NULL_ADDRESS, "The ENS resolved contract address is correct");
+
+      assert.equal(cst1Predecessor, NULL_ADDRESS, "the address is correct");
+      assert.equal(cst1Successor, cst2.address, "the address is correct");
+      assert.equal(cst2Predecessor, cst1.address, "the address is correct");
+      assert.equal(cst2Successor, NULL_ADDRESS, "the address is correct");
+
+      let event = txn.logs.find(event => event.event === "ContractUpgraded");
+
+      assert.equal(event.event, "ContractUpgraded");
+      assert.equal(event.args.predecessor, cst1.address, "the contract address is correct");
+      assert.equal(event.args.successor, cst2.address, "the contract address is correct");
+      assert.equal(event.args.name, "cst", "the contract name is correct");
+
+      event = txn.logs.find(event => event.event === "Transfer");
+      assert.equal(event.event, "Transfer", "The event type is correct");
+      assert.equal(asInt(event.args._value), 100, "The amount minted is correct");
+      assert.equal(event.args._from, cst1.address, "The from address is correct");
+      assert.equal(event.args._to, cst2.address, "The to address is correct");
+
+      event = txn.logs.find(event => event.event === "AddrChanged");
+      assert.isNotOk(event, "No ENS AddrChanged event was fired");
     });
 
     it("does not allow a non-owner to upgrade a contract", async function()  {
-      await registry.register("cst", cst1.address, { from: superAdmin });
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
 
       let nonOwner = accounts[3];
 
@@ -181,7 +296,7 @@ contract('Registry', function(accounts) {
     });
 
     it("does not allow a non-super-admin to upgrade a contract", async function()  {
-      await registry.register("cst", cst1.address, { from: superAdmin });
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
 
       let nonSuperAdmin = accounts[11];
 
@@ -232,7 +347,7 @@ contract('Registry', function(accounts) {
     });
 
     it("can preserve contract state through a contract upgrade", async function() {
-      await registry.register("cst", cst1.address, { from: superAdmin });
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
       await cst1.configure(web3.toHex("cst"),
                            web3.toHex("CST"),
                            web3.toWei(0.1, "ether"),
@@ -296,7 +411,7 @@ contract('Registry', function(accounts) {
       let recipient = accounts[37];
 
       await ledger.debitAccount(grantor, 50);
-      await registry.register("cst", cst1.address, { from: superAdmin });
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
       await cst1.approve(spender, 10, { from: grantor });
 
       let allowance = await cst1.allowance(grantor, spender);
@@ -370,7 +485,7 @@ contract('Registry', function(accounts) {
       let numContracts = await registry.numContracts();
       assert.equal(numContracts, 0, "there are no contracts");
 
-      await assertRevert(async () => await registry.register("Stanley Nickel", cst1.address, { from: nonSuperAdmin }));
+      await assertRevert(async () => await registry.register("Stanley Nickel", STANLEYNICKEL_NAMEHASH, cst1.address, { from: nonSuperAdmin }));
       numContracts = await registry.numContracts();
       assert.equal(numContracts, 0, "there are still no contracts");
     });
@@ -417,12 +532,51 @@ contract('Registry', function(accounts) {
       assert.equal(upgradedFromTxn.logs[0].args.predecessor, registry.address);
     });
 
+    it("fires revert when the default function is called", async function() {
+      await assertRevert(async () => await registry.sendTransaction());
+    });
+
+    it("supports the EIP-137 interface-meta interface ID", async function() {
+      let supportsInterface = await registry.supportsInterface("0x01ffc9a7");
+      assert.isOk(supportsInterface, "The interface ID is supported");
+    });
+
+    it("supports the EIP-137 address interface ID", async function() {
+      let supportsInterface = await registry.supportsInterface("0x3b3b57de");
+      assert.isOk(supportsInterface, "The interface ID is supported");
+    });
+
+    it("doesnt support the EIP-137 content interface ID", async function() {
+      let supportsInterface = await registry.supportsInterface("0xd8389dc5");
+      assert.isNotOk(supportsInterface, "The interface ID is not supported");
+    });
+
+    it("doesnt support the EIP-137 name interface ID", async function() {
+      let supportsInterface = await registry.supportsInterface("0x691f3431");
+      assert.isNotOk(supportsInterface, "The interface ID is not supported");
+    });
+
+    it("doesnt support the EIP-137 ABI interface ID", async function() {
+      let supportsInterface = await registry.supportsInterface("0x2203ab56");
+      assert.isNotOk(supportsInterface, "The interface ID is not supported");
+    });
+
+    it("doesnt support the EIP-137 pubkey interface ID", async function() {
+      let supportsInterface = await registry.supportsInterface("0xc8690233");
+      assert.isNotOk(supportsInterface, "The interface ID is not supported");
+    });
+
+    it("doesnt support the EIP-137 text interface ID", async function() {
+      let supportsInterface = await registry.supportsInterface("0x59d1d43c");
+      assert.isNotOk(supportsInterface, "The interface ID is not supported");
+    });
+
     describe("unlessUpgraded", function() {
       beforeEach(async function() {
         let newRegistry = await Registry.new();
 
         // we do this so that we can test upgradeContract
-        await registry.register("cst", cst1.address, { from: superAdmin });
+        await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
 
         await registry.upgradeTo(newRegistry.address, 0);
         await newRegistry.upgradedFrom(registry.address);
@@ -433,7 +587,7 @@ contract('Registry', function(accounts) {
         let numContracts = await registry.numContracts();
         assert.equal(numContracts, 1, "there is one contract");
 
-        await assertRevert(async () => await registry.register("Stanley Nickel", cst2.address, { from: superAdmin }));
+        await assertRevert(async () => await registry.register("Stanley Nickel", cst2.address, STANLEYNICKEL_NAMEHASH, { from: superAdmin }));
         numContracts = await registry.numContracts();
         assert.equal(numContracts, 1, "there is still one contract");
       });
@@ -454,7 +608,6 @@ contract('Registry', function(accounts) {
       it("does not allow superAdmin to getStorage if registry is upgraded", async function() {
         await assertRevert(async () => await registry.getStorage("cstStorage", { from: superAdmin }));
       });
-
     });
   });
 });

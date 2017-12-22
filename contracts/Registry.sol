@@ -14,28 +14,53 @@ import "./ERC20.sol";
 contract Registry is Ownable, administratable, upgradeable {
   using SafeMath for uint256;
 
+  bytes4 constant INTERFACE_META_ID = 0x01ffc9a7;
+  bytes4 constant ADDR_INTERFACE_ID = 0x3b3b57de;
+
   uint256 public numContracts;
   mapping(bytes32 => address) public storageForHash;
   mapping(bytes32 => address) public contractForHash;
+  mapping(bytes32 => bytes32) public hashForNamehash;
+  mapping(bytes32 => bytes32) public namehashForHash;
   mapping(uint256 => string) public contractNameForIndex;
 
-  event ContractRegistered(address indexed _contract, string _name);
-  event ContractUpgraded(address indexed successor, address indexed predecessor, string name);
+  event ContractRegistered(address indexed _contract, string _name, bytes32 namehash);
+  event ContractUpgraded(address indexed successor, address indexed predecessor, string name, bytes32 namehash);
   event StorageAdded(address indexed storageAddress, string name);
   event StorageRemoved(address indexed storageAddress, string name);
+  event AddrChanged(bytes32 indexed node, address a);
+
+  function() {
+    revert();
+  }
+
+  function supportsInterface(bytes4 interfaceId) constant returns (bool) {
+    return interfaceId == ADDR_INTERFACE_ID ||
+           interfaceId == INTERFACE_META_ID;
+  }
+
+  function addr(bytes32 node) constant returns (address) {
+    return contractForHash[hashForNamehash[node]];
+  }
 
   function getContractHash(string name) public constant unlessUpgraded returns (bytes32) {
     return sha3(name);
   }
 
-  function register(string name, address contractAddress) public onlySuperAdmins unlessUpgraded returns (bytes32) {
+  function register(string name, address contractAddress, bytes32 namehash) public onlySuperAdmins unlessUpgraded returns (bool) {
     bytes32 hash = sha3(name);
     require(bytes(name).length > 0);
     require(contractAddress != 0x0);
     require(contractForHash[hash] == 0x0);
+    require(hashForNamehash[namehash] == 0x0);
 
     contractNameForIndex[numContracts] = name;
     contractForHash[hash] = contractAddress;
+
+    if (namehash != 0x0) {
+      hashForNamehash[namehash] = hash;
+      namehashForHash[hash] = namehash;
+    }
 
     numContracts = numContracts.add(1);
 
@@ -51,8 +76,13 @@ contract Registry is Ownable, administratable, upgradeable {
 
     configurable(contractAddress).configureFromStorage();
 
-    ContractRegistered(contractAddress, name);
-    return hash;
+    ContractRegistered(contractAddress, name, namehash);
+
+    if (namehash != 0x0) {
+      AddrChanged(namehash, contractAddress);
+    }
+
+    return true;
   }
 
   function upgradeContract(string name, address successor) public onlySuperAdmins unlessUpgraded returns (bytes32) {
@@ -95,7 +125,11 @@ contract Registry is Ownable, administratable, upgradeable {
 
     configurable(successor).configureFromStorage();
 
-    ContractUpgraded(successor, predecessor, name);
+    if (namehashForHash[hash] != 0x0) {
+      AddrChanged(namehashForHash[hash], successor);
+    }
+
+    ContractUpgraded(successor, predecessor, name, namehashForHash[hash]);
     return hash;
   }
 

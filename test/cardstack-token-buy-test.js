@@ -4,6 +4,7 @@ const {
   MAX_FAILED_TXN_GAS,
   NULL_ADDRESS,
   CST_DEPLOY_GAS_LIMIT,
+  CARDSTACK_NAMEHASH,
   asInt,
   assertRevert,
   checkBalance
@@ -32,7 +33,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
 
       for (let i = 0; i < accounts.length; i++) {
         await checkBalance(accounts[i], 1);

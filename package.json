@@ -18,6 +18,7 @@
     "bluebird": "^3.5.0",
     "command-line-args": "^4.0.7",
     "command-line-usage": "^4.0.1",
+    "eth-ens-namehash": "^2.0.8",
     "ethereum-bridge": "^0.5.4-alpha-1",
     "ganache-cli": "^6.0.3",
     "lodash": "^4.17.4",

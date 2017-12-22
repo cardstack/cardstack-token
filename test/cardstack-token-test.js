@@ -4,6 +4,7 @@ const {
   ROUNDING_ERROR_WEI,
   NULL_ADDRESS,
   CST_DEPLOY_GAS_LIMIT,
+  CARDSTACK_NAMEHASH,
   asInt,
   assertRevert,
   checkBalance
@@ -47,7 +48,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(superAdminCount, 1, "the super admin count is correct for the cst contract");
       assert.equal(firstSuperAdmin, registry.address, "the super admin by index is correct for the cst contract");
 
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -219,7 +220,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -284,7 +285,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -373,7 +374,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.addSuperAdmin(superAdmin);
       await cst.mintTokens(1000);
     });
@@ -507,7 +508,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
       await cst.mintTokens(1000);
@@ -582,7 +583,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -618,7 +619,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -658,7 +659,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
     });
@@ -715,7 +716,7 @@ contract('CardStackToken', function(accounts) {
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
-      await registry.register("CST", cst.address);
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
     });
