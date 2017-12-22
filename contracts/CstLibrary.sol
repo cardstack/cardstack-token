@@ -1,11 +1,11 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.18;
 import "./ExternalStorage.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 library CstLibrary {
   using SafeMath for uint256;
 
-  function getTokenName(address _storage) public constant returns(bytes32) {
+  function getTokenName(address _storage) public view returns(bytes32) {
     return ExternalStorage(_storage).getBytes32Value("cstTokenName");
   }
 
@@ -13,7 +13,7 @@ library CstLibrary {
     ExternalStorage(_storage).setBytes32Value("cstTokenName", tokenName);
   }
 
-  function getTokenSymbol(address _storage) public constant returns(bytes32) {
+  function getTokenSymbol(address _storage) public view returns(bytes32) {
     return ExternalStorage(_storage).getBytes32Value("cstTokenSymbol");
   }
 
@@ -21,7 +21,7 @@ library CstLibrary {
     ExternalStorage(_storage).setBytes32Value("cstTokenSymbol", tokenName);
   }
 
-  function getBuyPrice(address _storage) public constant returns(uint256) {
+  function getBuyPrice(address _storage) public view returns(uint256) {
     return ExternalStorage(_storage).getUIntValue("cstBuyPrice");
   }
 
@@ -29,7 +29,7 @@ library CstLibrary {
     ExternalStorage(_storage).setUIntValue("cstBuyPrice", value);
   }
 
-  function getSellPrice(address _storage) public constant returns(uint256) {
+  function getSellPrice(address _storage) public view returns(uint256) {
     return ExternalStorage(_storage).getUIntValue("cstSellPrice");
   }
 
@@ -37,7 +37,7 @@ library CstLibrary {
     ExternalStorage(_storage).setUIntValue("cstSellPrice", value);
   }
 
-  function getCirculationCap(address _storage) public constant returns(uint256) {
+  function getCirculationCap(address _storage) public view returns(uint256) {
     return ExternalStorage(_storage).getUIntValue("cstCirculationCap");
   }
 
@@ -45,7 +45,7 @@ library CstLibrary {
     ExternalStorage(_storage).setUIntValue("cstCirculationCap", value);
   }
 
-  function getMinimumBalance(address _storage) public constant returns(uint256) {
+  function getMinimumBalance(address _storage) public view returns(uint256) {
     return ExternalStorage(_storage).getUIntValue("cstMinimumBalance");
   }
 
@@ -53,7 +53,7 @@ library CstLibrary {
     ExternalStorage(_storage).setUIntValue("cstMinimumBalance", value);
   }
 
-  function getFoundation(address _storage) public constant returns(address) {
+  function getFoundation(address _storage) public view returns(address) {
     return ExternalStorage(_storage).getAddressValue("cstFoundation");
   }
 
@@ -61,7 +61,7 @@ library CstLibrary {
     ExternalStorage(_storage).setAddressValue("cstFoundation", value);
   }
 
-  function getAllowance(address _storage, address account, address spender) public constant returns (uint256) {
+  function getAllowance(address _storage, address account, address spender) public view returns (uint256) {
     return ExternalStorage(_storage).getMultiLedgerValue("cstAllowance", account, spender);
   }
 
@@ -69,7 +69,7 @@ library CstLibrary {
     ExternalStorage(_storage).setMultiLedgerValue("cstAllowance", account, spender, allowance);
   }
 
-  function getTotalUnvestedAndUnreleasedTokens(address _storage) public constant returns(uint256) {
+  function getTotalUnvestedAndUnreleasedTokens(address _storage) public view returns(uint256) {
     return ExternalStorage(_storage).getUIntValue("cstUnvestedAndUnreleasedTokens");
   }
 
@@ -77,15 +77,15 @@ library CstLibrary {
     ExternalStorage(_storage).setUIntValue("cstUnvestedAndUnreleasedTokens", value);
   }
 
-  function vestingMappingSize(address _storage) public returns(uint256) {
+  function vestingMappingSize(address _storage) public view returns(uint256) {
     return ExternalStorage(_storage).getLedgerCount("cstFullyVestedAmount");
   }
 
-  function vestingBeneficiaryForIndex(address _storage, uint256 index) public returns(address) {
-    return ExternalStorage(_storage).ledgerEntryForIndex(sha3("cstFullyVestedAmount"), index);
+  function vestingBeneficiaryForIndex(address _storage, uint256 index) public view returns(address) {
+    return ExternalStorage(_storage).ledgerEntryForIndex(keccak256("cstFullyVestedAmount"), index);
   }
 
-  function releasableAmount(address _storage, address beneficiary) public constant returns (uint256) {
+  function releasableAmount(address _storage, address beneficiary) public view returns (uint256) {
     uint256 releasedAmount = getVestingReleasedAmount(_storage, beneficiary);
     uint256 amount = vestedAmount(_storage, beneficiary).sub(releasedAmount);
 
@@ -96,7 +96,7 @@ library CstLibrary {
     return amount;
   }
 
-  function vestedAmount(address _storage, address beneficiary) public constant returns (uint256) {
+  function vestedAmount(address _storage, address beneficiary) public view returns (uint256) {
     uint256 start = getVestingStart(_storage, beneficiary);
     uint256 fullyVestedAmount = getFullyVestedAmount(_storage, beneficiary);
 
@@ -119,7 +119,7 @@ library CstLibrary {
     }
   }
 
-  function canGrantVestedTokens(address _storage, address beneficiary) public constant returns (bool) {
+  function canGrantVestedTokens(address _storage, address beneficiary) public view returns (bool) {
     uint256 existingFullyVestedAmount = getFullyVestedAmount(_storage, beneficiary);
     if (existingFullyVestedAmount == 0) {
       return true;
@@ -138,7 +138,7 @@ library CstLibrary {
     return false;
   }
 
-  function canRevokeVesting(address _storage, address beneficiary) public constant returns (bool) {
+  function canRevokeVesting(address _storage, address beneficiary) public view returns (bool) {
     bool isRevocable = getVestingRevocable(_storage, beneficiary);
     uint256 revokeDate = getVestingRevokeDate(_storage, beneficiary);
     uint256 start = getVestingStart(_storage, beneficiary);
@@ -161,7 +161,7 @@ library CstLibrary {
   }
 
   function getVestingSchedule(address _storage, address _beneficiary) public
-                                                                      constant returns (uint256 startDate,
+                                                                      view returns (uint256 startDate,
                                                                                         uint256 cliffDate,
                                                                                         uint256 durationSec,
                                                                                         uint256 fullyVestedAmount,
@@ -209,23 +209,23 @@ library CstLibrary {
     setTotalUnvestedAndUnreleasedTokens(_storage, totalUnvestedAndUnreleasedAmount.sub(unreleased));
   }
 
-  function getVestingStart(address _storage, address beneficiary) public constant returns(uint256) {
+  function getVestingStart(address _storage, address beneficiary) public view returns(uint256) {
     return ExternalStorage(_storage).getLedgerValue("cstVestingStart", beneficiary);
   }
 
-  function getVestingCliff(address _storage, address beneficiary) public constant returns(uint256) {
+  function getVestingCliff(address _storage, address beneficiary) public view returns(uint256) {
     return ExternalStorage(_storage).getLedgerValue("cstVestingCliff", beneficiary);
   }
 
-  function getVestingDuration(address _storage, address beneficiary) public constant returns(uint256) {
+  function getVestingDuration(address _storage, address beneficiary) public view returns(uint256) {
     return ExternalStorage(_storage).getLedgerValue("cstVestingDuration", beneficiary);
   }
 
-  function getFullyVestedAmount(address _storage, address beneficiary) public constant returns(uint256) {
+  function getFullyVestedAmount(address _storage, address beneficiary) public view returns(uint256) {
     return ExternalStorage(_storage).getLedgerValue("cstFullyVestedAmount", beneficiary);
   }
 
-  function getVestingRevocable(address _storage, address beneficiary) public constant returns(bool) {
+  function getVestingRevocable(address _storage, address beneficiary) public view returns(bool) {
     return ExternalStorage(_storage).getBooleanMapValue("cstVestingRevocable", beneficiary);
   }
 
@@ -233,7 +233,7 @@ library CstLibrary {
     ExternalStorage(_storage).setLedgerValue("cstVestingReleasedAmount", beneficiary, value);
   }
 
-  function getVestingReleasedAmount(address _storage, address beneficiary) public constant returns(uint256) {
+  function getVestingReleasedAmount(address _storage, address beneficiary) public view returns(uint256) {
     return ExternalStorage(_storage).getLedgerValue("cstVestingReleasedAmount", beneficiary);
   }
 
@@ -241,11 +241,11 @@ library CstLibrary {
     ExternalStorage(_storage).setLedgerValue("cstVestingRevokeDate", beneficiary, value);
   }
 
-  function getVestingRevokeDate(address _storage, address beneficiary) public constant returns(uint256) {
+  function getVestingRevokeDate(address _storage, address beneficiary) public view returns(uint256) {
     return ExternalStorage(_storage).getLedgerValue("cstVestingRevokeDate", beneficiary);
   }
 
-  function getRewardsContractHash(address _storage) public constant returns (bytes32) {
+  function getRewardsContractHash(address _storage) public view returns (bytes32) {
     return ExternalStorage(_storage).getBytes32Value("cstRewardsContractHash");
   }
 

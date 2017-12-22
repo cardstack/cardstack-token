@@ -1,6 +1,6 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.18;
 
 contract storable {
-  function getLedgerNameHash() public constant returns (bytes32);
-  function getStorageNameHash() public constant returns (bytes32);
+  function getLedgerNameHash() public view returns (bytes32);
+  function getStorageNameHash() public view returns (bytes32);
 }
