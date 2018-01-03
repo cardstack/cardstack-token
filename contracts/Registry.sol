@@ -16,6 +16,7 @@ contract Registry is Ownable, administratable, upgradeable {
 
   bytes4 constant INTERFACE_META_ID = 0x01ffc9a7;
   bytes4 constant ADDR_INTERFACE_ID = 0x3b3b57de;
+  bytes32 constant BARE_DOMAIN_NAMEHASH = 0x794941fae74d6435d1b29ee1c08cc39941ba78470872e6afd0693c7eeb63025c; // namehash for "cardstack.eth"
 
   uint256 public numContracts;
   mapping(bytes32 => address) public storageForHash;
@@ -45,6 +46,21 @@ contract Registry is Ownable, administratable, upgradeable {
 
   function getContractHash(string name) public view unlessUpgraded returns (bytes32) {
     return keccak256(name);
+  }
+
+  function setNamehash(string contractName, bytes32 namehash) public onlySuperAdmins unlessUpgraded returns (bool) {
+    require(namehash != 0x0);
+
+    bytes32 hash = keccak256(contractName);
+    address contractAddress = contractForHash[hash];
+
+    require(contractAddress != 0x0);
+    require(hashForNamehash[namehash] == 0x0);
+
+    hashForNamehash[namehash] = hash;
+    namehashForHash[hash] = namehash;
+
+    AddrChanged(namehash, contractAddress);
   }
 
   function register(string name, address contractAddress, bytes32 namehash) public onlySuperAdmins unlessUpgraded returns (bool) {
@@ -125,7 +141,10 @@ contract Registry is Ownable, administratable, upgradeable {
 
     configurable(successor).configureFromStorage();
 
-    if (namehashForHash[hash] != 0x0) {
+    if (hashForNamehash[BARE_DOMAIN_NAMEHASH] == hash) {
+      AddrChanged(BARE_DOMAIN_NAMEHASH, successor);
+    }
+    if (namehashForHash[hash] != 0x0 && namehashForHash[hash] != BARE_DOMAIN_NAMEHASH) {
       AddrChanged(namehashForHash[hash], successor);
     }
 
