@@ -3,7 +3,6 @@ const {
   GAS_PRICE,
   CST_DEPLOY_GAS_LIMIT,
   CARDSTACK_NAMEHASH,
-  STANLEYNICKEL_NAMEHASH,
   assertRevert,
   asInt
 } = require("../lib/utils");
@@ -12,6 +11,8 @@ const Registry = artifacts.require("./Registry.sol");
 const CardStackToken = artifacts.require("./CardStackToken.sol");
 const CstLedger = artifacts.require("./CstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
+const STANLEYNICKEL_NAMEHASH = "0x88e78f6dbb1ac224ed76cf893bad9a933f96f9560e41b507dc69a397594374d4";
+const CARD_CARDSTACK_NAMEHASH = "0x43d3399c341e8916a0010cf9c3d19c938db85ac9f12045c61fb887a021ece7f0"; // namehash for card.cardstack.eth
 
 contract('Registry', function(accounts) {
   describe("register contract", function() {
@@ -51,6 +52,119 @@ contract('Registry', function(accounts) {
       await ledger.mintTokens(100);
     });
 
+    it("allows the registry super admin to set a new namehash for a registered contract", async function() {
+      await registry.register("cst", cst1.address, NULL_ADDRESS, { from: superAdmin });
+
+      let txn = await registry.setNamehash("cst", CARDSTACK_NAMEHASH, { from: superAdmin });
+
+      let hash = await registry.getContractHash("cst");
+      let namehash = await registry.namehashForHash(hash);
+      let ensResolvedAddr = await registry.addr(CARDSTACK_NAMEHASH);
+
+      assert.equal(namehash, CARDSTACK_NAMEHASH, "The contract namehash is correct");
+      assert.equal(ensResolvedAddr, cst1.address, "The ENS resolved contract address is correct");
+
+      assert.equal(txn.logs.length, 1, 'the correct number of events was fired');
+      assert.equal(txn.logs[0].event, "AddrChanged");
+      assert.equal(txn.logs[0].args.node, CARDSTACK_NAMEHASH, "the namehash is correct");
+      assert.equal(txn.logs[0].args.a, cst1.address, "the contract address is correct");
+    });
+
+    it("allows the registry super admin to change the namehash for a registered contract", async function() {
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+
+      let txn = await registry.setNamehash("cst", STANLEYNICKEL_NAMEHASH, { from: superAdmin });
+
+      let hash = await registry.getContractHash("cst");
+      let namehash = await registry.namehashForHash(hash);
+      let ensResolvedAddr = await registry.addr(STANLEYNICKEL_NAMEHASH);
+
+      assert.equal(namehash, STANLEYNICKEL_NAMEHASH, "The contract namehash is correct");
+      assert.equal(ensResolvedAddr, cst1.address, "The ENS resolved contract address is correct");
+
+      assert.equal(txn.logs.length, 1, 'the correct number of events was fired');
+      assert.equal(txn.logs[0].event, "AddrChanged");
+      assert.equal(txn.logs[0].args.node, STANLEYNICKEL_NAMEHASH, "the namehash is correct");
+      assert.equal(txn.logs[0].args.a, cst1.address, "the contract address is correct");
+    });
+
+    it("allows the registry super admin to set a subdomain namehash and a bare domain namehash that point to the same contract", async function() {
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+
+      let txn = await registry.setNamehash("cst", CARD_CARDSTACK_NAMEHASH, { from: superAdmin });
+
+      let hash = await registry.getContractHash("cst");
+      let namehash = await registry.namehashForHash(hash);
+      let ensResolvedAddr1 = await registry.addr(CARDSTACK_NAMEHASH);
+      let ensResolvedAddr2 = await registry.addr(CARD_CARDSTACK_NAMEHASH);
+
+      assert.equal(namehash, CARD_CARDSTACK_NAMEHASH, "The contract namehash is correct");
+      assert.equal(ensResolvedAddr1, cst1.address, "The ENS resolved contract address is correct");
+      assert.equal(ensResolvedAddr2, cst1.address, "The ENS resolved contract address is correct");
+
+      assert.equal(txn.logs.length, 1, 'the correct number of events was fired');
+      assert.equal(txn.logs[0].event, "AddrChanged");
+      assert.equal(txn.logs[0].args.node, CARD_CARDSTACK_NAMEHASH, "the namehash is correct");
+      assert.equal(txn.logs[0].args.a, cst1.address, "the contract address is correct");
+    });
+
+    it("does not allow a non super admin to change the namehash for a registered contract", async function() {
+      let nonSuperAdmin = accounts[3];
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+
+      await assertRevert(async () => await registry.setNamehash("cst", STANLEYNICKEL_NAMEHASH, { from: nonSuperAdmin }));
+
+      let hash = await registry.getContractHash("cst");
+      let namehash = await registry.namehashForHash(hash);
+      let ensResolvedAddrCardstack = await registry.addr(CARDSTACK_NAMEHASH);
+      let ensResolvedAddrStanleyNickel = await registry.addr(STANLEYNICKEL_NAMEHASH);
+
+      assert.equal(namehash, CARDSTACK_NAMEHASH, "The contract namehash is correct");
+      assert.equal(ensResolvedAddrCardstack, cst1.address, "The ENS resolved contract address is correct");
+      assert.equal(ensResolvedAddrStanleyNickel, NULL_ADDRESS, "The ENS resolved contract address is correct");
+    });
+
+    it("does not allow registry super admin to create a namehash for non-existant contract", async function() {
+      await assertRevert(async () => await registry.setNamehash("cst", STANLEYNICKEL_NAMEHASH, { from: superAdmin }));
+
+      let hash = await registry.getContractHash("cst");
+      let namehash = await registry.namehashForHash(hash);
+      let ensResolvedAddrStanleyNickel = await registry.addr(STANLEYNICKEL_NAMEHASH);
+
+      assert.equal(namehash, "0x0000000000000000000000000000000000000000000000000000000000000000", "The contract namehash is correct");
+      assert.equal(ensResolvedAddrStanleyNickel, NULL_ADDRESS, "The ENS resolved contract address is correct");
+    });
+
+    it("does not allow registry super admin to create a duplicate namehash for a registered contract", async function() {
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await registry.register("cst2", cst2.address, NULL_ADDRESS, { from: superAdmin });
+
+      await assertRevert(async () => await registry.setNamehash("cst2", CARDSTACK_NAMEHASH, { from: superAdmin }));
+
+      let hash = await registry.getContractHash("cst");
+      let hash2 = await registry.getContractHash("cst2");
+      let namehash = await registry.namehashForHash(hash);
+      let namehash2 = await registry.namehashForHash(hash2);
+      let ensResolvedAddrCardstack = await registry.addr(CARDSTACK_NAMEHASH);
+
+      assert.equal(namehash, CARDSTACK_NAMEHASH, "The contract namehash is correct");
+      assert.equal(namehash2, "0x0000000000000000000000000000000000000000000000000000000000000000", "The contract namehash is correct");
+      assert.equal(ensResolvedAddrCardstack, cst1.address, "The ENS resolved contract address is correct");
+    });
+
+    it("does not alow registry super admin to create a null namehash for a registered contract", async function() {
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+
+      await assertRevert(async () => await registry.setNamehash("cst", NULL_ADDRESS, { from: superAdmin }));
+
+      let hash = await registry.getContractHash("cst");
+      let namehash = await registry.namehashForHash(hash);
+      let ensResolvedAddrCardstack = await registry.addr(CARDSTACK_NAMEHASH);
+
+      assert.equal(namehash, CARDSTACK_NAMEHASH, "The contract namehash is correct");
+      assert.equal(ensResolvedAddrCardstack, cst1.address, "The ENS resolved contract address is correct");
+    });
+
     it("allows the registry superadmin to add a contract to the registry", async function() {
       let txn = await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
 
@@ -85,10 +199,10 @@ contract('Registry', function(accounts) {
       assert.equal(txn.logs[3].args.a, cst1.address, "the contract address is correct");
     });
 
-    it("does not allow a non-owner to register a contract", async function() {
-      let nonOwner = accounts[3];
+    it("does not allow a non-super admin to register a contract", async function() {
+      let nonSuperAdmin = accounts[3];
 
-      await assertRevert(async () => await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: nonOwner }));
+      await assertRevert(async () => await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: nonSuperAdmin }));
 
       let hash = web3.sha3("cst");
       let count = await registry.numContracts();
@@ -215,10 +329,66 @@ contract('Registry', function(accounts) {
       assert.equal(event.args._from, cst1.address, "The from address is correct");
       assert.equal(event.args._to, cst2.address, "The to address is correct");
 
-      event = txn.logs.find(event => event.event === "AddrChanged");
-      assert.equal(event.event, "AddrChanged");
-      assert.equal(event.args.node, CARDSTACK_NAMEHASH, "the namehash is correct");
-      assert.equal(event.args.a, cst2.address, "the contract address is correct");
+      let events = txn.logs.filter(event => event.event === "AddrChanged");
+      assert.equal(events.length, 1, 'The number of AddrChanged events is correct');
+      assert.equal(events[0].event, "AddrChanged");
+      assert.equal(events[0].args.node, CARDSTACK_NAMEHASH, "the namehash is correct");
+      assert.equal(events[0].args.a, cst2.address, "the contract address is correct");
+    });
+
+    it("allows the registry superAdmin to upgrade a contract that has a subdomain namehash and bare domain name hash that point to the upgraded contract", async function() {
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await registry.setNamehash("cst", CARD_CARDSTACK_NAMEHASH, { from: superAdmin });
+
+      let txn = await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
+
+      let hash = await registry.getContractHash("cst");
+      let count = await registry.numContracts();
+      let contractName = await registry.contractNameForIndex(0);
+      let contractAddress = await registry.contractForHash(hash);
+      let ensResolvedAddr = await registry.addr(CARDSTACK_NAMEHASH);
+
+      let cst1Predecessor = await cst1.predecessor();
+      let cst1Successor = await cst1.successor();
+      let cst2Predecessor = await cst2.predecessor();
+      let cst2Successor = await cst2.successor();
+
+
+      assert.ok(txn.logs.length > 0, 'an event was fired');
+
+      assert.equal(count, 1, "contract count is correct");
+      assert.equal(contractName.toString(), "cst", "contract name is correct");
+      assert.equal(contractAddress.toString(), cst2.address, "The contract address is correct");
+      assert.equal(hash, web3.sha3("cst"), "The contract hash is correct");
+      assert.equal(ensResolvedAddr, cst2.address, "The ENS resolved contract address is correct");
+
+      assert.equal(cst1Predecessor, NULL_ADDRESS, "the address is correct");
+      assert.equal(cst1Successor, cst2.address, "the address is correct");
+      assert.equal(cst2Predecessor, cst1.address, "the address is correct");
+      assert.equal(cst2Successor, NULL_ADDRESS, "the address is correct");
+
+      let event = txn.logs.find(event => event.event === "ContractUpgraded");
+
+      assert.equal(event.event, "ContractUpgraded");
+      assert.equal(event.args.predecessor, cst1.address, "the contract address is correct");
+      assert.equal(event.args.successor, cst2.address, "the contract address is correct");
+      assert.equal(event.args.name, "cst", "the contract name is correct");
+
+      event = txn.logs.find(event => event.event === "Transfer");
+      assert.equal(event.event, "Transfer", "The event type is correct");
+      assert.equal(asInt(event.args._value), 100, "The amount minted is correct");
+      assert.equal(event.args._from, cst1.address, "The from address is correct");
+      assert.equal(event.args._to, cst2.address, "The to address is correct");
+
+      let events = txn.logs.filter(event => event.event === "AddrChanged");
+      assert.equal(events.length, 2, 'The number of AddrChanged events is correct');
+      assert.equal(events[0].event, "AddrChanged");
+      assert.equal(events[0].args.node, CARDSTACK_NAMEHASH, "the namehash is correct");
+      assert.equal(events[0].args.a, cst2.address, "the contract address is correct");
+
+      assert.equal(events[1].event, "AddrChanged");
+      assert.equal(events[1].args.node, CARD_CARDSTACK_NAMEHASH, "the namehash is correct");
+      assert.equal(events[1].args.a, cst2.address, "the contract address is correct");
     });
 
     it("allows the registry superAdmin to upgrade a contract that doesnt have a namehash", async function() {
@@ -607,6 +777,10 @@ contract('Registry', function(accounts) {
 
       it("does not allow superAdmin to getStorage if registry is upgraded", async function() {
         await assertRevert(async () => await registry.getStorage("cstStorage", { from: superAdmin }));
+      });
+
+      it("does not allow superAdmin to set namehash if registry upgraded", async function() {
+        await assertRevert(async () => await registry.setNamehash("cst", STANLEYNICKEL_NAMEHASH, { from: superAdmin }));
       });
     });
   });
