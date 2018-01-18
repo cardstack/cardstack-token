@@ -240,6 +240,7 @@ Storage (${storage.address})
             durationSec,
             fullyVestedAmount,
             vestedAmount,
+            vestedAvailableAmount,
             releasedAmount,
             revokeDate,
             isRevocable ] = await cst.getVestingSchedule(beneficiary);
@@ -251,6 +252,7 @@ Storage (${storage.address})
       fully vested date: ${moment.unix(startDate.toNumber() + durationSec.toNumber()).format(dateFormat)}
       fully vested amount: ${fullyVestedAmount} ${cstSymbol}
       vested amount as of now (${moment().format(dateFormat)}): ${vestedAmount} ${cstSymbol}
+      vested amount available as of now (${moment().format(dateFormat)}): ${vestedAvailableAmount} ${cstSymbol}
       vested amount already released: ${releasedAmount} ${cstSymbol}
       vested amount not yet released ${releasableAmount} ${cstSymbol}
       is revocable: ${isRevocable}\n`;

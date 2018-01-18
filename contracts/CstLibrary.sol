@@ -87,7 +87,7 @@ library CstLibrary {
 
   function releasableAmount(address _storage, address beneficiary) public view returns (uint256) {
     uint256 releasedAmount = getVestingReleasedAmount(_storage, beneficiary);
-    uint256 amount = vestedAmount(_storage, beneficiary).sub(releasedAmount);
+    uint256 amount = vestedAvailableAmount(_storage, beneficiary).sub(releasedAmount);
 
     if (amount < 0) {
       return 0;
@@ -96,7 +96,7 @@ library CstLibrary {
     return amount;
   }
 
-  function vestedAmount(address _storage, address beneficiary) public view returns (uint256) {
+  function vestedAvailableAmount(address _storage, address beneficiary) public view returns (uint256) {
     uint256 start = getVestingStart(_storage, beneficiary);
     uint256 fullyVestedAmount = getFullyVestedAmount(_storage, beneficiary);
 
@@ -105,6 +105,9 @@ library CstLibrary {
     }
 
     uint256 duration = getVestingDuration(_storage, beneficiary);
+    if (duration == 0) {
+      return 0;
+    }
     uint256 cliff = getVestingCliff(_storage, beneficiary);
     uint256 revokeDate = getVestingRevokeDate(_storage, beneficiary);
 
@@ -119,13 +122,39 @@ library CstLibrary {
     }
   }
 
+  function vestedAmount(address _storage, address beneficiary) public view returns (uint256) {
+    uint256 start = getVestingStart(_storage, beneficiary);
+    uint256 fullyVestedAmount = getFullyVestedAmount(_storage, beneficiary);
+
+    if (start == 0 || fullyVestedAmount == 0) {
+      return 0;
+    }
+
+    uint256 duration = getVestingDuration(_storage, beneficiary);
+    if (duration == 0) {
+      return 0;
+    }
+
+    uint256 revokeDate = getVestingRevokeDate(_storage, beneficiary);
+
+    if (now <= start) {
+      return 0;
+    } else if (revokeDate > 0) {
+      return fullyVestedAmount.mul(revokeDate.sub(start)).div(duration);
+    } else if (now >= start.add(duration)) {
+      return fullyVestedAmount;
+    } else {
+      return fullyVestedAmount.mul(now.sub(start)).div(duration);
+    }
+  }
+
   function canGrantVestedTokens(address _storage, address beneficiary) public view returns (bool) {
     uint256 existingFullyVestedAmount = getFullyVestedAmount(_storage, beneficiary);
     if (existingFullyVestedAmount == 0) {
       return true;
     }
 
-    uint256 existingVestedAmount = vestedAmount(_storage, beneficiary);
+    uint256 existingVestedAmount = vestedAvailableAmount(_storage, beneficiary);
     uint256 existingReleasedAmount = getVestingReleasedAmount(_storage, beneficiary);
     uint256 revokeDate = getVestingRevokeDate(_storage, beneficiary);
 
@@ -154,7 +183,7 @@ library CstLibrary {
     require(canRevokeVesting(_storage, beneficiary));
 
     uint256 totalUnvestedAndUnreleasedAmount = getTotalUnvestedAndUnreleasedTokens(_storage);
-    uint256 unvestedAmount = getFullyVestedAmount(_storage, beneficiary).sub(vestedAmount(_storage, beneficiary));
+    uint256 unvestedAmount = getFullyVestedAmount(_storage, beneficiary).sub(vestedAvailableAmount(_storage, beneficiary));
 
     setVestingRevokeDate(_storage, beneficiary, now);
     setTotalUnvestedAndUnreleasedTokens(_storage, totalUnvestedAndUnreleasedAmount.sub(unvestedAmount));

@@ -373,13 +373,14 @@ contract CardStackToken is ERC20,
 
   function getVestingSchedule(address _beneficiary) public
                                                     view unlessUpgraded returns (uint256 startDate,
-                                                                                     uint256 cliffDate,
-                                                                                     uint256 durationSec,
-                                                                                     uint256 fullyVestedAmount,
-                                                                                     uint256 vestedAmount,
-                                                                                     uint256 releasedAmount,
-                                                                                     uint256 revokeDate,
-                                                                                     bool isRevocable) {
+                                                                                 uint256 cliffDate,
+                                                                                 uint256 durationSec,
+                                                                                 uint256 fullyVestedAmount,
+                                                                                 uint256 vestedAmount,
+                                                                                 uint256 vestedAvailableAmount,
+                                                                                 uint256 releasedAmount,
+                                                                                 uint256 revokeDate,
+                                                                                 bool isRevocable) {
     (
       startDate,
       cliffDate,
@@ -391,6 +392,7 @@ contract CardStackToken is ERC20,
     ) =  externalStorage.getVestingSchedule(_beneficiary);
 
     vestedAmount = externalStorage.vestedAmount(_beneficiary);
+    vestedAvailableAmount = externalStorage.vestedAvailableAmount(_beneficiary);
   }
 
   function setCustomBuyer(address buyer, uint256 balanceLimit) public onlySuperAdmins unlessUpgraded returns (bool) {
