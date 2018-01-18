@@ -46,12 +46,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(rando);
 
       assert.equal(actualFullyVestedAmount, 0, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount, 0, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate, 0, "the vesting startDate is correct");
       assert.equal(actualCliffDate, 0, "the vesting cliffDate is correct");
       assert.equal(actualDurationSec, 0, "The vesting duration is correct");
@@ -80,12 +82,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount, 10, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount, 0, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate, start, "the vesting startDate is correct");
       assert.equal(actualCliffDate, start + duration.years(1), "the vesting cliffDate is correct");
       assert.equal(actualDurationSec, duration.years(2), "The vesting duration is correct");
@@ -167,12 +171,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount, 0, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount, 0, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate, 0, "the vesting startDate is correct");
       assert.equal(actualCliffDate, 0, "the vesting cliffDate is correct");
       assert.equal(actualDurationSec, 0, "The vesting duration is correct");
@@ -202,12 +208,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount, 0, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount, 0, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate, 0, "the vesting startDate is correct");
       assert.equal(actualCliffDate, 0, "the vesting cliffDate is correct");
       assert.equal(actualDurationSec, 0, "The vesting duration is correct");
@@ -236,12 +244,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount, 0, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount, 0, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate, 0, "the vesting startDate is correct");
       assert.equal(actualCliffDate, 0, "the vesting cliffDate is correct");
       assert.equal(actualDurationSec, 0, "The vesting duration is correct");
@@ -276,12 +286,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount.toNumber(), 5, "the fullyVestedAmount is correct");
-      assert.equal(actualVestedAmount.toNumber(), 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), 0, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate.toNumber(), start, "the vesting startDate is correct");
       assert.equal(actualCliffDate.toNumber(), start + duration.years(1), "the vesting cliffDate is correct");
       assert.equal(actualDurationSec.toNumber(), duration.years(2), "The vesting duration is correct");
@@ -324,12 +336,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount, 20, "the fullyVestedAmount is correct");
-      assert.equal(actualVestedAmount, 20, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAmount.toNumber(), 20, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount, 20, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate, start, "the vesting startDate is correct");
       assert.equal(actualCliffDate, start + vestingCliff, "the vesting cliffDate is correct");
       assert.equal(actualDurationSec, vestingDuration, "The vesting duration is correct");
@@ -394,12 +408,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount, 10, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount, 0, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate, start, "the vesting startDate is correct");
       assert.equal(actualCliffDate, start + vestingCliff2, "the vesting cliffDate is correct");
       assert.equal(actualDurationSec, vestingDuration2, "The vesting duration is correct");
@@ -446,12 +462,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount, 10, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount, 0, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate, start, "the vesting startDate is correct");
       assert.equal(actualCliffDate, start + vestingCliff2, "the vesting cliffDate is correct");
       assert.equal(actualDurationSec, vestingDuration2, "The vesting duration is correct");
@@ -495,11 +513,11 @@ contract('CardStackToken', function(accounts) {
       assert.equal(balance.toNumber(), expectedReleaseAmount, "the beneficiary's CST balance is correct");
       assert.equal(totalUnvestedAndUnreleasedTokens.toNumber(), fullyVestedAmount - expectedReleaseAmount, "the total unvested & unreleased tokens is correct");
 
-      let [ , , , ,
-            actualVestedAmount,
+      let [ , , , , ,
+            actualVestedAvailableAmount,
             actualReleasedAmount ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), expectedReleaseAmount, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), expectedReleaseAmount, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), expectedReleaseAmount, "the vesting released amount is correct");
 
       assert.equal(txn.logs.length, 2, "there are 2 events that were fired");
@@ -538,11 +556,11 @@ contract('CardStackToken', function(accounts) {
       assert.equal(balance.toNumber(), expectedReleaseAmount, "the beneficiary's CST balance is correct");
       assert.equal(totalUnvestedAndUnreleasedTokens.toNumber(), fullyVestedAmount - expectedReleaseAmount, "the total unvested & unreleased tokens is correct");
 
-      let [ , , , ,
-            actualVestedAmount,
+      let [ , , , , ,
+            actualVestedAvailableAmount,
             actualReleasedAmount ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), expectedReleaseAmount, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), expectedReleaseAmount, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), expectedReleaseAmount, "the vesting released amount is correct");
     });
 
@@ -584,9 +602,11 @@ contract('CardStackToken', function(accounts) {
 
         let [ , , , ,
               actualVestedAmount,
+              actualVestedAvailableAmount,
               actualReleasedAmount ] = await cst.getVestingSchedule(beneficiary);
 
-        assert.equal(actualVestedAmount.toNumber(), expectedVestingAmount, "the fullyVestedAmount is correct");
+        assert.equal(actualVestedAmount.toNumber(), expectedVestingAmount, "the vestedAmount is correct");
+        assert.equal(actualVestedAvailableAmount.toNumber(), expectedVestingAmount, "the vestedAvailableAmount is correct");
         assert.equal(actualReleasedAmount.toNumber(), expectedVestingAmount, "the vesting released amount is correct");
 
         assert.equal(txn.logs.length, 2, "there are 2 events that were fired");
@@ -633,9 +653,11 @@ contract('CardStackToken', function(accounts) {
 
       let [ , , , ,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), fullyVestedAmount, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAmount.toNumber(), fullyVestedAmount, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), fullyVestedAmount, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), fullyVestedAmount, "the vesting released amount is correct");
 
       assert.equal(txn.logs.length, 2, "there are 2 events that were fired");
@@ -682,11 +704,11 @@ contract('CardStackToken', function(accounts) {
       assert.equal(balance.toNumber(), fullyVestedAmount, "the beneficiary's CST balance is correct");
       assert.equal(totalUnvestedAndUnreleasedTokens.toNumber(), 0, "the total unvested & unreleased tokens is correct");
 
-      let [ , , , ,
-            actualVestedAmount,
+      let [ , , , , ,
+            actualVestedAvailableAmount,
             actualReleasedAmount ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), fullyVestedAmount, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), fullyVestedAmount, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), fullyVestedAmount, "the vesting released amount is correct");
 
       assert.equal(txn.logs.length, 2, "there are 2 events that were fired");
@@ -731,9 +753,11 @@ contract('CardStackToken', function(accounts) {
 
       let [ , , , ,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), 0, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAmount.toNumber(), 49, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), 0, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), 0, "the vesting released amount is correct");
 
       assert.equal(txn.logs.length, 0, "there are no events that were fired");
@@ -768,9 +792,11 @@ contract('CardStackToken', function(accounts) {
 
       let [ , , , ,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), 0, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAmount.toNumber(), 49, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), 0, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), 0, "the vesting released amount is correct");
 
       assert.equal(txn.logs.length, 0, "there are no events that were fired");
@@ -806,10 +832,12 @@ contract('CardStackToken', function(accounts) {
 
       let [ , , , ,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), 75, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAmount.toNumber(), 75, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), 75, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), 75, "the vesting released amount is correct");
       assert.equal(actualRevokeDate.toNumber(), revokeDate, "the revoke date is correct");
 
@@ -858,12 +886,12 @@ contract('CardStackToken', function(accounts) {
       assert.equal(balance.toNumber(), 0, "the beneficiary's CST balance is correct");
       assert.equal(totalUnvestedAndUnreleasedTokens.toNumber(), 0, "the total unvested & unreleased tokens is correct");
 
-      let [ , , , ,
-            actualVestedAmount,
+      let [ , , , , ,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), 0, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), 0, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), 0, "the vesting released amount is correct");
       assert.equal(actualRevokeDate.toNumber(), revokeDate, "the revoke date is correct");
 
@@ -902,12 +930,12 @@ contract('CardStackToken', function(accounts) {
       assert.equal(balance.toNumber(), 0, "the beneficiary's CST balance is correct");
       assert.equal(totalUnvestedAndUnreleasedTokens.toNumber(), fullyVestedAmount, "the total unvested & unreleased tokens is correct");
 
-      let [ , , , ,
-            actualVestedAmount,
+      let [ , , , , ,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), fullyVestedAmount, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), fullyVestedAmount, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), 0, "the vesting released amount is correct");
       assert.equal(actualRevokeDate.toNumber(), 0, "the revoke date is correct");
     });
@@ -940,12 +968,12 @@ contract('CardStackToken', function(accounts) {
       assert.equal(balance.toNumber(), 0, "the beneficiary's CST balance is correct");
       assert.equal(totalUnvestedAndUnreleasedTokens.toNumber(), 100, "the total unvested & unreleased tokens is correct");
 
-      let [ , , , ,
-            actualVestedAmount,
+      let [ , , , , ,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), 75, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), 75, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), 0, "the vesting released amount is correct");
       assert.equal(actualRevokeDate.toNumber(), 0, "the revoke date is correct");
     });
@@ -984,10 +1012,12 @@ contract('CardStackToken', function(accounts) {
 
       let [ , , , ,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), 75, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAmount.toNumber(), 75, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), 75, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), 75, "the vesting released amount is correct");
       assert.equal(actualRevokeDate.toNumber(), revokeDate, "the revoke date is correct");
     });
@@ -1014,12 +1044,14 @@ contract('CardStackToken', function(accounts) {
             actualDurationSec,
             actualFullyVestedAmount,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
             actualIsRevocable ] = await cst.getVestingSchedule(rando);
 
       assert.equal(actualFullyVestedAmount, 0, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount, 0, "the vestedAvailableAmount is correct");
       assert.equal(actualStartDate, 0, "the vesting startDate is correct");
       assert.equal(actualCliffDate, 0, "the vesting cliffDate is correct");
       assert.equal(actualDurationSec, 0, "The vesting duration is correct");
@@ -1062,10 +1094,12 @@ contract('CardStackToken', function(accounts) {
 
       let [ , , , ,
             actualVestedAmount,
+            actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate ] = await cst.getVestingSchedule(beneficiary);
 
-      assert.equal(actualVestedAmount.toNumber(), 75, "the fullyVestedAmount is correct");
+      assert.equal(actualVestedAmount.toNumber(), 75, "the vestedAmount is correct");
+      assert.equal(actualVestedAvailableAmount.toNumber(), 75, "the vestedAvailableAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), 75, "the vesting released amount is correct");
       assert.equal(actualRevokeDate.toNumber(), revokeDate, "the revoke date is correct");
 
