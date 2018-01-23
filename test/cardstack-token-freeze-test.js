@@ -295,7 +295,7 @@ contract('CardStackToken', function(accounts) {
       await increaseTimeTo(this.start + duration.years(1.5));
       await cst.freezeAccount(beneficiary, true);
 
-      await assertRevert(async () => await cst.releaseVestedTokensForBeneficiary(beneficiary));
+      await assertRevert(async () => await cst.releaseVestedTokens(beneficiary));
 
       let balance = await cst.balanceOf(beneficiary);
       assert.equal(balance.toNumber(), 0, "the beneficiary's CST balance is correct");
@@ -597,7 +597,7 @@ contract('CardStackToken', function(accounts) {
       await increaseTimeTo(this.start + duration.years(1.5));
       await cst.freezeToken(true);
 
-      await assertRevert(async () => await cst.releaseVestedTokensForBeneficiary(beneficiary));
+      await assertRevert(async () => await cst.releaseVestedTokens(beneficiary));
 
       await cst.freezeToken(false);
       let balance = await cst.balanceOf(beneficiary);

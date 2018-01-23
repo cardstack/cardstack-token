@@ -327,7 +327,7 @@ contract CardStackToken is ERC20,
   function revokeVesting(address beneficiary) public onlySuperAdmins unlessUpgraded unlessFrozen returns (bool) {
     externalStorage.revokeVesting(beneficiary);
 
-    releaseVestedTokensForBeneficiary(beneficiary);
+    releaseVestedTokens(beneficiary);
 
     VestedTokenRevocation(beneficiary);
 
@@ -335,10 +335,10 @@ contract CardStackToken is ERC20,
   }
 
   function releaseVestedTokens() public unlessFrozen unlessUpgraded returns (bool) {
-    return releaseVestedTokensForBeneficiary(msg.sender);
+    return releaseVestedTokens(msg.sender);
   }
 
-  function releaseVestedTokensForBeneficiary(address beneficiary) public unlessFrozen unlessUpgraded returns (bool) {
+  function releaseVestedTokens(address beneficiary) public unlessFrozen unlessUpgraded returns (bool) {
     require(!frozenAccount[beneficiary]);
 
     uint256 unreleased = releasableAmount(beneficiary);
