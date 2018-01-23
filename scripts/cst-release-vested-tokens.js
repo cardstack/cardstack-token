@@ -65,7 +65,7 @@ module.exports = async function(callback) {
   let cst = await CardStackToken.at(cstAddress);
 
   if (data) {
-    let data = cst.contract.releaseVestedTokensForBeneficiary.getData(address);
+    let data = cst.contract.releaseVestedTokens.getData(address);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
       data
@@ -84,7 +84,7 @@ module.exports = async function(callback) {
 
   try {
     console.log(`Releasing vested tokens for the beneficiary ${address}, for CST (${cst.address}):`);
-    await cst.releaseVestedTokensForBeneficiary(address);
+    await cst.releaseVestedTokens(address);
     console.log('done');
   } catch (err) {
     console.error(`Error releasing vested tokens for CST (${cst.address}, ${err.message}`);

@@ -557,7 +557,7 @@ contract('CardStackToken', function(accounts) {
 
       await cst2.upgradedFrom(cst1.address, { from: admin });
 
-      let txn = await cst2.releaseVestedTokensForBeneficiary(beneficiary);
+      let txn = await cst2.releaseVestedTokens(beneficiary);
       let releaseTime = web3.eth.getBlock(txn.receipt.blockNumber).timestamp;
       let expectedReleaseAmount = Math.floor(fullyVestedAmount * (releaseTime - start) / vestingDuration);
 
@@ -970,7 +970,7 @@ contract('CardStackToken', function(accounts) {
       await increaseTimeTo(this.start + duration.years(1.5));
 
       await cst1.upgradeTo(cst2.address, 100, { from: admin });
-      await assertRevert(async () => await cst1.releaseVestedTokensForBeneficiary(beneficiary));
+      await assertRevert(async () => await cst1.releaseVestedTokens(beneficiary));
 
       let balance = await cst2.balanceOf(beneficiary);
       assert.equal(balance.toNumber(), 0, "the beneficiary's CST balance is correct");

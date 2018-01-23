@@ -546,7 +546,7 @@ contract('CardStackToken', function(accounts) {
                                   false);
       await increaseTimeTo(start + duration.years(1.5));
 
-      let { receipt } = await cst.releaseVestedTokensForBeneficiary(beneficiary, { from: accounts[33] });
+      let { receipt } = await cst.releaseVestedTokens(beneficiary, { from: accounts[33] });
       let releaseTime = web3.eth.getBlock(receipt.blockNumber).timestamp;
       let expectedReleaseAmount = Math.floor(fullyVestedAmount * (releaseTime - start) / vestingDuration);
 
@@ -776,7 +776,7 @@ contract('CardStackToken', function(accounts) {
                                   false);
       await increaseTimeTo(start + vestingCliff - duration.minutes(1));
 
-      let txn = await cst.releaseVestedTokensForBeneficiary(beneficiary, { from: accounts[33] });
+      let txn = await cst.releaseVestedTokens(beneficiary, { from: accounts[33] });
 
       let balance = await cst.balanceOf(beneficiary);
       let totalUnvestedAndUnreleasedTokens = await cst.totalUnvestedAndUnreleasedTokens();
@@ -1077,7 +1077,7 @@ contract('CardStackToken', function(accounts) {
 
       await increaseTimeTo(start + duration.years(1.9));
 
-      let txn = await cst.releaseVestedTokensForBeneficiary(beneficiary);
+      let txn = await cst.releaseVestedTokens(beneficiary);
 
       let revokeDate = web3.eth.getBlock(revokeTxn.receipt.blockNumber).timestamp;
       let balance = await cst.balanceOf(beneficiary);
