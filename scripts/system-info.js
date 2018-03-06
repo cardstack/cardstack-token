@@ -243,7 +243,7 @@ Storage (${storage.address})
             vestedAvailableAmount,
             releasedAmount,
             revokeDate,
-            isRevocable ] = await cst.getVestingSchedule(beneficiary);
+            isRevocable ] = await cst.vestingSchedule(beneficiary);
       totalUnvested += (fullyVestedAmount.toNumber() - vestedAmount.toNumber());
       vestingSchedules = `${vestingSchedules}
     beneficiary: ${beneficiary} ${revokeDate.toNumber() > 0 ? "Revoked on " + moment.unix(revokeDate.toNumber()).format(dateFormat) : ""}
