@@ -19,12 +19,12 @@
     "command-line-args": "^4.0.7",
     "command-line-usage": "^4.0.1",
     "eth-ens-namehash": "^2.0.8",
-    "ganache-cli": "^6.0.3",
+    "ganache-cli": "^6.1.0-beta.4",
     "lodash": "^4.17.4",
     "moment": "^2.19.4",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
-    "truffle": "^4.0.4",
-    "zeppelin-solidity": "^1.4.0"
+    "truffle": "^4.1.0",
+    "zeppelin-solidity": "^1.7.0"
   }
 }
