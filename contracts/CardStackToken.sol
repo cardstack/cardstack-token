@@ -371,16 +371,16 @@ contract CardStackToken is ERC20,
     return externalStorage.vestingBeneficiaryForIndex(index);
   }
 
-  function getVestingSchedule(address _beneficiary) public
-                                                    view unlessUpgraded returns (uint256 startDate,
-                                                                                 uint256 cliffDate,
-                                                                                 uint256 durationSec,
-                                                                                 uint256 fullyVestedAmount,
-                                                                                 uint256 vestedAmount,
-                                                                                 uint256 vestedAvailableAmount,
-                                                                                 uint256 releasedAmount,
-                                                                                 uint256 revokeDate,
-                                                                                 bool isRevocable) {
+  function vestingSchedule(address _beneficiary) public
+                                                 view unlessUpgraded returns (uint256 startDate,
+                                                                              uint256 cliffDate,
+                                                                              uint256 durationSec,
+                                                                              uint256 fullyVestedAmount,
+                                                                              uint256 vestedAmount,
+                                                                              uint256 vestedAvailableAmount,
+                                                                              uint256 releasedAmount,
+                                                                              uint256 revokeDate,
+                                                                              bool isRevocable) {
     (
       startDate,
       cliffDate,

@@ -470,7 +470,7 @@ contract('CardStackToken', function(accounts) {
             actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
-            actualIsRevocable ] = await cst2.getVestingSchedule(beneficiary);
+            actualIsRevocable ] = await cst2.vestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount, 10, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
@@ -535,7 +535,7 @@ contract('CardStackToken', function(accounts) {
 
       let [ , , , , ,
             actualVestedAmount,
-            actualReleasedAmount ] = await cst2.getVestingSchedule(beneficiary);
+            actualReleasedAmount ] = await cst2.vestingSchedule(beneficiary);
 
       assert.equal(actualVestedAmount.toNumber(), expectedReleaseAmount, "the fullyVestedAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), expectedReleaseAmount, "the vesting released amount is correct");
@@ -575,7 +575,7 @@ contract('CardStackToken', function(accounts) {
 
       let [ , , , , ,
             actualVestedAmount,
-            actualReleasedAmount ] = await cst2.getVestingSchedule(beneficiary);
+            actualReleasedAmount ] = await cst2.vestingSchedule(beneficiary);
 
       assert.equal(actualVestedAmount.toNumber(), expectedReleaseAmount, "the fullyVestedAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), expectedReleaseAmount, "the vesting released amount is correct");
@@ -615,7 +615,7 @@ contract('CardStackToken', function(accounts) {
       let [ , , , , ,
             actualVestedAmount,
             actualReleasedAmount,
-            actualRevokeDate ] = await cst2.getVestingSchedule(beneficiary);
+            actualRevokeDate ] = await cst2.vestingSchedule(beneficiary);
 
       assert.equal(actualVestedAmount.toNumber(), 75, "the fullyVestedAmount is correct");
       assert.equal(actualReleasedAmount.toNumber(), 75, "the vesting released amount is correct");
@@ -929,7 +929,7 @@ contract('CardStackToken', function(accounts) {
             actualVestedAvailableAmount,
             actualReleasedAmount,
             actualRevokeDate,
-            actualIsRevocable ] = await cst2.getVestingSchedule(beneficiary);
+            actualIsRevocable ] = await cst2.vestingSchedule(beneficiary);
 
       assert.equal(actualFullyVestedAmount, 0, "the fullyVestedAmount is correct");
       assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
@@ -1018,7 +1018,7 @@ contract('CardStackToken', function(accounts) {
                                   true);
       await cst1.upgradeTo(cst2.address, 100, { from: admin });
 
-      await assertRevert(async () => cst1.getVestingSchedule(beneficiary));
+      await assertRevert(async () => cst1.vestingSchedule(beneficiary));
     });
 
     it("does not show total unvested and unreleased tokens in predecessor contract when contract has been upgraded", async function() {
