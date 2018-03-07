@@ -66,7 +66,7 @@ module.exports = async function(callback) {
 
   concurrency = concurrency || 100;
 
-  let fileStr = fs.readFileSync(`${__dirname}/../${csv}`);
+  let fileStr = fs.readFileSync(csv);
   let rows = _.compact(fileStr.toString().split("\n"));
 
   console.log(`Scheduling ${rows.length} buyers to be added to the CST contract ${cst.address}.`);
