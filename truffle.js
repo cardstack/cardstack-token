@@ -48,7 +48,7 @@ module.exports = {
       port: 8545,
       from: "", //TODO populate with the main address from secure terminal wallet
       network_id: 1,
-      gasPrice: 30000000000 // Default is 100 GWEI (100000000000), which is very fast
+      gasPrice: 8000000000 // Using 8 GWEI, make sure to double check eth gas station
     }
   }
 };
