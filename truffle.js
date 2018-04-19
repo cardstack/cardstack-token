@@ -44,7 +44,7 @@ module.exports = {
     },
 
     rinkeby_hub: {
-      host: "54.152.24.98", // Connect to geth on the specified
+      host: "ws://54.86.148.45:8546", // Connect to geth on the specified
       port: 8545,
       network_id: 4,
       gasPrice: 30000000000 // Default is 100 GWEI (100000000000), which is very fast
