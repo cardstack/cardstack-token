@@ -46,11 +46,6 @@ To deploy the CST contracts to testrpc, start the testrpc blockchain. Make sure 
 yarn ganache
 ```
 
-Then from the commandline remove any previously created build artifacts so that you can trigger a full build:
-```
-rm -rf ./build
-```
-
 Then execute:
 ```
 WALLET=<wallet address> truffle migrate --reset --network=testrpc
@@ -102,10 +97,6 @@ geth --rinkeby --rpc --rpcapi db,eth,net,web3,personal --unlock="main account's 
 
 Enter the password for your wallet when prompted, and then wait for the latest block in Rinkeby to download (you can double check the block number here at https://www.rinkeby.io/). After you see that the latest blocks have downloaded execute the following:
 
-Then from the commandline remove any previously created build artifacts so that you can trigger a full build:
-```
-rm -rf ./build
-```
 
 Then execute:
 ```
