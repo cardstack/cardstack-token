@@ -31,6 +31,7 @@ contract administratable is Ownable {
   }
 
   function addSuperAdmin(address admin) public onlyOwner {
+    require(admin != address(0));
     superAdmins[admin] = true;
     if (!processedSuperAdmin[admin]) {
       processedSuperAdmin[admin] = true;
@@ -42,12 +43,14 @@ contract administratable is Ownable {
   }
 
   function removeSuperAdmin(address admin) public onlyOwner {
+    require(admin != address(0));
     superAdmins[admin] = false;
 
     emit RemoveSuperAdmin(admin);
   }
 
   function addAdmin(address admin) public onlySuperAdmins {
+    require(admin != address(0));
     admins[admin] = true;
     if (!processedAdmin[admin]) {
       processedAdmin[admin] = true;
@@ -59,6 +62,7 @@ contract administratable is Ownable {
   }
 
   function removeAdmin(address admin) public onlySuperAdmins {
+    require(admin != address(0));
     admins[admin] = false;
 
     emit RemoveAdmin(admin);

@@ -153,6 +153,7 @@ contract Registry is Ownable, administratable, upgradeable {
   }
 
   function addStorage(string name, address storageAddress) public onlySuperAdmins unlessUpgraded {
+    require(storageAddress != address(0));
     bytes32 hash = keccak256(name);
     storageForHash[hash] = storageAddress;
 

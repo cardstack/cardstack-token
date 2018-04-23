@@ -51,6 +51,8 @@ contract CstLedger is ITokenLedger, administratable {
   }
 
   function transfer(address sender, address recipient, uint256 amount) public onlyAdmins {
+    require(sender != address(0));
+    require(recipient != address(0));
     require(_balanceOf[sender] >= amount);
 
     _balanceOf[sender] = _balanceOf[sender].sub(amount);
@@ -59,6 +61,7 @@ contract CstLedger is ITokenLedger, administratable {
   }
 
   function creditAccount(address account, uint256 amount) public onlyAdmins { // remove tokens
+    require(account != address(0));
     require(_balanceOf[account] >= amount);
 
     _totalInCirculation = _totalInCirculation.sub(amount);
@@ -66,6 +69,7 @@ contract CstLedger is ITokenLedger, administratable {
   }
 
   function debitAccount(address account, uint256 amount) public onlyAdmins { // add tokens
+    require(account != address(0));
     _totalInCirculation = _totalInCirculation.add(amount);
     _balanceOf[account] = _balanceOf[account].add(amount);
     makeAccountIterable(account);
