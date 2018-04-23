@@ -37,7 +37,6 @@ contract('Registry', function(accounts) {
       await storage.setBytes32Value("cstTokenName", web3.toHex("cst"));
       await storage.setBytes32Value("cstTokenSymbol", web3.toHex("CST"));
       await storage.setUIntValue("cstBuyPrice", web3.toWei(0.1, "ether"));
-      await storage.setUIntValue("cstSellPrice", web3.toWei(0.1, "ether"));
       await storage.setUIntValue("cstCirculationCap", 100);
       await storage.setAddressValue("cstFoundation", foundation);
 

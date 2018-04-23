@@ -218,6 +218,7 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst2.address);
 
+      await cst2.freezeToken(true);
       await cst2.configure(0x0, 0x0, 0, 0, 1000000, accounts[0]);
       await cst2.foundationWithdraw(cstEth.toNumber());
     });
@@ -245,7 +246,9 @@ contract('CardStackToken', function(accounts) {
 
     it("allows purchase of CST for successor contract", async function() {
       await cst2.upgradedFrom(cst1.address, { from: admin });
+      await cst2.freezeToken(true); // this triggers a price change so contract must be frozen
       await cst2.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 1000000, NULL_ADDRESS);
+      await cst2.freezeToken(false);
 
       let buyerAccount = accounts[8];
       checkBalance(buyerAccount, 2);
