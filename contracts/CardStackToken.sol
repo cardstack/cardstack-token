@@ -221,13 +221,13 @@ contract CardStackToken is ERC20,
   function buy() public payable unlessFrozen unlessUpgraded returns (uint256) {
     require(msg.value >= buyPrice);
     require(approvedBuyer[msg.sender]);
-    assert(priceChangeBlockHeight == 0 || block.number > priceChangeBlockHeight.add(1));
-    assert(buyPrice > 0);
-    assert(circulationCap > 0);
+    require(priceChangeBlockHeight == 0 || block.number > priceChangeBlockHeight.add(1));
+    require(buyPrice > 0);
+    require(circulationCap > 0);
 
     uint256 amount = msg.value.div(buyPrice);
-    assert(totalInCirculation().add(amount) <= circulationCap);
-    assert(amount <= tokensAvailable());
+    require(totalInCirculation().add(amount) <= circulationCap);
+    require(amount <= tokensAvailable());
 
     uint256 balanceLimit;
     uint256 buyerBalance = tokenLedger.balanceOf(msg.sender);
@@ -240,7 +240,7 @@ contract CardStackToken is ERC20,
       balanceLimit = cstBalanceLimit;
     }
 
-    assert(balanceLimit > 0 && balanceLimit >= buyerBalance.add(amount));
+    require(balanceLimit > 0 && balanceLimit >= buyerBalance.add(amount));
 
     tokenLedger.debitAccount(msg.sender, amount);
     emit Transfer(this, msg.sender, amount);
