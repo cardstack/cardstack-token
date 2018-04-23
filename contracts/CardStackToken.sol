@@ -281,6 +281,13 @@ contract CardStackToken is ERC20,
     return true;
   }
 
+  /* Beware that changing an allowance with this method brings the risk that someone may use both the old
+   * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
+   * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
+   * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+   *
+   * Please use `increaseApproval` or `decreaseApproval` instead.
+   */
   function approve(address spender, uint256 value) public unlessFrozen unlessUpgraded returns (bool) {
     require(!frozenAccount[spender]);
     require(msg.sender != spender);
@@ -289,6 +296,20 @@ contract CardStackToken is ERC20,
 
     emit Approval(msg.sender, spender, value);
     return true;
+  }
+
+  function increaseApproval(address spender, uint256 addedValue) public unlessFrozen unlessUpgraded returns (bool) {
+    return approve(spender, externalStorage.getAllowance(msg.sender, spender).add(addedValue));
+  }
+
+  function decreaseApproval(address spender, uint256 subtractedValue) public unlessFrozen unlessUpgraded returns (bool) {
+    uint256 oldValue = externalStorage.getAllowance(msg.sender, spender);
+
+    if (subtractedValue > oldValue) {
+      return approve(spender, 0);
+    } else {
+      return approve(spender, oldValue.sub(subtractedValue));
+    }
   }
 
   function grantVestedTokens(address beneficiary,

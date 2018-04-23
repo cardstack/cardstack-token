@@ -182,6 +182,44 @@ contract('CardStackToken', function(accounts) {
       assert.equal(unfreezeEvent.logs[0].args.frozen, false, 'the frozen value is correct');
     });
 
+    it("does not allow increasing allowance when spender account has been frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst.freezeAccount(spender, true);
+
+      await assertRevert(async () => await cst.increaseApproval(spender, 10, { from: grantor }));
+    });
+
+    it("does not allow increasing allowance when grantor account has been frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst.freezeAccount(grantor, true);
+
+      await assertRevert(async () => await cst.increaseApproval(spender, 10, { from: grantor }));
+    });
+
+    it("does not allow decreasing allowance when spender account has been frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst.approve(spender, 10, { from: grantor });
+      await cst.freezeAccount(spender, true);
+
+      await assertRevert(async () => await cst.decreaseApproval(spender, 10, { from: grantor }));
+    });
+
+    it("does not allow decreasing allowance when grantor account has been frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst.approve(spender, 10, { from: grantor });
+      await cst.freezeAccount(grantor, true);
+
+      await assertRevert(async () => await cst.decreaseApproval(spender, 10, { from: grantor }));
+    });
+
     it("does not allow approving allowance when spender account has been frozen", async function() {
       let grantor = accounts[3];
       let spender = accounts[4];
@@ -485,6 +523,25 @@ contract('CardStackToken', function(accounts) {
 
       assert.equal(unfreezeEvent.logs[0].event, 'FrozenToken', 'the account freeze event is correct');
       assert.equal(unfreezeEvent.logs[0].args.frozen, false, 'the frozen value is correct');
+    });
+
+    it("does not allow increasing allowance when token frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst.freezeToken(true);
+
+      await assertRevert(async () => await cst.increaseApproval(spender, 10, { from: grantor }));
+    });
+
+    it("does not allow decreasing allowance when token frozen", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst.approve(spender, 10, { from: grantor });
+      await cst.freezeToken(true);
+
+      await assertRevert(async () => await cst.decreaseApproval(spender, 10, { from: grantor }));
     });
 
     it("does not allow approving allowance when token frozen", async function() {
