@@ -233,7 +233,7 @@ contract CardStackToken is ERC20,
     uint256 balanceLimit;
     uint256 buyerBalance = tokenLedger.balanceOf(msg.sender);
     uint256 customLimit = customBuyerLimit[msg.sender];
-    require(contributionMinimum == 0 || buyerBalance >= contributionMinimum || amount >= contributionMinimum);
+    require(contributionMinimum == 0 || buyerBalance.add(amount) >= contributionMinimum);
 
     if (customLimit > 0) {
       balanceLimit = customLimit;
