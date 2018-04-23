@@ -2,7 +2,7 @@
 This project contains the smart contracts that govern the CardStack token.
 
 ## Prerequisites
-* node 7.6+
+* node 8+
 
 * yarn
 
@@ -19,7 +19,7 @@ brew install ethereum
 After installing, run `geth account new` to create an account on your node.
 
 ## Installing
-This project leverages node 7.6+, please make sure to install node 7.6+ (or use nvm to manage your node versions). Additionally, this project leverages yarn.
+This project leverages node 8+, please make sure to install node 8+ (or use nvm to manage your node versions). Additionally, this project leverages yarn.
 
 ```
 yarn install
