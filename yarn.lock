@@ -1480,9 +1480,9 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
 
-ganache-cli@^6.1.0-beta.4:
-  version "6.1.0-beta.4"
-  resolved "https://registry.yarnpkg.com/ganache-cli/-/ganache-cli-6.1.0-beta.4.tgz#658dac95913adf80c88214deab38adcad46973b3"
+ganache-cli@^6.1.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/ganache-cli/-/ganache-cli-6.1.0.tgz#486c846497204b644166b5f0f74c9b41d02bdc25"
   dependencies:
     source-map-support "^0.5.3"
     webpack-cli "^2.0.9"
@@ -3267,9 +3267,9 @@ sntp@1.x.x:
   dependencies:
     hoek "2.x.x"
 
-solc@0.4.19:
-  version "0.4.19"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.4.19.tgz#1af1c4c292a0365a6977d4cbe3fbee7139b4b561"
+solc@0.4.23, solc@^0.4.23:
+  version "0.4.23"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.4.23.tgz#54a0ff4015827b32fddb62c0a418b5247310a58e"
   dependencies:
     fs-extra "^0.30.0"
     memorystream "^0.3.1"
@@ -3550,13 +3550,13 @@ trim-right@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/trim-right/-/trim-right-1.0.1.tgz#cb2e1203067e0c8de1f614094b9fe45704ea6003"
 
-truffle@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/truffle/-/truffle-4.1.0.tgz#2a4e13f86a0aaf816721f060d7e95844c6e8963c"
+truffle@^4.1.7:
+  version "4.1.7"
+  resolved "https://registry.yarnpkg.com/truffle/-/truffle-4.1.7.tgz#b2d66d26eafd92da868d67765953e12c8160aedb"
   dependencies:
     mocha "^3.4.2"
     original-require "^1.0.1"
-    solc "0.4.19"
+    solc "0.4.23"
 
 tunnel-agent@^0.6.0:
   version "0.6.0"
@@ -3932,9 +3932,9 @@ yeoman-environment@^2.0.0:
     through2 "^2.0.0"
     yeoman-environment "^1.1.0"
 
-zeppelin-solidity@^1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/zeppelin-solidity/-/zeppelin-solidity-1.7.0.tgz#c43332926b6e84a845015c21753064eeac054df0"
+zeppelin-solidity@^1.8.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/zeppelin-solidity/-/zeppelin-solidity-1.8.0.tgz#049fcde7daea9fc85210f8c6db9f8cd1ab8a853a"
   dependencies:
     dotenv "^4.0.0"
     ethjs-abi "^0.2.1"

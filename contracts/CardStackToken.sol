@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -89,7 +89,7 @@ contract CardStackToken is ERC20,
     _;
   }
 
-  function CardStackToken(address _registry, string _storageName, string _ledgerName) public payable {
+  constructor(address _registry, string _storageName, string _ledgerName) public payable {
     storageName = _storageName;
     ledgerName = _ledgerName;
     registry = _registry;
@@ -133,7 +133,7 @@ contract CardStackToken is ERC20,
 
     cstBalanceLimit = _balanceLimit;
 
-    ConfigChanged(_buyPrice, _circulationCap, _balanceLimit);
+    emit ConfigChanged(_buyPrice, _circulationCap, _balanceLimit);
 
     return true;
   }
@@ -154,7 +154,7 @@ contract CardStackToken is ERC20,
 
     address ledgerAddress = Registry(registry).getStorage(ledgerName);
     address storageAddress = Registry(registry).getStorage(storageName);
-    StorageUpdated(storageAddress, ledgerAddress);
+    emit StorageUpdated(storageAddress, ledgerAddress);
     return true;
   }
 
@@ -193,7 +193,7 @@ contract CardStackToken is ERC20,
     require(!frozenAccount[recipient]);
 
     tokenLedger.transfer(msg.sender, recipient, amount);
-    Transfer(msg.sender, recipient, amount);
+    emit Transfer(msg.sender, recipient, amount);
 
     return true;
   }
@@ -201,9 +201,9 @@ contract CardStackToken is ERC20,
   function mintTokens(uint256 mintedAmount) public onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
     tokenLedger.mintTokens(mintedAmount);
 
-    Mint(mintedAmount, tokenLedger.totalTokens(), circulationCap);
+    emit Mint(mintedAmount, tokenLedger.totalTokens(), circulationCap);
 
-    Transfer(address(0), this, mintedAmount);
+    emit Transfer(address(0), this, mintedAmount);
 
     return true;
   }
@@ -213,7 +213,7 @@ contract CardStackToken is ERC20,
     require(!frozenAccount[recipient]);
 
     tokenLedger.debitAccount(recipient, amount);
-    Transfer(this, recipient, amount);
+    emit Transfer(this, recipient, amount);
 
     return true;
   }
@@ -243,7 +243,7 @@ contract CardStackToken is ERC20,
     assert(balanceLimit > 0 && balanceLimit >= buyerBalance.add(amount));
 
     tokenLedger.debitAccount(msg.sender, amount);
-    Transfer(this, msg.sender, amount);
+    emit Transfer(this, msg.sender, amount);
 
     return amount;
   }
@@ -277,7 +277,7 @@ contract CardStackToken is ERC20,
     tokenLedger.transfer(from, to, value);
     externalStorage.setAllowance(from, msg.sender, allowanceValue.sub(value));
 
-    Transfer(from, to, value);
+    emit Transfer(from, to, value);
     return true;
   }
 
@@ -287,7 +287,7 @@ contract CardStackToken is ERC20,
 
     externalStorage.setAllowance(msg.sender, spender, value);
 
-    Approval(msg.sender, spender, value);
+    emit Approval(msg.sender, spender, value);
     return true;
   }
 
@@ -318,7 +318,7 @@ contract CardStackToken is ERC20,
                                        durationSec,
                                        isRevocable);
 
-    VestedTokenGrant(beneficiary, startDate, cliffDate, durationSec, fullyVestedAmount, isRevocable);
+    emit VestedTokenGrant(beneficiary, startDate, cliffDate, durationSec, fullyVestedAmount, isRevocable);
 
     return true;
   }
@@ -329,7 +329,7 @@ contract CardStackToken is ERC20,
 
     releaseVestedTokensForBeneficiary(beneficiary);
 
-    VestedTokenRevocation(beneficiary);
+    emit VestedTokenRevocation(beneficiary);
 
     return true;
   }
@@ -348,9 +348,9 @@ contract CardStackToken is ERC20,
     externalStorage.releaseVestedTokens(beneficiary);
 
     tokenLedger.debitAccount(beneficiary, unreleased);
-    Transfer(this, beneficiary, unreleased);
+    emit Transfer(this, beneficiary, unreleased);
 
-    VestedTokenRelease(beneficiary, unreleased);
+    emit VestedTokenRelease(beneficiary, unreleased);
 
     return true;
   }
@@ -430,7 +430,7 @@ contract CardStackToken is ERC20,
       balanceLimit = cstBalanceLimit;
     }
 
-    WhiteList(buyer, balanceLimit);
+    emit WhiteList(buyer, balanceLimit);
 
     return true;
   }
@@ -448,5 +448,7 @@ contract CardStackToken is ERC20,
       whitelistedTransfererForIndex[totalTransferWhitelistMapping] = transferer;
       totalTransferWhitelistMapping = totalTransferWhitelistMapping.add(1);
     }
+
+    return true;
   }
 }

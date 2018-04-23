@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 import "./administratable.sol";
 
@@ -32,10 +32,10 @@ contract upgradeable is administratable {
   function upgradeTo(address _successor, uint256 remainingContractBalance) public onlySuperAdmins unlessUpgraded returns (bool){
     successor = _successor;
     if (remainingContractBalance > 0) {
-      Transfer(this, _successor, remainingContractBalance);
+      emit Transfer(this, _successor, remainingContractBalance);
     }
 
-    Upgraded(_successor);
+    emit Upgraded(_successor);
     return true;
   }
 
@@ -44,7 +44,7 @@ contract upgradeable is administratable {
 
     predecessor = _predecessor;
 
-    UpgradedFrom(_predecessor);
+    emit UpgradedFrom(_predecessor);
     return true;
   }
 }

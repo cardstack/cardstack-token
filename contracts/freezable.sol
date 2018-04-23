@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -29,12 +29,12 @@ contract freezable is Ownable {
       frozenAccountForIndex[totalFrozenAccountsMapping] = target;
       totalFrozenAccountsMapping = totalFrozenAccountsMapping.add(1);
     }
-    FrozenFunds(target, freeze);
+    emit FrozenFunds(target, freeze);
   }
 
   function freezeToken(bool freeze) public onlyOwner {
     frozenToken = freeze;
-    FrozenToken(frozenToken);
+    emit FrozenToken(frozenToken);
   }
 
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -60,7 +60,7 @@ contract Registry is Ownable, administratable, upgradeable {
     hashForNamehash[namehash] = hash;
     namehashForHash[hash] = namehash;
 
-    AddrChanged(namehash, contractAddress);
+    emit AddrChanged(namehash, contractAddress);
   }
 
   function register(string name, address contractAddress, bytes32 namehash) public onlySuperAdmins unlessUpgraded returns (bool) {
@@ -92,10 +92,10 @@ contract Registry is Ownable, administratable, upgradeable {
 
     configurable(contractAddress).configureFromStorage();
 
-    ContractRegistered(contractAddress, name, namehash);
+    emit ContractRegistered(contractAddress, name, namehash);
 
     if (namehash != 0x0) {
-      AddrChanged(namehash, contractAddress);
+      emit AddrChanged(namehash, contractAddress);
     }
 
     return true;
@@ -142,13 +142,13 @@ contract Registry is Ownable, administratable, upgradeable {
     configurable(successor).configureFromStorage();
 
     if (hashForNamehash[BARE_DOMAIN_NAMEHASH] == hash) {
-      AddrChanged(BARE_DOMAIN_NAMEHASH, successor);
+      emit AddrChanged(BARE_DOMAIN_NAMEHASH, successor);
     }
     if (namehashForHash[hash] != 0x0 && namehashForHash[hash] != BARE_DOMAIN_NAMEHASH) {
-      AddrChanged(namehashForHash[hash], successor);
+      emit AddrChanged(namehashForHash[hash], successor);
     }
 
-    ContractUpgraded(successor, predecessor, name, namehashForHash[hash]);
+    emit ContractUpgraded(successor, predecessor, name, namehashForHash[hash]);
     return hash;
   }
 
@@ -156,7 +156,7 @@ contract Registry is Ownable, administratable, upgradeable {
     bytes32 hash = keccak256(name);
     storageForHash[hash] = storageAddress;
 
-    StorageAdded(storageAddress, name);
+    emit StorageAdded(storageAddress, name);
   }
 
   function getStorage(string name) public view unlessUpgraded returns (address) {
@@ -167,7 +167,7 @@ contract Registry is Ownable, administratable, upgradeable {
     address storageAddress = storageForHash[keccak256(name)];
     delete storageForHash[keccak256(name)];
 
-    StorageRemoved(storageAddress, name);
+    emit StorageRemoved(storageAddress, name);
   }
 }
 
