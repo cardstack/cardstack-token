@@ -39,6 +39,65 @@ contract('CardStackToken', function(accounts) {
       await cst.setAllowTransfers(true);
     });
 
+    it("allows account to increase the allowance for a spender", async function() {
+      await cst.approve(spender, 10, { from: grantor });
+      let txn = await cst.increaseApproval(spender, 2, { from: grantor });
+      let allowance = await cst.allowance(grantor, spender);
+
+      assert.equal(asInt(allowance), 12, "the allowance is correct");
+
+      let event = txn.logs[0];
+
+      assert.equal(event.event, "Approval", "The event type is correct");
+      assert.equal(event.args._value.toNumber(), 12, "The value is correct");
+      assert.equal(event.args._owner, grantor, "The grantor is correct");
+      assert.equal(event.args._spender, spender, "The spendor is correct");
+    });
+
+    it("does not allow an account to designate itself as a spender when increasing amount", async function() {
+      await assertRevert(async () => await cst.increaseApproval(grantor, 10, { from: grantor }));
+      let allowance = await cst.allowance(grantor, grantor);
+
+      assert.equal(asInt(allowance), 0, "the allowance is correct");
+    });
+
+    it("allows account to decrease the allowance for a spender", async function() {
+      await cst.approve(spender, 10, { from: grantor });
+      let txn = await cst.decreaseApproval(spender, 2, { from: grantor });
+      let allowance = await cst.allowance(grantor, spender);
+
+      assert.equal(asInt(allowance), 8, "the allowance is correct");
+
+      let event = txn.logs[0];
+
+      assert.equal(event.event, "Approval", "The event type is correct");
+      assert.equal(event.args._value.toNumber(), 8, "The value is correct");
+      assert.equal(event.args._owner, grantor, "The grantor is correct");
+      assert.equal(event.args._spender, spender, "The spendor is correct");
+    });
+
+    it("does not allow an account to designate itself as a spender when decreasing amount", async function() {
+      await assertRevert(async () => await cst.decreaseApproval(grantor, 10, { from: grantor }));
+      let allowance = await cst.allowance(grantor, grantor);
+
+      assert.equal(asInt(allowance), 0, "the allowance is correct");
+    });
+
+    it("asserts that the minimum allowance is not negative when decreasing the allowance", async function() {
+      await cst.approve(spender, 2, { from: grantor });
+      let txn = await cst.decreaseApproval(spender, 3, { from: grantor });
+      let allowance = await cst.allowance(grantor, spender);
+
+      assert.equal(asInt(allowance), 0, "the allowance is correct");
+
+      let event = txn.logs[0];
+
+      assert.equal(event.event, "Approval", "The event type is correct");
+      assert.equal(event.args._value.toNumber(), 0, "The value is correct");
+      assert.equal(event.args._owner, grantor, "The grantor is correct");
+      assert.equal(event.args._spender, spender, "The spendor is correct");
+    });
+
     it("allows account to approve an allowance for a spender", async function() {
       let txn = await cst.approve(spender, 10, { from: grantor });
       let allowance = await cst.allowance(grantor, spender);

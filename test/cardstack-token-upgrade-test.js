@@ -391,6 +391,33 @@ contract('CardStackToken', function(accounts) {
       assert.equal(endCstBalance, 0, "The CST balance is correct");
     });
 
+    it("allows increasing allowance for successor contract", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+
+      await cst2.increaseApproval(spender, 10, { from: grantor });
+
+      let allowance = await cst2.allowance(grantor, spender);
+
+      assert.equal(asInt(allowance), 10, "the allowance is correct");
+    });
+
+    it("allows decreasing allowance for successor contract", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst1.approve(spender, 20, { from: grantor });
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+
+      await cst2.decreaseApproval(spender, 10, { from: grantor });
+
+      let allowance = await cst2.allowance(grantor, spender);
+
+      assert.equal(asInt(allowance), 10, "the allowance is correct");
+    });
+
     it("allows approving allowance for successor contract", async function() {
       let grantor = accounts[3];
       let spender = accounts[4];
@@ -852,6 +879,25 @@ contract('CardStackToken', function(accounts) {
 
       assert.ok(startFoundationBalance.toNumber() - endFoundationBalance.toNumber() < MAX_FAILED_TXN_GAS * GAS_PRICE, "The foundations's account was just charged for gas");
       assert.equal(endCstBalance.toNumber(), 0, "The CST balance is correct");
+    });
+
+    it("does not allow increasing allowance when contract has been upgraded", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
+
+      await assertRevert(async () => await cst1.increaseApproval(spender, 10, { from: grantor }));
+    });
+
+    it("does not allow decreasing allowance when contract has been upgraded", async function() {
+      let grantor = accounts[3];
+      let spender = accounts[4];
+
+      await cst1.approve(spender, 10, { from: grantor });
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
+
+      await assertRevert(async () => await cst1.decreaseApproval(spender, 10, { from: grantor }));
     });
 
     it("does not allow approving allowance when contract has been upgraded", async function() {
