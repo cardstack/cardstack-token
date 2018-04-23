@@ -11,25 +11,26 @@ contract upgradeable is administratable {
   event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
   modifier unlessUpgraded() {
-    if (successor != 0x0) revert();
+    if (successor != address(0)) revert();
     _;
   }
 
   modifier isUpgraded() {
-    if (successor == 0x0) revert();
+    if (successor == address(0)) revert();
     _;
   }
 
   modifier hasPredecessor() {
-    if (predecessor == 0x0) revert();
+    if (predecessor == address(0)) revert();
     _;
   }
 
   function isDeprecated() public view returns (bool) {
-    return successor != 0x0;
+    return successor != address(0);
   }
 
   function upgradeTo(address _successor, uint256 remainingContractBalance) public onlySuperAdmins unlessUpgraded returns (bool){
+    require(_successor != address(0));
     successor = _successor;
     if (remainingContractBalance > 0) {
       emit Transfer(this, _successor, remainingContractBalance);
@@ -40,7 +41,7 @@ contract upgradeable is administratable {
   }
 
   function upgradedFrom(address _predecessor) public onlySuperAdmins returns (bool) {
-    require(_predecessor != 0x0);
+    require(_predecessor != address(0));
 
     predecessor = _predecessor;
 

@@ -90,6 +90,7 @@ contract CardStackToken is ERC20,
   }
 
   constructor(address _registry, string _storageName, string _ledgerName) public payable {
+    require(_registry != address(0));
     storageName = _storageName;
     ledgerName = _ledgerName;
     registry = _registry;
@@ -289,6 +290,7 @@ contract CardStackToken is ERC20,
    * Please use `increaseApproval` or `decreaseApproval` instead.
    */
   function approve(address spender, uint256 value) public unlessFrozen unlessUpgraded returns (bool) {
+    require(spender != address(0));
     require(!frozenAccount[spender]);
     require(msg.sender != spender);
 
@@ -346,6 +348,7 @@ contract CardStackToken is ERC20,
 
 
   function revokeVesting(address beneficiary) public onlySuperAdmins unlessUpgraded unlessFrozen returns (bool) {
+    require(beneficiary != address(0));
     externalStorage.revokeVesting(beneficiary);
 
     releaseVestedTokensForBeneficiary(beneficiary);
@@ -360,6 +363,7 @@ contract CardStackToken is ERC20,
   }
 
   function releaseVestedTokensForBeneficiary(address beneficiary) public unlessFrozen unlessUpgraded returns (bool) {
+    require(beneficiary != address(0));
     require(!frozenAccount[beneficiary]);
 
     uint256 unreleased = releasableAmount(beneficiary);
@@ -417,6 +421,7 @@ contract CardStackToken is ERC20,
   }
 
   function setCustomBuyer(address buyer, uint256 balanceLimit) public onlySuperAdmins unlessUpgraded returns (bool) {
+    require(buyer != address(0));
     customBuyerLimit[buyer] = balanceLimit;
     if (!processedCustomBuyer[buyer]) {
       processedCustomBuyer[buyer] = true;
@@ -439,6 +444,7 @@ contract CardStackToken is ERC20,
   }
 
   function addBuyer(address buyer) public onlySuperAdmins unlessUpgraded returns (bool) {
+    require(buyer != address(0));
     approvedBuyer[buyer] = true;
     if (!processedBuyer[buyer]) {
       processedBuyer[buyer] = true;
@@ -457,12 +463,14 @@ contract CardStackToken is ERC20,
   }
 
   function removeBuyer(address buyer) public onlySuperAdmins unlessUpgraded returns (bool) {
+    require(buyer != address(0));
     approvedBuyer[buyer] = false;
 
     return true;
   }
 
   function setWhitelistedTransferer(address transferer, bool _allowTransfers) public onlySuperAdmins unlessUpgraded returns (bool) {
+    require(transferer != address(0));
     whitelistedTransferer[transferer] = _allowTransfers;
     if (!processedWhitelistedTransferer[transferer]) {
       processedWhitelistedTransferer[transferer] = true;
