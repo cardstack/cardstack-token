@@ -29,14 +29,6 @@ library CstLibrary {
     ExternalStorage(_storage).setUIntValue("cstBuyPrice", value);
   }
 
-  function getSellPrice(address _storage) public view returns(uint256) {
-    return ExternalStorage(_storage).getUIntValue("cstSellPrice");
-  }
-
-  function setSellPrice(address _storage, uint256 value) public {
-    ExternalStorage(_storage).setUIntValue("cstSellPrice", value);
-  }
-
   function getCirculationCap(address _storage) public view returns(uint256) {
     return ExternalStorage(_storage).getUIntValue("cstCirculationCap");
   }

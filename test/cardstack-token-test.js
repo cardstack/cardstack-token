@@ -34,7 +34,6 @@ contract('CardStackToken', function(accounts) {
       await storage.setBytes32Value("cstTokenName", web3.toHex("CardStack Token"));
       await storage.setBytes32Value("cstTokenSymbol", web3.toHex("CST"));
       await storage.setUIntValue("cstBuyPrice", web3.toWei(0.1, "ether"));
-      await storage.setUIntValue("cstSellPrice", web3.toWei(0.1, "ether"));
       await storage.setUIntValue("cstCirculationCap", 100);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
@@ -56,6 +55,7 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst.address);
 
+      await cst.freezeToken(true);
       await cst.configure(0x0, 0x0, 0, 0, 1000000, accounts[0]);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
@@ -63,6 +63,7 @@ contract('CardStackToken', function(accounts) {
     it("should configure the CST correctly", async function() {
       await ledger.mintTokens(10000);
 
+      await cst.freezeToken(true); // triggers a price change so need to freeze token first
       let txn = await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 8000, 1000000, NULL_ADDRESS);
 
       let name = await cst.name();
@@ -100,10 +101,29 @@ contract('CardStackToken', function(accounts) {
       assert.equal(event.args.balanceLimit.toNumber(), 1000000, "the balanceLimit is correct");
     });
 
+    it("allows the CST price to be changed when the token is frozen", async function() {
+      await ledger.mintTokens(10000);
+      await cst.freezeToken(true);
+
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 5, 8000, 1000000, NULL_ADDRESS);
+
+      let buyPrice = await cst.buyPrice();
+      assert.equal(buyPrice.toNumber(), 5, "the buyPrice is correct");
+    });
+
+    it("does not allow the CST price to be changed when the token is not frozen", async function() {
+      await ledger.mintTokens(10000);
+      await assertRevert(async () => await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 5, 8000, 1000000, NULL_ADDRESS));
+
+      let buyPrice = await cst.buyPrice();
+      assert.equal(buyPrice.toNumber(), web3.toWei(0.1, "ether"), "the buyPrice is correct");
+    });
+
     it("non-owner cannot configure token", async function() {
       let nonOwner = accounts[1];
 
       await ledger.mintTokens(10000);
+      await cst.freezeToken(true); // triggers a price change so need to freeze token first
 
       await assertRevert(async () => await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 2, 8000, 1000000, NULL_ADDRESS, {
         from: nonOwner
@@ -114,6 +134,7 @@ contract('CardStackToken', function(accounts) {
       let nonOwner = accounts[1];
 
       await ledger.mintTokens(10000);
+      await cst.freezeToken(true); // triggers a price change so need to freeze token first
 
       await storage.setUIntValue(web3.sha3("cstBuyPrice"), web3.toWei(0.5, "ether"));
       await storage.setUIntValue(web3.sha3("cstCirculationCap"), 10);
@@ -129,6 +150,7 @@ contract('CardStackToken', function(accounts) {
       let newLedger = await CstLedger.new();
 
       await ledger.mintTokens(10000);
+      await cst.freezeToken(true); // triggers a price change so need to freeze token first
 
       await newStorage.setUIntValue("cstBuyPrice", web3.toWei(0.5, "ether"));
       await newStorage.setUIntValue("cstCirculationCap", 10);
@@ -171,9 +193,9 @@ contract('CardStackToken', function(accounts) {
       let newLedger = await CstLedger.new();
 
       await ledger.mintTokens(10000);
+      await cst.freezeToken(true); // triggers a price change so need to freeze token first
 
       await newStorage.setUIntValue("cstBuyPrice", web3.toWei(0.5, "ether"));
-      await newStorage.setUIntValue("cstSellPrice", web3.toWei(0.4, "ether"));
       await newStorage.setUIntValue("cstCirculationCap", 10);
       await newStorage.setBytes32Value("cstTokenSymbol", web3.toHex("CST1"));
       await newStorage.setBytes32Value("cstTokenName", web3.toHex("New CardStack Token"));
@@ -369,7 +391,6 @@ contract('CardStackToken', function(accounts) {
       await storage.setBytes32Value("cstTokenName", web3.toHex("CardStack Token"));
       await storage.setBytes32Value("cstTokenSymbol", web3.toHex("CST"));
       await storage.setUIntValue("cstBuyPrice", web3.toWei(0.1, "ether"));
-      await storage.setUIntValue("cstSellPrice", web3.toWei(0.1, "ether"));
       await storage.setUIntValue("cstCirculationCap", 1000);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
@@ -383,6 +404,7 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst.address);
 
+      await cst.freezeToken(true);
       await cst.configure(0x0, 0x0, 0, 0, 1000000, accounts[0]);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
@@ -503,7 +525,6 @@ contract('CardStackToken', function(accounts) {
       await storage.setBytes32Value("cstTokenName", web3.toHex("CardStack Token"));
       await storage.setBytes32Value("cstTokenSymbol", web3.toHex("CST"));
       await storage.setUIntValue("cstBuyPrice", web3.toWei(0.1, "ether"));
-      await storage.setUIntValue("cstSellPrice", web3.toWei(0.1, "ether"));
       await storage.setUIntValue("cstCirculationCap", 1000);
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT

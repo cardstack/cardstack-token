@@ -40,7 +40,6 @@ contract CardStackToken is ERC20,
   // and not in storage, as this whitelist is specific to phase 1 token sale
   uint256 public cstBalanceLimit;
   uint256 public contributionMinimum;
-  uint256 priceChangeBlockHeight;
 
   uint256 public totalCustomBuyersMapping;
   mapping (address => uint256) public customBuyerLimit;
@@ -60,7 +59,6 @@ contract CardStackToken is ERC20,
   uint256 public decimals = 0;
   bool public allowTransfers;
 
-  event PriceChange(uint256 newSellPrice, uint256 newBuyPrice);
   event Mint(uint256 amountMinted, uint256 totalTokens, uint256 circulationCap);
   event Approval(address indexed _owner,
                  address indexed _spender,
@@ -118,16 +116,17 @@ contract CardStackToken is ERC20,
                      uint256 _balanceLimit,
                      address _foundation) public onlySuperAdmins unlessUpgraded initStorage returns (bool) {
 
+    if (buyPrice > 0 && buyPrice != _buyPrice) {
+      require(frozenToken);
+    }
+
     externalStorage.setTokenName(_tokenName);
     externalStorage.setTokenSymbol(_tokenSymbol);
     externalStorage.setBuyPrice(_buyPrice);
     externalStorage.setCirculationCap(_circulationCap);
     externalStorage.setFoundation(_foundation);
 
-    if (buyPrice > 0 && buyPrice != _buyPrice) {
-      priceChangeBlockHeight = block.number;
-    }
-
+    // TODO refactor to use external storage exclusively for these vars
     buyPrice = _buyPrice;
     circulationCap = _circulationCap;
     foundation = _foundation;
@@ -167,19 +166,19 @@ contract CardStackToken is ERC20,
     return bytes32ToString(externalStorage.getTokenSymbol());
   }
 
-  function totalInCirculation() public view unlessFrozen unlessUpgraded returns(uint256) {
+  function totalInCirculation() public view unlessUpgraded returns(uint256) {
     return tokenLedger.totalInCirculation().add(totalUnvestedAndUnreleasedTokens());
   }
 
-  function totalSupply() public view unlessFrozen unlessUpgraded returns(uint256) {
+  function totalSupply() public view unlessUpgraded returns(uint256) {
     return tokenLedger.totalTokens();
   }
 
-  function tokensAvailable() public view unlessFrozen unlessUpgraded returns(uint256) {
+  function tokensAvailable() public view unlessUpgraded returns(uint256) {
     return totalSupply().sub(totalInCirculation());
   }
 
-  function balanceOf(address account) public view unlessUpgraded unlessFrozen returns (uint256) {
+  function balanceOf(address account) public view unlessUpgraded returns (uint256) {
     address thisAddress = this;
     if (thisAddress == account) {
       return tokensAvailable();
@@ -222,7 +221,6 @@ contract CardStackToken is ERC20,
   function buy() public payable unlessFrozen unlessUpgraded returns (uint256) {
     require(msg.value >= buyPrice);
     require(approvedBuyer[msg.sender]);
-    require(priceChangeBlockHeight == 0 || block.number > priceChangeBlockHeight.add(1));
     require(buyPrice > 0);
     require(circulationCap > 0);
 

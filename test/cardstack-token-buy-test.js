@@ -44,6 +44,7 @@ contract('CardStackToken', function(accounts) {
     afterEach(async function() {
       let cstEth = await web3.eth.getBalance(cst.address);
 
+      await cst.freezeToken(true);
       await cst.configure(0x0, 0x0, 0, 0, 1000000, accounts[0]);
       await cst.foundationWithdraw(cstEth.toNumber());
     });
@@ -121,83 +122,6 @@ contract('CardStackToken', function(accounts) {
       assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
       assert.equal(cstBalance, 0, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
-    });
-
-    it("cannot buy CST immediately after a price change", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 1000000, NULL_ADDRESS);
-      await ledger.mintTokens(10);
-      let buyerAccount = accounts[8];
-
-      let startBalance = await web3.eth.getBalance(buyerAccount);
-
-      startBalance = asInt(startBalance);
-
-      await cst.addBuyer(buyerAccount);
-
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 10, 1000000, NULL_ADDRESS);
-      let txnValue = web3.toWei(0.2, "ether");
-
-      await assertRevert(async () => await cst.buy({
-        from: buyerAccount,
-        value: txnValue,
-        gasPrice: GAS_PRICE
-      }));
-
-      let endBalance = await web3.eth.getBalance(buyerAccount);
-      let cstBalance = await cst.balanceOf(buyerAccount);
-      let totalInCirculation = await cst.totalInCirculation();
-
-      endBalance = asInt(endBalance);
-
-      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
-      assert.equal(cstBalance, 0, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
-    });
-
-    it("can buy CST at least 2 blocks after a price change", async function() {
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 10, 1000000, NULL_ADDRESS);
-      await ledger.mintTokens(10);
-      let buyerAccount = accounts[8];
-      let txnValue = web3.toWei(2, "ether");
-
-      let startBalance = await web3.eth.getBalance(buyerAccount);
-      let startCstEth = await web3.eth.getBalance(cst.address);
-
-      startBalance = asInt(startBalance);
-
-      await cst.addBuyer(buyerAccount);
-
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 10, 1000000, NULL_ADDRESS);
-
-      // change the block height by adding buyers
-      await cst.addBuyer(accounts[20]);
-      await cst.addBuyer(accounts[21]);
-
-      let txn = await cst.buy({
-        from: buyerAccount,
-        value: txnValue,
-        gasPrice: GAS_PRICE
-      });
-
-      // console.log("TXN", JSON.stringify(txn, null, 2));
-      assert.ok(txn.receipt);
-      assert.ok(txn.logs);
-
-      let { cumulativeGasUsed } = txn.receipt;
-      let endBalance = await web3.eth.getBalance(buyerAccount);
-      let endCstEth = await web3.eth.getBalance(cst.address);
-      let cstBalance = await cst.balanceOf(buyerAccount);
-      let totalInCirculation = await cst.totalInCirculation();
-      let balanceOfCstContract = await cst.balanceOf(cst.address);
-
-      endBalance = asInt(endBalance);
-
-      assert.ok(cumulativeGasUsed < 170000, "Less than 170000 gas was used for the txn");
-      assert.ok(Math.abs(startBalance - asInt(txnValue) - (GAS_PRICE * cumulativeGasUsed) - endBalance) < ROUNDING_ERROR_WEI, "Buyer's wallet debited correctly");
-      assert.equal(web3.fromWei(asInt(endCstEth) - asInt(startCstEth), 'ether'), 2, 'the ether balance for the CST contract is correct');
-      assert.equal(cstBalance, 2, "The CST balance is correct");
-      assert.equal(totalInCirculation, 2, "The CST total in circulation was updated correctly");
-      assert.equal(asInt(balanceOfCstContract), 8, "The balanceOf the cst contract is correct");
     });
 
     it("can not purchase more CST than the amount of ethers in the buyers wallet", async function() {
