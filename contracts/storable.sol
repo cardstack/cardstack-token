@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 contract storable {
   function getLedgerNameHash() public view returns (bytes32);

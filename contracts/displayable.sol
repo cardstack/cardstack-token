@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 contract displayable {
   function bytes32ToString(bytes32 x) public pure returns (string) {

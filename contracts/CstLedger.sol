@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
 import "./administratable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
