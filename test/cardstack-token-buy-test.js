@@ -598,6 +598,35 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(balanceOfCstContract), 90, "The balanceOf the cst contract is correct");
     });
 
+    it("allows a purchase of CST when buyer buys upto the contirbution miniumum when they already have a CST balance", async function() {
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
+      await ledger.mintTokens(100);
+      let buyerAccount = accounts[8];
+      let txnValue = web3.toWei(0.5, "ether");
+
+      await cst.addBuyer(buyerAccount);
+      await cst.setContributionMinimum(5);
+      await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+      await cst.setContributionMinimum(6);
+      await cst.buy({
+        from: buyerAccount,
+        value: web3.toWei(0.1, "ether"),
+        gasPrice: GAS_PRICE
+      });
+
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+      let balanceOfCstContract = await cst.balanceOf(cst.address);
+
+      assert.equal(cstBalance, 6, "The CST balance is correct");
+      assert.equal(totalInCirculation, 6, "The CST total in circulation was updated correctly");
+      assert.equal(asInt(balanceOfCstContract), 94, "The balanceOf the cst contract is correct");
+    });
+
     it("allows a purchase of CST when the buyer has more than the contribution minimum as a CST balance, and makes a new purchase that is less than the contribution minimum", async function() {
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"),  web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
       await ledger.mintTokens(100);
