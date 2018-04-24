@@ -7,11 +7,10 @@ contract freezable is Ownable {
   using SafeMath for uint256;
 
   bool public frozenToken;
-  uint256 public totalFrozenAccountsMapping;
   // TODO move this into external storage
+  address[] public frozenAccountForIndex;
   mapping (address => bool) public frozenAccount;
-  mapping (uint256 => address) public frozenAccountForIndex;
-  mapping (address => bool) processedAccount;
+  mapping (address => bool) private processedAccount;
 
   event FrozenFunds(address indexed target, bool frozen);
   event FrozenToken(bool frozen);
@@ -22,12 +21,15 @@ contract freezable is Ownable {
     _;
   }
 
+  function totalFrozenAccountsMapping() public view returns(uint256) {
+    return frozenAccountForIndex.length;
+  }
+
   function freezeAccount(address target, bool freeze) public onlyOwner {
     frozenAccount[target] = freeze;
     if (!processedAccount[target]) {
+      frozenAccountForIndex.push(target);
       processedAccount[target] = true;
-      frozenAccountForIndex[totalFrozenAccountsMapping] = target;
-      totalFrozenAccountsMapping = totalFrozenAccountsMapping.add(1);
     }
     emit FrozenFunds(target, freeze);
   }

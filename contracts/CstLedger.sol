@@ -22,9 +22,8 @@ contract CstLedger is ITokenLedger, administratable {
   uint256 public _totalInCirculation; // warning this does not take into account unvested nor vested-unreleased tokens into consideration
   uint256 public _totalTokens;
   mapping (address => uint256) public _balanceOf;
-  uint256 public ledgerCount;
-  mapping (uint256 => address) public accountForIndex;
   mapping (address => bool) public accounts;
+  address[] public accountForIndex;
 
   function totalTokens() public view returns (uint256) {
     return _totalTokens;
@@ -42,10 +41,13 @@ contract CstLedger is ITokenLedger, administratable {
     _totalTokens = _totalTokens.add(amount);
   }
 
+  function ledgerCount() public view returns (uint256) {
+    return accountForIndex.length;
+  }
+
   function makeAccountIterable(address account) internal {
     if (!accounts[account]) {
-      accountForIndex[ledgerCount] = account;
-      ledgerCount = ledgerCount.add(1);
+      accountForIndex.push(account);
       accounts[account] = true;
     }
   }

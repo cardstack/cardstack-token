@@ -6,14 +6,12 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 contract administratable is Ownable {
   using SafeMath for uint256;
 
-  uint256 public totalAdminsMapping;
-  uint256 public totalSuperAdminsMapping;
-  mapping (uint256 => address) public adminsForIndex;
-  mapping (uint256 => address) public superAdminsForIndex;
+  address[] public adminsForIndex;
+  address[] public superAdminsForIndex;
   mapping (address => bool) public admins;
   mapping (address => bool) public superAdmins;
-  mapping (address => bool) processedAdmin;
-  mapping (address => bool) processedSuperAdmin;
+  mapping (address => bool) private processedAdmin;
+  mapping (address => bool) private processedSuperAdmin;
 
   event AddAdmin(address indexed admin);
   event RemoveAdmin(address indexed admin);
@@ -30,13 +28,16 @@ contract administratable is Ownable {
     _;
   }
 
+  function totalSuperAdminsMapping() public view returns (uint256) {
+    return superAdminsForIndex.length;
+  }
+
   function addSuperAdmin(address admin) public onlyOwner {
     require(admin != address(0));
     superAdmins[admin] = true;
     if (!processedSuperAdmin[admin]) {
+      superAdminsForIndex.push(admin);
       processedSuperAdmin[admin] = true;
-      superAdminsForIndex[totalSuperAdminsMapping] = admin;
-      totalSuperAdminsMapping = totalSuperAdminsMapping.add(1);
     }
 
     emit AddSuperAdmin(admin);
@@ -49,13 +50,16 @@ contract administratable is Ownable {
     emit RemoveSuperAdmin(admin);
   }
 
+  function totalAdminsMapping() public view returns (uint256) {
+    return adminsForIndex.length;
+  }
+
   function addAdmin(address admin) public onlySuperAdmins {
     require(admin != address(0));
     admins[admin] = true;
     if (!processedAdmin[admin]) {
+      adminsForIndex.push(admin);
       processedAdmin[admin] = true;
-      adminsForIndex[totalAdminsMapping] = admin;
-      totalAdminsMapping = totalAdminsMapping.add(1);
     }
 
     emit AddAdmin(admin);

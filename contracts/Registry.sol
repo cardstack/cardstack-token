@@ -18,12 +18,11 @@ contract Registry is Ownable, administratable, upgradeable {
   bytes4 constant ADDR_INTERFACE_ID = 0x3b3b57de;
   bytes32 constant BARE_DOMAIN_NAMEHASH = 0x794941fae74d6435d1b29ee1c08cc39941ba78470872e6afd0693c7eeb63025c; // namehash for "cardstack.eth"
 
-  uint256 public numContracts;
   mapping(bytes32 => address) public storageForHash;
   mapping(bytes32 => address) public contractForHash;
   mapping(bytes32 => bytes32) public hashForNamehash;
   mapping(bytes32 => bytes32) public namehashForHash;
-  mapping(uint256 => string) public contractNameForIndex;
+  string[] public contractNameForIndex;
 
   event ContractRegistered(address indexed _contract, string _name, bytes32 namehash);
   event ContractUpgraded(address indexed successor, address indexed predecessor, string name, bytes32 namehash);
@@ -48,6 +47,10 @@ contract Registry is Ownable, administratable, upgradeable {
     return keccak256(name);
   }
 
+  function numContracts() public view returns(uint256) {
+    return contractNameForIndex.length;
+  }
+
   function setNamehash(string contractName, bytes32 namehash) public onlySuperAdmins unlessUpgraded returns (bool) {
     require(namehash != 0x0);
 
@@ -70,15 +73,13 @@ contract Registry is Ownable, administratable, upgradeable {
     require(contractForHash[hash] == 0x0);
     require(hashForNamehash[namehash] == 0x0);
 
-    contractNameForIndex[numContracts] = name;
+    contractNameForIndex.push(name);
     contractForHash[hash] = contractAddress;
 
     if (namehash != 0x0) {
       hashForNamehash[namehash] = hash;
       namehashForHash[hash] = namehash;
     }
-
-    numContracts = numContracts.add(1);
 
     address storageAddress = storageForHash[storable(contractAddress).getStorageNameHash()];
     address ledgerAddress = storageForHash[storable(contractAddress).getLedgerNameHash()];

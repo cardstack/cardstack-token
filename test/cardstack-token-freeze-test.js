@@ -52,12 +52,10 @@ contract('CardStackToken', function(accounts) {
 
 
       let frozenCount = await cst.totalFrozenAccountsMapping();
-      let firstFrozenAccount = await cst.frozenAccountForIndex(0);
       let isFrozen = await cst.frozenAccount(frozenAccount);
 
       assert.notOk(isFrozen, "the account is not frozen");
       assert.equal(frozenCount, 0, "the frozenCount is correct");
-      assert.equal(firstFrozenAccount, NULL_ADDRESS, "the frozenAccountForIndex is correct");
 
       await cst.freezeAccount(frozenAccount, true);
     });

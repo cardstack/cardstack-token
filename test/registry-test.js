@@ -203,14 +203,9 @@ contract('Registry', function(accounts) {
 
       await assertRevert(async () => await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: nonSuperAdmin }));
 
-      let hash = web3.sha3("cst");
       let count = await registry.numContracts();
-      let contractName = await registry.contractNameForIndex(0);
-      let contractAddress = await registry.contractForHash(hash);
 
       assert.equal(count, 0, "contract count is correct");
-      assert.equal(contractName.toString(), "", "contract name is correct");
-      assert.equal(contractAddress.toString(), NULL_ADDRESS, "The contract address is correct");
     });
 
     it("does not allow a contract to be registered more than once", async function() {
@@ -495,10 +490,7 @@ contract('Registry', function(accounts) {
 
       await assertRevert(async () => await registry.upgradeContract("cst", cst2.address, { from: superAdmin }));
 
-      let hash = web3.sha3("cst");
       let count = await registry.numContracts();
-      let contractName = await registry.contractNameForIndex(0);
-      let contractAddress = await registry.contractForHash(hash);
 
       let cst1Predecessor = await cst1.predecessor();
       let cst1Successor = await cst1.successor();
@@ -506,8 +498,6 @@ contract('Registry', function(accounts) {
       let cst2Successor = await cst2.successor();
 
       assert.equal(count, 0, "contract count is correct");
-      assert.equal(contractName.toString(), "", "contract name is correct");
-      assert.equal(contractAddress.toString(), NULL_ADDRESS, "The contract address is correct");
 
       assert.equal(cst1Predecessor, NULL_ADDRESS, "the address is correct");
       assert.equal(cst1Successor, NULL_ADDRESS, "the address is correct");
