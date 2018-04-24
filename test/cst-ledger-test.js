@@ -44,11 +44,9 @@ contract('CstLedger', function(accounts) {
 
       let isAdmin = await ledger.admins(admin);
       let adminCount = await ledger.totalAdminsMapping();
-      let firstAdminAddress = await ledger.adminsForIndex(0);
 
       assert.notOk(isAdmin, "admin was not added");
       assert.equal(adminCount, 0, 'the admin count is correct');
-      assert.equal(firstAdminAddress, NULL_ADDRESS, 'the admin address is correct');
     });
 
     it("allows admin to mint tokens", async function() {

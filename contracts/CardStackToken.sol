@@ -41,20 +41,17 @@ contract CardStackToken is ERC20,
   uint256 public cstBalanceLimit;
   uint256 public contributionMinimum;
 
-  uint256 public totalCustomBuyersMapping;
   mapping (address => uint256) public customBuyerLimit;
-  mapping (uint256 => address) public customBuyerForIndex;
-  mapping (address => bool) processedCustomBuyer;
+  address[] public customBuyerForIndex;
+  mapping (address => bool) private processedCustomBuyer;
 
-  uint256 public totalBuyersMapping;
   mapping (address => bool) public approvedBuyer;
-  mapping (uint256 => address) public approvedBuyerForIndex;
-  mapping (address => bool) processedBuyer;
+  address[] public approvedBuyerForIndex;
+  mapping (address => bool) private processedBuyer;
 
-  uint256 public totalTransferWhitelistMapping;
   mapping (address => bool) public whitelistedTransferer;
-  mapping (uint256 => address) public whitelistedTransfererForIndex;
-  mapping (address => bool) processedWhitelistedTransferer;
+  address[] public whitelistedTransfererForIndex;
+  mapping (address => bool) private processedWhitelistedTransferer;
 
   uint256 public decimals = 0;
   bool public allowTransfers;
@@ -147,6 +144,7 @@ contract CardStackToken is ERC20,
   }
 
   function updateStorage(string newStorageName, string newLedgerName) public onlySuperAdmins unlessUpgraded returns (bool) {
+    // TODO we should assert contract is frozen before updating storage
     storageName = newStorageName;
     ledgerName = newLedgerName;
 
@@ -418,13 +416,16 @@ contract CardStackToken is ERC20,
     vestedAvailableAmount = externalStorage.vestedAvailableAmount(_beneficiary);
   }
 
+  function totalCustomBuyersMapping() public view returns (uint256) {
+    return customBuyerForIndex.length;
+  }
+
   function setCustomBuyer(address buyer, uint256 balanceLimit) public onlySuperAdmins unlessUpgraded returns (bool) {
     require(buyer != address(0));
     customBuyerLimit[buyer] = balanceLimit;
     if (!processedCustomBuyer[buyer]) {
+      customBuyerForIndex.push(buyer);
       processedCustomBuyer[buyer] = true;
-      customBuyerForIndex[totalCustomBuyersMapping] = buyer;
-      totalCustomBuyersMapping = totalCustomBuyersMapping.add(1);
     }
     addBuyer(buyer);
 
@@ -441,13 +442,16 @@ contract CardStackToken is ERC20,
     return true;
   }
 
+  function totalBuyersMapping() public view returns (uint256) {
+    return approvedBuyerForIndex.length;
+  }
+
   function addBuyer(address buyer) public onlySuperAdmins unlessUpgraded returns (bool) {
     require(buyer != address(0));
     approvedBuyer[buyer] = true;
     if (!processedBuyer[buyer]) {
+      approvedBuyerForIndex.push(buyer);
       processedBuyer[buyer] = true;
-      approvedBuyerForIndex[totalBuyersMapping] = buyer;
-      totalBuyersMapping = totalBuyersMapping.add(1);
     }
 
     uint256 balanceLimit = customBuyerLimit[buyer];
@@ -467,13 +471,16 @@ contract CardStackToken is ERC20,
     return true;
   }
 
+  function totalTransferWhitelistMapping() public view returns (uint256) {
+    return whitelistedTransfererForIndex.length;
+  }
+
   function setWhitelistedTransferer(address transferer, bool _allowTransfers) public onlySuperAdmins unlessUpgraded returns (bool) {
     require(transferer != address(0));
     whitelistedTransferer[transferer] = _allowTransfers;
     if (!processedWhitelistedTransferer[transferer]) {
+      whitelistedTransfererForIndex.push(transferer);
       processedWhitelistedTransferer[transferer] = true;
-      whitelistedTransfererForIndex[totalTransferWhitelistMapping] = transferer;
-      totalTransferWhitelistMapping = totalTransferWhitelistMapping.add(1);
     }
 
     return true;

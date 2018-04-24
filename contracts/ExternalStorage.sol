@@ -6,30 +6,32 @@ import "./administratable.sol";
 contract ExternalStorage is administratable {
   using SafeMath for uint256;
 
-  mapping(bytes32 => mapping(address => mapping(address => uint256))) MultiLedgerStorage;
-  mapping(bytes32 => uint256) public primaryLedgerCount;
-  mapping(bytes32 => mapping(address => bool)) public ledgerPrimaryEntries;
-  mapping(bytes32 => mapping(uint256 => address)) public primaryLedgerEntryForIndex;
-  mapping(bytes32 => mapping(address => uint256)) public secondaryLedgerCount;
-  mapping(bytes32 => mapping(address => mapping(address => bool))) public ledgerSecondaryEntries;
-  mapping(bytes32 => mapping(address => mapping(uint256 => address))) public secondaryLedgerEntryForIndex;
+  mapping(bytes32 => address[]) public primaryLedgerEntryForIndex;
+  mapping(bytes32 => mapping(address => address[])) public secondaryLedgerEntryForIndex;
+  mapping(bytes32 => mapping(address => mapping(address => uint256))) private MultiLedgerStorage;
+  mapping(bytes32 => mapping(address => bool)) private ledgerPrimaryEntries;
+  mapping(bytes32 => mapping(address => mapping(address => bool))) private ledgerSecondaryEntries;
 
   function getMultiLedgerValue(string record, address primaryAddress, address secondaryAddress) public view returns (uint256) {
     return MultiLedgerStorage[keccak256(record)][primaryAddress][secondaryAddress];
   }
 
+  function primaryLedgerCount(string record) public view returns (uint256) {
+    return primaryLedgerEntryForIndex[keccak256(record)].length;
+  }
+
+  function secondaryLedgerCount(string record, address primaryAddress) public view returns (uint256) {
+    return secondaryLedgerEntryForIndex[keccak256(record)][primaryAddress].length;
+  }
+
   function setMultiLedgerValue(string record, address primaryAddress, address secondaryAddress, uint256 value) public onlyAdmins {
     bytes32 hash = keccak256(record);
-    uint256 primaryLedgerIndex = primaryLedgerCount[hash];
-    uint256 secondaryLedgerIndex = secondaryLedgerCount[hash][primaryAddress];
     if (!ledgerSecondaryEntries[hash][primaryAddress][secondaryAddress]) {
-      secondaryLedgerEntryForIndex[hash][primaryAddress][secondaryLedgerIndex] = secondaryAddress;
-      secondaryLedgerCount[hash][primaryAddress] = secondaryLedgerIndex.add(1);
+      secondaryLedgerEntryForIndex[hash][primaryAddress].push(secondaryAddress);
       ledgerSecondaryEntries[hash][primaryAddress][secondaryAddress] = true;
 
       if (!ledgerPrimaryEntries[hash][primaryAddress]) {
-        primaryLedgerEntryForIndex[hash][primaryLedgerIndex] = primaryAddress;
-        primaryLedgerCount[hash] = primaryLedgerIndex.add(1);
+        primaryLedgerEntryForIndex[hash].push(primaryAddress);
         ledgerPrimaryEntries[hash][primaryAddress] = true;
       }
     }
@@ -37,50 +39,44 @@ contract ExternalStorage is administratable {
     MultiLedgerStorage[hash][primaryAddress][secondaryAddress] = value;
   }
 
-  mapping(bytes32 => mapping(address => uint256)) LedgerStorage;
-  mapping(bytes32 => uint256) public ledgerCount;
-  mapping(bytes32 => mapping(address => bool)) public ledgerAccounts;
-  mapping(bytes32 => mapping(uint256 => address)) public ledgerEntryForIndex;
+  mapping(bytes32 => address[]) public ledgerEntryForIndex;
+  mapping(bytes32 => mapping(address => uint256)) private LedgerStorage;
+  mapping(bytes32 => mapping(address => bool)) private ledgerAccounts;
 
   function getLedgerValue(string record, address _address) public view returns (uint256) {
     return LedgerStorage[keccak256(record)][_address];
   }
 
   function getLedgerCount(string record) public view returns (uint256) {
-    return ledgerCount[keccak256(record)];
+    return ledgerEntryForIndex[keccak256(record)].length;
   }
 
   function setLedgerValue(string record, address _address, uint256 value) public onlyAdmins {
     bytes32 hash = keccak256(record);
     if (!ledgerAccounts[hash][_address]) {
-      uint256 ledgerIndex = ledgerCount[hash];
-      ledgerEntryForIndex[hash][ledgerIndex] = _address;
-      ledgerCount[hash] = ledgerIndex.add(1);
+      ledgerEntryForIndex[hash].push(_address);
       ledgerAccounts[hash][_address] = true;
     }
 
     LedgerStorage[hash][_address] = value;
   }
 
-  mapping(bytes32 => mapping(address => bool)) BooleanMapStorage;
-  mapping(bytes32 => uint256) public booleanMapCount;
-  mapping(bytes32 => mapping(address => bool)) public booleanMapAccounts;
-  mapping(bytes32 => mapping(uint256 => address)) public booleanMapEntryForIndex;
+  mapping(bytes32 => address[]) public booleanMapEntryForIndex;
+  mapping(bytes32 => mapping(address => bool)) private BooleanMapStorage;
+  mapping(bytes32 => mapping(address => bool)) private booleanMapAccounts;
 
   function getBooleanMapValue(string record, address _address) public view returns (bool) {
     return BooleanMapStorage[keccak256(record)][_address];
   }
 
   function getBooleanMapCount(string record) public view returns (uint256) {
-    return booleanMapCount[keccak256(record)];
+    return booleanMapEntryForIndex[keccak256(record)].length;
   }
 
   function setBooleanMapValue(string record, address _address, bool value) public onlyAdmins {
     bytes32 hash = keccak256(record);
     if (!booleanMapAccounts[hash][_address]) {
-      uint256 ledgerIndex = booleanMapCount[hash];
-      booleanMapEntryForIndex[hash][ledgerIndex] = _address;
-      booleanMapCount[hash] = ledgerIndex.add(1);
+      booleanMapEntryForIndex[hash].push(_address);
       booleanMapAccounts[hash][_address] = true;
     }
 

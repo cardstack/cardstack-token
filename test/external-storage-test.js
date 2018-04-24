@@ -47,11 +47,9 @@ contract('ExternalStorage', function(accounts) {
 
       let isAdmin = await storage.admins(admin);
       let adminCount = await storage.totalAdminsMapping();
-      let firstAdminAddress = await storage.adminsForIndex(0);
 
       assert.notOk(isAdmin, "admin was not added");
       assert.equal(adminCount, 0, 'the admin count is correct');
-      assert.equal(firstAdminAddress, NULL_ADDRESS, 'the admin address is correct');
     });
 
     it("allows admin to set uint value", async function () {
@@ -383,7 +381,7 @@ contract('ExternalStorage', function(accounts) {
       await storage.setMultiLedgerValue("someledger", someUser, anotherUser, 37, { from: admin });
       await storage.setMultiLedgerValue("someledger", otherUser, anotherUser, 73, { from: admin });
 
-      let ledgerCount = await storage.primaryLedgerCount(web3.sha3("someledger"), { from: nonAdmin });
+      let ledgerCount = await storage.primaryLedgerCount("someledger", { from: nonAdmin });
       assert.equal(ledgerCount, 2, "primary ledger count was getted");
     });
 
@@ -411,7 +409,7 @@ contract('ExternalStorage', function(accounts) {
       await storage.setMultiLedgerValue("someledger", someUser, otherUser, 37, { from: admin });
       await storage.setMultiLedgerValue("someledger", someUser, anotherUser, 73, { from: admin });
 
-      let ledgerCount = await storage.secondaryLedgerCount(web3.sha3("someledger"), someUser, { from: nonAdmin });
+      let ledgerCount = await storage.secondaryLedgerCount("someledger", someUser, { from: nonAdmin });
       assert.equal(ledgerCount, 2, "secondary ledger count was getted");
     });
 
