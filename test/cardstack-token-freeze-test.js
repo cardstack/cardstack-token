@@ -385,6 +385,16 @@ contract('CardStackToken', function(accounts) {
       });
     });
 
+    it("should allow account to be frozen when token is frozen", async function() {
+      await cst.freezeToken(true);
+
+      await cst.freezeAccount(frozenAccount, true);
+
+      let isFrozen = await cst.frozenAccount(frozenAccount);
+
+      assert.equal(isFrozen, true, 'the account was frozen while the token was frozen');
+    });
+
     it("should not be able to mint tokens when token is frozen", async function() {
       await cst.freezeToken(true);
 

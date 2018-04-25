@@ -24,37 +24,22 @@ contract CardStackToken is ERC20,
   using SafeMath for uint256;
   using CstLibrary for address;
 
+  ITokenLedger public tokenLedger;
   string public storageName;
   string public ledgerName;
-  ITokenLedger public tokenLedger;
   address public externalStorage;
   address public registry;
+  uint256 public decimals = 0;
 
-  // These are mirrored in external storage so that state can live in future version of this contract
-  // we save on gas prices by having these available as instance variables
-  uint256 public buyPrice;
-  uint256 public circulationCap;
-  address public foundation;
-
-  // Note that the data for the buyer whitelist itenationally lives in this contract
-  // and not in storage, as this whitelist is specific to phase 1 token sale
-  uint256 public cstBalanceLimit;
-  uint256 public contributionMinimum;
-
-  mapping (address => uint256) public customBuyerLimit;
-  address[] public customBuyerForIndex;
-  mapping (address => bool) private processedCustomBuyer;
-
-  mapping (address => bool) public approvedBuyer;
-  address[] public approvedBuyerForIndex;
-  mapping (address => bool) private processedBuyer;
-
+  // This state is specific to the first version of the CST
+  // token contract and the token generation event, and hence
+  // there is no reason to persist in external storage for
+  // future contracts.
+  bool public allowTransfers;
   mapping (address => bool) public whitelistedTransferer;
   address[] public whitelistedTransfererForIndex;
   mapping (address => bool) private processedWhitelistedTransferer;
-
-  uint256 public decimals = 0;
-  bool public allowTransfers;
+  uint256 public contributionMinimum;
 
   event Mint(uint256 amountMinted, uint256 totalTokens, uint256 circulationCap);
   event Approval(address indexed _owner,
@@ -71,6 +56,8 @@ contract CardStackToken is ERC20,
   event StorageUpdated(address storageAddress, address ledgerAddress);
 
   modifier onlyFoundation {
+    address foundation = externalStorage.getFoundation();
+    require(foundation != address(0));
     if (msg.sender != owner && msg.sender != foundation) revert();
     _;
   }
@@ -93,9 +80,9 @@ contract CardStackToken is ERC20,
     addSuperAdmin(registry);
   }
 
-  /* This unnamed function is called whenever someone tries to send ether to it */
+  /* This unnamed function is called whenever someone tries to send ether directly to the token contract */
   function () public {
-    revert();     // Prevents accidental sending of ether
+    revert(); // Prevents accidental sending of ether
   }
 
   function getLedgerNameHash() public view returns (bytes32) {
@@ -113,7 +100,8 @@ contract CardStackToken is ERC20,
                      uint256 _balanceLimit,
                      address _foundation) public onlySuperAdmins unlessUpgraded initStorage returns (bool) {
 
-    if (buyPrice > 0 && buyPrice != _buyPrice) {
+    uint256 __buyPrice = externalStorage.getBuyPrice();
+    if (__buyPrice > 0 && __buyPrice != _buyPrice) {
       require(frozenToken);
     }
 
@@ -122,13 +110,7 @@ contract CardStackToken is ERC20,
     externalStorage.setBuyPrice(_buyPrice);
     externalStorage.setCirculationCap(_circulationCap);
     externalStorage.setFoundation(_foundation);
-
-    // TODO refactor to use external storage exclusively for these vars
-    buyPrice = _buyPrice;
-    circulationCap = _circulationCap;
-    foundation = _foundation;
-
-    cstBalanceLimit = _balanceLimit;
+    externalStorage.setBalanceLimit(_balanceLimit);
 
     emit ConfigChanged(_buyPrice, _circulationCap, _balanceLimit);
 
@@ -136,10 +118,6 @@ contract CardStackToken is ERC20,
   }
 
   function configureFromStorage() public onlySuperAdmins unlessUpgraded initStorage returns (bool) {
-    buyPrice = externalStorage.getBuyPrice();
-    circulationCap = externalStorage.getCirculationCap();
-    foundation = externalStorage.getFoundation();
-
     return true;
   }
 
@@ -166,6 +144,24 @@ contract CardStackToken is ERC20,
 
   function totalInCirculation() public view unlessUpgraded returns(uint256) {
     return tokenLedger.totalInCirculation().add(totalUnvestedAndUnreleasedTokens());
+  }
+
+  function cstBalanceLimit() public view unlessUpgraded returns(uint256) {
+    return externalStorage.getBalanceLimit();
+  }
+
+  function buyPrice() public view unlessUpgraded returns(uint256) {
+    return externalStorage.getBuyPrice();
+  }
+
+  function circulationCap() public view unlessUpgraded returns(uint256) {
+    return externalStorage.getCirculationCap();
+  }
+
+  // intentionally allowing this to be visible if upgraded so foundation can
+  // withdraw funds from contract that has a successor
+  function foundation() public view returns(address) {
+    return externalStorage.getFoundation();
   }
 
   function totalSupply() public view unlessUpgraded returns(uint256) {
@@ -197,9 +193,10 @@ contract CardStackToken is ERC20,
   }
 
   function mintTokens(uint256 mintedAmount) public onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
+    uint256 _circulationCap = externalStorage.getCirculationCap();
     tokenLedger.mintTokens(mintedAmount);
 
-    emit Mint(mintedAmount, tokenLedger.totalTokens(), circulationCap);
+    emit Mint(mintedAmount, tokenLedger.totalTokens(), _circulationCap);
 
     emit Transfer(address(0), this, mintedAmount);
 
@@ -217,24 +214,27 @@ contract CardStackToken is ERC20,
   }
 
   function buy() public payable unlessFrozen unlessUpgraded returns (uint256) {
-    require(msg.value >= buyPrice);
-    require(approvedBuyer[msg.sender]);
-    require(buyPrice > 0);
-    require(circulationCap > 0);
+    require(externalStorage.getApprovedBuyer(msg.sender));
 
-    uint256 amount = msg.value.div(buyPrice);
-    require(totalInCirculation().add(amount) <= circulationCap);
+    uint256 _buyPrice = externalStorage.getBuyPrice();
+    uint256 _circulationCap = externalStorage.getCirculationCap();
+    require(msg.value >= _buyPrice);
+    require(_buyPrice > 0);
+    require(_circulationCap > 0);
+
+    uint256 amount = msg.value.div(_buyPrice);
+    require(totalInCirculation().add(amount) <= _circulationCap);
     require(amount <= tokensAvailable());
 
     uint256 balanceLimit;
     uint256 buyerBalance = tokenLedger.balanceOf(msg.sender);
-    uint256 customLimit = customBuyerLimit[msg.sender];
+    uint256 customLimit = externalStorage.getCustomBuyerLimit(msg.sender);
     require(contributionMinimum == 0 || buyerBalance.add(amount) >= contributionMinimum);
 
     if (customLimit > 0) {
       balanceLimit = customLimit;
     } else {
-      balanceLimit = cstBalanceLimit;
+      balanceLimit = externalStorage.getBalanceLimit();
     }
 
     require(balanceLimit > 0 && balanceLimit >= buyerBalance.add(amount));
@@ -245,6 +245,8 @@ contract CardStackToken is ERC20,
     return amount;
   }
 
+  // intentionally allowing this to be visible if upgraded so foundation can
+  // withdraw funds from contract that has a successor
   function foundationWithdraw(uint256 amount) public onlyFoundation returns (bool) {
     /* UNTRUSTED */
     msg.sender.transfer(amount);
@@ -252,7 +254,6 @@ contract CardStackToken is ERC20,
     return true;
   }
 
-  // intentionally did not lock this down to foundation only. if someone wants to send ethers, no biggie0:w
   function foundationDeposit() public payable unlessUpgraded returns (bool) {
     return true;
   }
@@ -317,10 +318,12 @@ contract CardStackToken is ERC20,
                              uint256 durationSec,
                              bool isRevocable) public onlySuperAdmins unlessUpgraded unlessFrozen returns(bool) {
 
+    uint256 _circulationCap = externalStorage.getCirculationCap();
+
     require(beneficiary != address(0));
     require(!frozenAccount[beneficiary]);
     require(durationSec >= cliffSec);
-    require(totalInCirculation().add(fullyVestedAmount) <= circulationCap);
+    require(totalInCirculation().add(fullyVestedAmount) <= _circulationCap);
     require(fullyVestedAmount <= tokensAvailable());
 
     uint256 _now = now;
@@ -417,16 +420,20 @@ contract CardStackToken is ERC20,
   }
 
   function totalCustomBuyersMapping() public view returns (uint256) {
-    return customBuyerForIndex.length;
+    return externalStorage.getCustomBuyerMappingCount();
+  }
+
+  function customBuyerLimit(address buyer) public view returns (uint256) {
+    return externalStorage.getCustomBuyerLimit(buyer);
+  }
+
+  function customBuyerForIndex(uint256 index) public view returns (address) {
+    return externalStorage.getCustomBuyerForIndex(index);
   }
 
   function setCustomBuyer(address buyer, uint256 balanceLimit) public onlySuperAdmins unlessUpgraded returns (bool) {
     require(buyer != address(0));
-    customBuyerLimit[buyer] = balanceLimit;
-    if (!processedCustomBuyer[buyer]) {
-      customBuyerForIndex.push(buyer);
-      processedCustomBuyer[buyer] = true;
-    }
+    externalStorage.setCustomBuyerLimit(buyer, balanceLimit);
     addBuyer(buyer);
 
     return true;
@@ -443,20 +450,24 @@ contract CardStackToken is ERC20,
   }
 
   function totalBuyersMapping() public view returns (uint256) {
-    return approvedBuyerForIndex.length;
+    return externalStorage.getApprovedBuyerMappingCount();
+  }
+
+  function approvedBuyer(address buyer) public view returns (bool) {
+    return externalStorage.getApprovedBuyer(buyer);
+  }
+
+  function approvedBuyerForIndex(uint256 index) public view returns (address) {
+    return externalStorage.getApprovedBuyerForIndex(index);
   }
 
   function addBuyer(address buyer) public onlySuperAdmins unlessUpgraded returns (bool) {
     require(buyer != address(0));
-    approvedBuyer[buyer] = true;
-    if (!processedBuyer[buyer]) {
-      approvedBuyerForIndex.push(buyer);
-      processedBuyer[buyer] = true;
-    }
+    externalStorage.setApprovedBuyer(buyer, true);
 
-    uint256 balanceLimit = customBuyerLimit[buyer];
+    uint256 balanceLimit = externalStorage.getCustomBuyerLimit(buyer);
     if (balanceLimit == 0) {
-      balanceLimit = cstBalanceLimit;
+      balanceLimit = externalStorage.getBalanceLimit();
     }
 
     emit WhiteList(buyer, balanceLimit);
@@ -466,7 +477,7 @@ contract CardStackToken is ERC20,
 
   function removeBuyer(address buyer) public onlySuperAdmins unlessUpgraded returns (bool) {
     require(buyer != address(0));
-    approvedBuyer[buyer] = false;
+    externalStorage.setApprovedBuyer(buyer, false);
 
     return true;
   }
