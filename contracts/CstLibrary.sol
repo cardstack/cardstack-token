@@ -37,12 +37,12 @@ library CstLibrary {
     ExternalStorage(_storage).setUIntValue("cstCirculationCap", value);
   }
 
-  function getMinimumBalance(address _storage) public view returns(uint256) {
-    return ExternalStorage(_storage).getUIntValue("cstMinimumBalance");
+  function getBalanceLimit(address _storage) public view returns(uint256) {
+    return ExternalStorage(_storage).getUIntValue("cstBalanceLimit");
   }
 
-  function setMinimumBalance(address _storage, uint256 value) public {
-    ExternalStorage(_storage).setUIntValue("cstMinimumBalance", value);
+  function setBalanceLimit(address _storage, uint256 value) public {
+    ExternalStorage(_storage).setUIntValue("cstBalanceLimit", value);
   }
 
   function getFoundation(address _storage) public view returns(address) {
@@ -59,6 +59,38 @@ library CstLibrary {
 
   function setAllowance(address _storage, address account, address spender, uint256 allowance) public {
     ExternalStorage(_storage).setMultiLedgerValue("cstAllowance", account, spender, allowance);
+  }
+
+  function getCustomBuyerLimit(address _storage, address buyer) public view returns (uint256) {
+    return ExternalStorage(_storage).getLedgerValue("cstCustomBuyerLimit", buyer);
+  }
+
+  function setCustomBuyerLimit(address _storage, address buyer, uint256 value) public {
+    ExternalStorage(_storage).setLedgerValue("cstCustomBuyerLimit", buyer, value);
+  }
+
+  function getCustomBuyerForIndex(address _storage, uint256 index) public view returns (address) {
+    return ExternalStorage(_storage).ledgerEntryForIndex(keccak256("cstCustomBuyerLimit"), index);
+  }
+
+  function getCustomBuyerMappingCount(address _storage) public view returns(uint256) {
+    return ExternalStorage(_storage).getLedgerCount("cstCustomBuyerLimit");
+  }
+
+  function getApprovedBuyer(address _storage, address buyer) public view returns (bool) {
+    return ExternalStorage(_storage).getBooleanMapValue("cstApprovedBuyer", buyer);
+  }
+
+  function setApprovedBuyer(address _storage, address buyer, bool value) public {
+    ExternalStorage(_storage).setBooleanMapValue("cstApprovedBuyer", buyer, value);
+  }
+
+  function getApprovedBuyerForIndex(address _storage, uint256 index) public view returns (address) {
+    return ExternalStorage(_storage).booleanMapEntryForIndex(keccak256("cstApprovedBuyer"), index);
+  }
+
+  function getApprovedBuyerMappingCount(address _storage) public view returns(uint256) {
+    return ExternalStorage(_storage).getBooleanMapCount("cstApprovedBuyer");
   }
 
   function getTotalUnvestedAndUnreleasedTokens(address _storage) public view returns(uint256) {

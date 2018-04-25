@@ -1,4 +1,4 @@
-const { CST_STORAGE_NAME, CST_LEDGER_NAME } = require("../lib/constants");
+const { CST_DEPLOY_GAS_LIMIT, CST_STORAGE_NAME, CST_LEDGER_NAME } = require("../lib/constants.js");
 let RegistryContract = artifacts.require("./Registry.sol");
 let CstLibrary = artifacts.require("./CstLibrary.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
@@ -15,6 +15,6 @@ module.exports = async function(deployer) {
                           registry.address,
                           CST_STORAGE_NAME,
                           CST_LEDGER_NAME,
-                          { gas: 5900000 });  // need as much gas as possible--this is a big contract
+                          { gas: CST_DEPLOY_GAS_LIMIT });  // need as much gas as possible--this is a big contract
   }
 };
