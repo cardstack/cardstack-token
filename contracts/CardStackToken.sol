@@ -17,7 +17,7 @@ contract CardStackToken is ERC20,
                            displayable,
                            upgradeable,
                            configurable,
-                           storable {
+                           IStorable {
 
   using SafeMath for uint256;
   using CstLibrary for address;
@@ -83,11 +83,11 @@ contract CardStackToken is ERC20,
     revert(); // Prevents accidental sending of ether
   }
 
-  function getLedgerNameHash() public view returns (bytes32) {
+  function getLedgerNameHash() external view returns (bytes32) {
     return keccak256(ledgerName);
   }
 
-  function getStorageNameHash() public view returns (bytes32) {
+  function getStorageNameHash() external view returns (bytes32) {
     return keccak256(storageName);
   }
 
@@ -212,7 +212,7 @@ contract CardStackToken is ERC20,
     return true;
   }
 
-  function buy() public payable unlessFrozen unlessUpgraded returns (uint256) {
+  function buy() external payable unlessFrozen unlessUpgraded returns (uint256) {
     require(externalStorage.getApprovedBuyer(msg.sender));
 
     uint256 _buyPrice = externalStorage.getBuyPrice();

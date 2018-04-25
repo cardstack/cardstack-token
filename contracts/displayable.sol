@@ -5,9 +5,8 @@ contract displayable {
     bytes memory bytesString = new bytes(32);
     uint256 charCount = 0;
     for (uint256 j = 0; j < 32; j++) {
-      byte char = byte(bytes32(uint256(x) * 2 ** (8 * j)));
-      if (char != 0) {
-        bytesString[charCount] = char;
+      if (x[j] != 0) {
+        bytesString[charCount] = x[j];
         charCount++;
       }
     }

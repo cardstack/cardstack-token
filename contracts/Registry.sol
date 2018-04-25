@@ -50,7 +50,7 @@ contract Registry is administratable, upgradeable {
     return contractNameForIndex.length;
   }
 
-  function setNamehash(string contractName, bytes32 namehash) public onlySuperAdmins unlessUpgraded returns (bool) {
+  function setNamehash(string contractName, bytes32 namehash) external onlySuperAdmins unlessUpgraded returns (bool) {
     require(namehash != 0x0);
 
     bytes32 hash = keccak256(contractName);
@@ -65,7 +65,7 @@ contract Registry is administratable, upgradeable {
     emit AddrChanged(namehash, contractAddress);
   }
 
-  function register(string name, address contractAddress, bytes32 namehash) public onlySuperAdmins unlessUpgraded returns (bool) {
+  function register(string name, address contractAddress, bytes32 namehash) external onlySuperAdmins unlessUpgraded returns (bool) {
     bytes32 hash = keccak256(name);
     require(bytes(name).length > 0);
     require(contractAddress != 0x0);
@@ -80,8 +80,8 @@ contract Registry is administratable, upgradeable {
       namehashForHash[hash] = namehash;
     }
 
-    address storageAddress = storageForHash[storable(contractAddress).getStorageNameHash()];
-    address ledgerAddress = storageForHash[storable(contractAddress).getLedgerNameHash()];
+    address storageAddress = storageForHash[IStorable(contractAddress).getStorageNameHash()];
+    address ledgerAddress = storageForHash[IStorable(contractAddress).getLedgerNameHash()];
 
     if (storageAddress != 0x0) {
       ExternalStorage(storageAddress).addAdmin(contractAddress);
@@ -101,7 +101,7 @@ contract Registry is administratable, upgradeable {
     return true;
   }
 
-  function upgradeContract(string name, address successor) public onlySuperAdmins unlessUpgraded returns (bytes32) {
+  function upgradeContract(string name, address successor) external onlySuperAdmins unlessUpgraded returns (bytes32) {
     bytes32 hash = keccak256(name);
     require(successor != 0x0);
     require(contractForHash[hash] != 0x0);
@@ -122,10 +122,10 @@ contract Registry is administratable, upgradeable {
                                        remainingContractBalance);
     upgradeable(successor).upgradedFrom(predecessor);
 
-    address successorStorageAddress = storageForHash[storable(successor).getStorageNameHash()];
-    address successorLedgerAddress = storageForHash[storable(successor).getLedgerNameHash()];
-    address predecessorStorageAddress = storageForHash[storable(predecessor).getStorageNameHash()];
-    address predecessorLedgerAddress = storageForHash[storable(predecessor).getLedgerNameHash()];
+    address successorStorageAddress = storageForHash[IStorable(successor).getStorageNameHash()];
+    address successorLedgerAddress = storageForHash[IStorable(successor).getLedgerNameHash()];
+    address predecessorStorageAddress = storageForHash[IStorable(predecessor).getStorageNameHash()];
+    address predecessorLedgerAddress = storageForHash[IStorable(predecessor).getLedgerNameHash()];
 
     if (successorStorageAddress != 0x0) {
       ExternalStorage(successorStorageAddress).addAdmin(successor);
@@ -154,7 +154,7 @@ contract Registry is administratable, upgradeable {
     return hash;
   }
 
-  function addStorage(string name, address storageAddress) public onlySuperAdmins unlessUpgraded {
+  function addStorage(string name, address storageAddress) external onlySuperAdmins unlessUpgraded {
     require(storageAddress != address(0));
     bytes32 hash = keccak256(name);
     storageForHash[hash] = storageAddress;
