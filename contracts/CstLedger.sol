@@ -3,45 +3,45 @@ pragma solidity ^0.4.23;
 import "./administratable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract ITokenLedger {
-  function totalTokens() public view returns (uint256);
-  function totalInCirculation() public view returns (uint256);
-  function balanceOf(address account) public view returns (uint256);
-  function mintTokens(uint256 amount) public;
-  function transfer(address sender, address reciever, uint256 amount) public;
-  function creditAccount(address account, uint256 amount) public;
-  function debitAccount(address account, uint256 amount) public;
-  function addAdmin(address admin) public;
-  function removeAdmin(address admin) public;
+interface ITokenLedger {
+  function totalTokens() external view returns (uint256);
+  function totalInCirculation() external view returns (uint256);
+  function balanceOf(address account) external view returns (uint256);
+  function mintTokens(uint256 amount) external;
+  function transfer(address sender, address reciever, uint256 amount) external;
+  function creditAccount(address account, uint256 amount) external;
+  function debitAccount(address account, uint256 amount) external;
+  function addAdmin(address admin) external;
+  function removeAdmin(address admin) external;
 }
 
 contract CstLedger is ITokenLedger, administratable {
 
   using SafeMath for uint256;
 
-  uint256 public _totalInCirculation; // warning this does not take into account unvested nor vested-unreleased tokens into consideration
-  uint256 public _totalTokens;
-  mapping (address => uint256) public _balanceOf;
-  mapping (address => bool) public accounts;
+  uint256 private _totalInCirculation; // warning this does not take into account unvested nor vested-unreleased tokens into consideration
+  uint256 private _totalTokens;
+  mapping (address => uint256) private _balanceOf;
+  mapping (address => bool) private accounts;
   address[] public accountForIndex;
 
-  function totalTokens() public view returns (uint256) {
+  function totalTokens() external view returns (uint256) {
     return _totalTokens;
   }
 
-  function totalInCirculation() public view returns (uint256) {
+  function totalInCirculation() external view returns (uint256) {
     return _totalInCirculation;
   }
 
-  function balanceOf(address account) public view returns (uint256) {
+  function balanceOf(address account) external view returns (uint256) {
     return _balanceOf[account];
   }
 
-  function mintTokens(uint256 amount) public onlyAdmins {
+  function mintTokens(uint256 amount) external onlyAdmins {
     _totalTokens = _totalTokens.add(amount);
   }
 
-  function ledgerCount() public view returns (uint256) {
+  function ledgerCount() external view returns (uint256) {
     return accountForIndex.length;
   }
 
@@ -52,7 +52,7 @@ contract CstLedger is ITokenLedger, administratable {
     }
   }
 
-  function transfer(address sender, address recipient, uint256 amount) public onlyAdmins {
+  function transfer(address sender, address recipient, uint256 amount) external onlyAdmins {
     require(sender != address(0));
     require(recipient != address(0));
     require(_balanceOf[sender] >= amount);
@@ -62,7 +62,7 @@ contract CstLedger is ITokenLedger, administratable {
     makeAccountIterable(recipient);
   }
 
-  function creditAccount(address account, uint256 amount) public onlyAdmins { // remove tokens
+  function creditAccount(address account, uint256 amount) external onlyAdmins { // remove tokens
     require(account != address(0));
     require(_balanceOf[account] >= amount);
 
@@ -70,7 +70,7 @@ contract CstLedger is ITokenLedger, administratable {
     _balanceOf[account] = _balanceOf[account].sub(amount);
   }
 
-  function debitAccount(address account, uint256 amount) public onlyAdmins { // add tokens
+  function debitAccount(address account, uint256 amount) external onlyAdmins { // add tokens
     require(account != address(0));
     _totalInCirculation = _totalInCirculation.add(amount);
     _balanceOf[account] = _balanceOf[account].add(amount);

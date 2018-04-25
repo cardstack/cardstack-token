@@ -111,13 +111,7 @@ library CstLibrary {
 
   function releasableAmount(address _storage, address beneficiary) public view returns (uint256) {
     uint256 releasedAmount = getVestingReleasedAmount(_storage, beneficiary);
-    uint256 amount = vestedAvailableAmount(_storage, beneficiary).sub(releasedAmount);
-
-    if (amount < 0) {
-      return 0;
-    }
-
-    return amount;
+    return vestedAvailableAmount(_storage, beneficiary).sub(releasedAmount);
   }
 
   function vestedAvailableAmount(address _storage, address beneficiary) public view returns (uint256) {
