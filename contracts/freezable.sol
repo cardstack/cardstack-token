@@ -1,9 +1,9 @@
 pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./administratable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract freezable is Ownable {
+contract freezable is administratable {
   using SafeMath for uint256;
 
   bool public frozenToken;
@@ -25,7 +25,7 @@ contract freezable is Ownable {
     return frozenAccountForIndex.length;
   }
 
-  function freezeAccount(address target, bool freeze) public onlyOwner {
+  function freezeAccount(address target, bool freeze) public onlySuperAdmins {
     frozenAccount[target] = freeze;
     if (!processedAccount[target]) {
       frozenAccountForIndex.push(target);
@@ -34,7 +34,7 @@ contract freezable is Ownable {
     emit FrozenFunds(target, freeze);
   }
 
-  function freezeToken(bool freeze) public onlyOwner {
+  function freezeToken(bool freeze) public onlySuperAdmins {
     frozenToken = freeze;
     emit FrozenToken(frozenToken);
   }

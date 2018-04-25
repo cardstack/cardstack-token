@@ -20,6 +20,7 @@ contract('CardStackToken', function(accounts) {
   let storage;
   let cst;
   let registry;
+  let superAdmin = accounts[20];
 
   describe("frozen account", function() {
     let frozenAccount = accounts[5];
@@ -37,6 +38,8 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
+      await cst.addSuperAdmin(superAdmin);
 
       await ledger.mintTokens(100);
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
@@ -57,7 +60,7 @@ contract('CardStackToken', function(accounts) {
       assert.notOk(isFrozen, "the account is not frozen");
       assert.equal(frozenCount, 0, "the frozenCount is correct");
 
-      await cst.freezeAccount(frozenAccount, true);
+      await cst.freezeAccount(frozenAccount, true, { from: superAdmin });
     });
 
     it("cannot buy CST when frozen", async function() {
@@ -371,6 +374,8 @@ contract('CardStackToken', function(accounts) {
       });
 
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
+      await cst.addSuperAdmin(superAdmin);
       await ledger.mintTokens(100);
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
 
@@ -386,42 +391,41 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("should allow account to be frozen when token is frozen", async function() {
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
 
-      await cst.freezeAccount(frozenAccount, true);
+      await cst.freezeAccount(frozenAccount, true, { from: superAdmin });
 
       let isFrozen = await cst.frozenAccount(frozenAccount);
 
       assert.equal(isFrozen, true, 'the account was frozen while the token was frozen');
     });
 
-    it("should not be able to mint tokens when token is frozen", async function() {
-      await cst.freezeToken(true);
+    it("should be able to mint tokens when token is frozen", async function() {
+      await cst.freezeToken(true, { from: superAdmin });
 
-      await assertRevert(async () => await cst.mintTokens(100));
+      await cst.mintTokens(100);
 
       let totalTokens = await ledger.totalTokens();
-      let totalInCirculation = await ledger.totalInCirculation();
 
-      assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The totalInCirculation is correct");
+      assert.equal(asInt(totalTokens), 200, "The totalTokens is correct");
     });
 
-    it("should not be able to grant tokens when token is frozen", async function() {
-      await cst.freezeToken(true);
-      await assertRevert(async () => await cst.grantTokens(frozenAccount, 10));
+    it("should be able to grant tokens when token is frozen", async function() {
+      let account = accounts[7];
+      await cst.freezeToken(true, { from: superAdmin });
+      await cst.grantTokens(account, 10);
 
       let totalTokens = await ledger.totalTokens();
       let totalInCirculation = await ledger.totalInCirculation();
-      let recipientBalance = await ledger.balanceOf(frozenAccount);
+      let recipientBalance = await ledger.balanceOf(account);
 
       assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The totalInCirculation is correct");
+      assert.equal(asInt(totalInCirculation), 20, "The totalInCirculation is correct");
       assert.equal(asInt(recipientBalance), 10, "The balance is correct");
     });
 
     it("cannot buy CST when frozen", async function() {
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
       let buyerAccount = frozenAccount;
       let txnValue = web3.toWei(1, "ether");
       let startBalance = await web3.eth.getBalance(buyerAccount);
@@ -448,7 +452,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("cannot send a transfer when frozen", async function() {
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
       let senderAccount = frozenAccount;
       let recipientAccount = accounts[6];
       let transferAmount = 1;
@@ -482,7 +486,7 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
 
       await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
         from: senderAccount,
@@ -499,7 +503,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("should be able to unfreeze entire token", async function() {
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
       let unfreezeEvent = await cst.freezeToken(false);
       let recipientAccount = accounts[5];
       let senderAccount = accounts[6];
@@ -535,7 +539,7 @@ contract('CardStackToken', function(accounts) {
       let grantor = accounts[3];
       let spender = accounts[4];
 
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
 
       await assertRevert(async () => await cst.increaseApproval(spender, 10, { from: grantor }));
     });
@@ -545,7 +549,7 @@ contract('CardStackToken', function(accounts) {
       let spender = accounts[4];
 
       await cst.approve(spender, 10, { from: grantor });
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
 
       await assertRevert(async () => await cst.decreaseApproval(spender, 10, { from: grantor }));
     });
@@ -554,7 +558,7 @@ contract('CardStackToken', function(accounts) {
       let grantor = accounts[3];
       let spender = accounts[4];
 
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
 
       await assertRevert(async () => await cst.approve(spender, 10, { from: grantor }));
     });
@@ -565,38 +569,24 @@ contract('CardStackToken', function(accounts) {
       let recipient = accounts[7];
 
       await cst.approve(spender, 10, { from: grantor });
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
 
       await assertRevert(async () => await cst.transferFrom(grantor, recipient, 10, { from: spender }));
     });
 
-    it("does not allow vested token grant when token is frozen", async function() {
-      await cst.freezeToken(true);
+    it("does allow vested token grant when token is frozen", async function() {
+      await cst.freezeToken(true, { from: superAdmin });
 
       let beneficiary = accounts[9];
-      await assertRevert(async () => await cst.grantVestedTokens(beneficiary,
-                                                                 10,
-                                                                 0,
-                                                                 duration.years(1),
-                                                                 duration.years(2),
-                                                                 true));
-      let [ actualStartDate,
-            actualCliffDate,
-            actualDurationSec,
-            actualFullyVestedAmount,
-            actualVestedAmount,
-            actualReleasedAmount,
-            actualRevokeDate,
-            actualIsRevocable ] = await cst.vestingSchedule(beneficiary);
+      await cst.grantVestedTokens(beneficiary,
+                                  10,
+                                  0,
+                                  duration.years(1),
+                                  duration.years(2),
+                                  true);
+      let [ , , , actualFullyVestedAmount ] = await cst.vestingSchedule(beneficiary);
 
-      assert.equal(actualFullyVestedAmount, 0, "the fullyVestedAmount is correct");
-      assert.equal(actualVestedAmount, 0, "the vestedAmount is correct");
-      assert.equal(actualStartDate, 0, "the vesting startDate is correct");
-      assert.equal(actualCliffDate, 0, "the vesting cliffDate is correct");
-      assert.equal(actualDurationSec, 0, "The vesting duration is correct");
-      assert.equal(actualReleasedAmount, 0, "the vesting released amount is correct");
-      assert.equal(actualRevokeDate, 0, "the vesting revoke date is correct");
-      assert.equal(actualIsRevocable, false, "the vesting isRevocable field is correct");
+      assert.equal(actualFullyVestedAmount, 10, "the fullyVestedAmount is correct");
     });
 
     it("does not allow release vested tokens for beneficiary when token is frozen", async function() {
@@ -608,7 +598,7 @@ contract('CardStackToken', function(accounts) {
                                   duration.years(2),
                                   true);
       await increaseTimeTo(this.start + duration.years(1.5));
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
 
       await assertRevert(async () => await cst.releaseVestedTokens({ from: beneficiary }));
 
@@ -626,7 +616,7 @@ contract('CardStackToken', function(accounts) {
                                   duration.years(2),
                                   true);
       await increaseTimeTo(this.start + duration.years(1.5));
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
 
       await assertRevert(async () => await cst.releaseVestedTokensForBeneficiary(beneficiary));
 
@@ -644,7 +634,7 @@ contract('CardStackToken', function(accounts) {
                                   duration.years(2),
                                   true);
       await increaseTimeTo(this.start + duration.years(1.5));
-      await cst.freezeToken(true);
+      await cst.freezeToken(true, { from: superAdmin });
 
       await assertRevert(async () => await cst.revokeVesting(beneficiary));
 

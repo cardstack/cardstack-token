@@ -48,6 +48,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(firstSuperAdmin, registry.address, "the super admin by index is correct for the cst contract");
 
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -243,6 +244,7 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -308,6 +310,7 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -396,6 +399,7 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
       await cst.addSuperAdmin(superAdmin);
       await cst.mintTokens(1000);
     });
@@ -530,6 +534,7 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
       await cst.mintTokens(1000);
@@ -605,6 +610,7 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -641,6 +647,7 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
       await cst.addSuperAdmin(superAdmin);
     });
 
@@ -681,6 +688,7 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
     });
@@ -738,6 +746,7 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
       await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, 0x0);
       await cst.addSuperAdmin(superAdmin);
     });

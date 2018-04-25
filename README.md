@@ -88,6 +88,10 @@ You can execute this script to get information on how to release vested tokens f
 truffle exec ./scripts/cst-release-info.js --network=testrpc -r <Registry's address>
 ```
 
+The token contract is initialized in a frozen state (same for upgraded tokens). You must unfreeze the token before people can buy tokens:
+```
+WALLET=<wallet address> truffle exec ./scripts/cst-unfreeze-token.js -r "<registry address>" --network=testrpc
+```
 
 ### Rinkeby
 To deploy the CST contracts on Rinkeby, make sure that your wallet's main account is funded. Copy your wallet's main account address into the clipboard. Close the Mist or Ethereum wallet apps if they are open (geth cannot run when Mist is running and vice versa). Then from the commandline execute:
