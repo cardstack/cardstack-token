@@ -6,7 +6,7 @@ This project contains the smart contracts that govern the CardStack token.
 
 * yarn
 
-* [truffle](http://truffleframework.com/) to manage smart contracts (like ember-cli for Etherium).
+* [truffle](http://truffleframework.com/)
 ```
 yarn global add truffle
 ```
