@@ -53,6 +53,7 @@ contract('Registry', function(accounts) {
 
     it("allows the registry super admin to set a new namehash for a registered contract", async function() {
       await registry.register("cst", cst1.address, NULL_ADDRESS, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       let txn = await registry.setNamehash("cst", CARDSTACK_NAMEHASH, { from: superAdmin });
 
@@ -71,6 +72,7 @@ contract('Registry', function(accounts) {
 
     it("allows the registry super admin to change the namehash for a registered contract", async function() {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       let txn = await registry.setNamehash("cst", STANLEYNICKEL_NAMEHASH, { from: superAdmin });
 
@@ -89,6 +91,7 @@ contract('Registry', function(accounts) {
 
     it("allows the registry super admin to set a subdomain namehash and a bare domain namehash that point to the same contract", async function() {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       let txn = await registry.setNamehash("cst", CARD_CARDSTACK_NAMEHASH, { from: superAdmin });
 
@@ -110,6 +113,7 @@ contract('Registry', function(accounts) {
     it("does not allow a non super admin to change the namehash for a registered contract", async function() {
       let nonSuperAdmin = accounts[3];
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       await assertRevert(async () => await registry.setNamehash("cst", STANLEYNICKEL_NAMEHASH, { from: nonSuperAdmin }));
 
@@ -136,7 +140,9 @@ contract('Registry', function(accounts) {
 
     it("does not allow registry super admin to create a duplicate namehash for a registered contract", async function() {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
       await registry.register("cst2", cst2.address, NULL_ADDRESS, { from: superAdmin });
+      await cst2.freezeToken(false);
 
       await assertRevert(async () => await registry.setNamehash("cst2", CARDSTACK_NAMEHASH, { from: superAdmin }));
 
@@ -153,6 +159,7 @@ contract('Registry', function(accounts) {
 
     it("does not alow registry super admin to create a null namehash for a registered contract", async function() {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       await assertRevert(async () => await registry.setNamehash("cst", NULL_ADDRESS, { from: superAdmin }));
 
@@ -166,6 +173,7 @@ contract('Registry', function(accounts) {
 
     it("allows the registry superadmin to add a contract to the registry", async function() {
       let txn = await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       let hash = await registry.getContractHash("cst");
       let count = await registry.numContracts();
@@ -198,6 +206,13 @@ contract('Registry', function(accounts) {
       assert.equal(txn.logs[3].args.a, cst1.address, "the contract address is correct");
     });
 
+    it("places a newly registered contract in a frozen state", async function() {
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+
+      let isFrozen = await cst1.frozenToken();
+      assert.equal(isFrozen, true, 'a newly registered token is placed in a frozen state');
+    });
+
     it("does not allow a non-super admin to register a contract", async function() {
       let nonSuperAdmin = accounts[3];
 
@@ -210,6 +225,7 @@ contract('Registry', function(accounts) {
 
     it("does not allow a contract to be registered more than once", async function() {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       await assertRevert(async () => await registry.register("cst", cst1.address, STANLEYNICKEL_NAMEHASH, { from: superAdmin }));
 
@@ -231,6 +247,7 @@ contract('Registry', function(accounts) {
 
     it("allows a contract to be registered without a namehash", async function() {
       let txn = await registry.register("cst", cst1.address, NULL_ADDRESS, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       let hash = await registry.getContractHash("cst");
       let count = await registry.numContracts();
@@ -261,6 +278,7 @@ contract('Registry', function(accounts) {
 
     it("does not allow a contract to be registered with a duplicate namehash", async function() {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       await assertRevert(async () => await registry.register("cst2", cst2.address, CARDSTACK_NAMEHASH, { from: superAdmin }));
 
@@ -282,7 +300,9 @@ contract('Registry', function(accounts) {
 
     it("allows the registry superAdmin to upgrade a contract", async function() {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
+      await cst1.freezeToken(true);
       let txn = await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
 
       let hash = await registry.getContractHash("cst");
@@ -332,8 +352,10 @@ contract('Registry', function(accounts) {
 
     it("allows the registry superAdmin to upgrade a contract that has a subdomain namehash and bare domain name hash that point to the upgraded contract", async function() {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
       await registry.setNamehash("cst", CARD_CARDSTACK_NAMEHASH, { from: superAdmin });
 
+      await cst1.freezeToken(true);
       let txn = await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
 
       let hash = await registry.getContractHash("cst");
@@ -387,7 +409,9 @@ contract('Registry', function(accounts) {
 
     it("allows the registry superAdmin to upgrade a contract that doesnt have a namehash", async function() {
       await registry.register("cst", cst1.address, NULL_ADDRESS, { from: superAdmin });
+      await cst1.freezeToken(false);
 
+      await cst1.freezeToken(true);
       let txn = await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
 
       let hash = await registry.getContractHash("cst");
@@ -434,9 +458,11 @@ contract('Registry', function(accounts) {
 
     it("does not allow a non-owner to upgrade a contract", async function()  {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       let nonOwner = accounts[3];
 
+      await cst1.freezeToken(true);
       await assertRevert(async () => await registry.upgradeContract("cst", cst2.address, { from: nonOwner }));
 
       let hash = web3.sha3("cst");
@@ -461,9 +487,11 @@ contract('Registry', function(accounts) {
 
     it("does not allow a non-super-admin to upgrade a contract", async function()  {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
 
       let nonSuperAdmin = accounts[11];
 
+      await cst1.freezeToken(true);
       await assertRevert(async () => await registry.upgradeContract("cst", cst2.address, { from: nonSuperAdmin }));
 
       let hash = web3.sha3("cst");
@@ -487,7 +515,6 @@ contract('Registry', function(accounts) {
     });
 
     it("does not allow a contract that hasnt been registered to be upgraded", async function() {
-
       await assertRevert(async () => await registry.upgradeContract("cst", cst2.address, { from: superAdmin }));
 
       let count = await registry.numContracts();
@@ -505,8 +532,47 @@ contract('Registry', function(accounts) {
       assert.equal(cst2Successor, NULL_ADDRESS, "the address is correct");
     });
 
+    it("does not allow an non-frozen contract to be upgraded", async function() {
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
+
+      await assertRevert(async () => await registry.upgradeContract("cst", cst2.address, { from: superAdmin }));
+
+      let hash = web3.sha3("cst");
+      let count = await registry.numContracts();
+      let contractName = await registry.contractNameForIndex(0);
+      let contractAddress = await registry.contractForHash(hash);
+
+      let cst1Predecessor = await cst1.predecessor();
+      let cst1Successor = await cst1.successor();
+      let cst2Predecessor = await cst2.predecessor();
+      let cst2Successor = await cst2.successor();
+
+      assert.equal(count, 1, "contract count is correct");
+      assert.equal(contractName.toString(), "cst", "contract name is correct");
+      assert.equal(contractAddress.toString(), cst1.address, "The contract address is correct");
+
+      assert.equal(cst1Predecessor, NULL_ADDRESS, "the address is correct");
+      assert.equal(cst1Successor, NULL_ADDRESS, "the address is correct");
+      assert.equal(cst2Predecessor, NULL_ADDRESS, "the address is correct");
+      assert.equal(cst2Successor, NULL_ADDRESS, "the address is correct");
+    });
+
+    it("places upgraded contract in frozen state", async function() {
+      await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
+
+      await cst1.freezeToken(true);
+      await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
+
+      let isFrozen = await cst2.frozenToken();
+
+      assert.equal(isFrozen, true, 'the upgraded contract is in a frozen state');
+    });
+
     it("can preserve contract state through a contract upgrade", async function() {
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
       await cst1.configure(web3.toHex("cst"),
                            web3.toHex("CST"),
                            web3.toWei(0.1, "ether"),
@@ -528,8 +594,10 @@ contract('Registry', function(accounts) {
       let cstBalance = await cst1.balanceOf(buyerAccount);
       assert.equal(asInt(cstBalance), 2, "The CST balance is correct");
 
+      await cst1.freezeToken(true);
       await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
       await cst2.setAllowTransfers(true);
+      await cst2.freezeToken(false);
 
       let totalInCirculation = await cst2.totalInCirculation();
       cstBalance = await cst2.balanceOf(buyerAccount);
@@ -571,6 +639,7 @@ contract('Registry', function(accounts) {
 
       await ledger.debitAccount(grantor, 50);
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+      await cst1.freezeToken(false);
       await cst1.approve(spender, 10, { from: grantor });
 
       let allowance = await cst1.allowance(grantor, spender);
@@ -583,9 +652,11 @@ contract('Registry', function(accounts) {
       assert.equal(asInt(spenderBalance), 0, "the balance is correct");
       assert.equal(asInt(recipientBalance), 0, "the balance is correct");
 
+      await cst1.freezeToken(true);
       await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
 
       await cst2.setAllowTransfers(true);
+      await cst2.freezeToken(false);
       allowance = await cst2.allowance(grantor, spender);
       grantorBalance = await cst2.balanceOf(grantor);
       spenderBalance = await cst2.balanceOf(spender);
@@ -736,6 +807,7 @@ contract('Registry', function(accounts) {
 
         // we do this so that we can test upgradeContract
         await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
+        await cst1.freezeToken(false);
 
         await registry.upgradeTo(newRegistry.address, 0);
         await newRegistry.upgradedFrom(registry.address);
@@ -752,6 +824,7 @@ contract('Registry', function(accounts) {
       });
 
       it("does not allow superAdmin to upgrade contract if registry is upgraded", async function() {
+        await cst2.freezeToken(true);
         await assertRevert(async () => await registry.upgradeContract("cst", cst2.address, { from: superAdmin }));
       });
 

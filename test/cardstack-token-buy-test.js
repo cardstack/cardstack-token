@@ -34,6 +34,7 @@ contract('CardStackToken', function(accounts) {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
 
       for (let i = 0; i < accounts.length; i++) {
         await checkBalance(accounts[i], 1);

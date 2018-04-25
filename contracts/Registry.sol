@@ -1,6 +1,5 @@
 pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./upgradeable.sol";
 import "./ExternalStorage.sol";
@@ -11,7 +10,7 @@ import "./storable.sol";
 import "./freezable.sol";
 import "./ERC20.sol";
 
-contract Registry is Ownable, administratable, upgradeable {
+contract Registry is administratable, upgradeable {
   using SafeMath for uint256;
 
   bytes4 constant INTERFACE_META_ID = 0x01ffc9a7;
@@ -108,6 +107,8 @@ contract Registry is Ownable, administratable, upgradeable {
     require(contractForHash[hash] != 0x0);
 
     address predecessor = contractForHash[hash];
+    require(freezable(predecessor).frozenToken());
+
     contractForHash[hash] = successor;
 
     uint256 remainingContractBalance;

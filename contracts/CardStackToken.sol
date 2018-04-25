@@ -1,6 +1,5 @@
 pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ERC20.sol";
 import "./freezable.sol";
@@ -14,7 +13,6 @@ import "./configurable.sol";
 import "./storable.sol";
 
 contract CardStackToken is ERC20,
-                           Ownable,
                            freezable,
                            displayable,
                            upgradeable,
@@ -118,6 +116,7 @@ contract CardStackToken is ERC20,
   }
 
   function configureFromStorage() public onlySuperAdmins unlessUpgraded initStorage returns (bool) {
+    freezeToken(true);
     return true;
   }
 
@@ -192,7 +191,7 @@ contract CardStackToken is ERC20,
     return true;
   }
 
-  function mintTokens(uint256 mintedAmount) public onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
+  function mintTokens(uint256 mintedAmount) public onlySuperAdmins unlessUpgraded returns (bool) {
     uint256 _circulationCap = externalStorage.getCirculationCap();
     tokenLedger.mintTokens(mintedAmount);
 
@@ -203,7 +202,7 @@ contract CardStackToken is ERC20,
     return true;
   }
 
-  function grantTokens(address recipient, uint256 amount) public onlySuperAdmins unlessFrozen unlessUpgraded returns (bool) {
+  function grantTokens(address recipient, uint256 amount) public onlySuperAdmins unlessUpgraded returns (bool) {
     require(amount <= tokensAvailable());
     require(!frozenAccount[recipient]);
 
@@ -316,7 +315,7 @@ contract CardStackToken is ERC20,
                              uint256 startDate, // 0 indicates start "now"
                              uint256 cliffSec,
                              uint256 durationSec,
-                             bool isRevocable) public onlySuperAdmins unlessUpgraded unlessFrozen returns(bool) {
+                             bool isRevocable) public onlySuperAdmins unlessUpgraded returns(bool) {
 
     uint256 _circulationCap = externalStorage.getCirculationCap();
 
@@ -346,7 +345,7 @@ contract CardStackToken is ERC20,
   }
 
 
-  function revokeVesting(address beneficiary) public onlySuperAdmins unlessUpgraded unlessFrozen returns (bool) {
+  function revokeVesting(address beneficiary) public onlySuperAdmins unlessUpgraded returns (bool) {
     require(beneficiary != address(0));
     externalStorage.revokeVesting(beneficiary);
 
