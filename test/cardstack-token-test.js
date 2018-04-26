@@ -229,6 +229,78 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
       assert.equal(asInt(balance), 0, "The balance is correct");
     });
+
+    it("allows a superAdmin to add a superAdmin", async function() {
+      let anotherSuperAdmin = accounts[13];
+      let txn = await cst.addSuperAdmin(anotherSuperAdmin, { from: superAdmin });
+
+      let isSuperAdmin = await cst.superAdmins(anotherSuperAdmin);
+      assert.equal(isSuperAdmin, true, 'super admin was created');
+
+      assert.ok(txn.logs);
+      let event = txn.logs[0];
+      assert.equal(event.event, "AddSuperAdmin", "The event type is correct");
+      assert.equal(event.args.admin, anotherSuperAdmin, "The super admin address is correct");
+    });
+
+    it("allows a superAdmin to remove a superAdmin", async function() {
+      let anotherSuperAdmin = accounts[13];
+      await cst.addSuperAdmin(anotherSuperAdmin);
+
+      let txn = await cst.removeSuperAdmin(anotherSuperAdmin, { from: superAdmin });
+
+      let isSuperAdmin = await cst.superAdmins(anotherSuperAdmin);
+      assert.equal(isSuperAdmin, false, 'super admin was removed');
+
+      assert.ok(txn.logs);
+      let event = txn.logs[0];
+      assert.equal(event.event, "RemoveSuperAdmin", "The event type is correct");
+      assert.equal(event.args.admin, anotherSuperAdmin, "The super admin address is correct");
+    });
+
+    it("does not allow an admin to add a superAdmin", async function() {
+      let anotherSuperAdmin = accounts[13];
+      let admin = accounts[14];
+      await cst.addAdmin(admin);
+
+      await assertRevert(async () => await cst.addSuperAdmin(anotherSuperAdmin, { from: admin }));
+
+      let isSuperAdmin = await cst.superAdmins(anotherSuperAdmin);
+      assert.equal(isSuperAdmin, false, 'super admin was not created');
+    });
+
+    it("does not allow an admin to remove a superAdmin", async function() {
+      let anotherSuperAdmin = accounts[13];
+      let admin = accounts[14];
+      await cst.addAdmin(admin);
+      await cst.addSuperAdmin(anotherSuperAdmin);
+
+      await assertRevert(async () => await cst.removeSuperAdmin(anotherSuperAdmin, { from: admin }));
+
+      let isSuperAdmin = await cst.superAdmins(anotherSuperAdmin);
+      assert.equal(isSuperAdmin, true, 'super admin was not removed');
+    });
+
+    it("does not allow a-non superAdmin to add a superAdmin", async function() {
+      let anotherSuperAdmin = accounts[13];
+      let person = accounts[14];
+
+      await assertRevert(async () => await cst.addSuperAdmin(anotherSuperAdmin, { from: person }));
+
+      let isSuperAdmin = await cst.superAdmins(anotherSuperAdmin);
+      assert.equal(isSuperAdmin, false, 'super admin was not created');
+    });
+
+    it("does not allow a-non superAdmin to remove a superAdmin", async function() {
+      let anotherSuperAdmin = accounts[13];
+      let person = accounts[14];
+      await cst.addSuperAdmin(anotherSuperAdmin);
+
+      await assertRevert(async () => await cst.removeSuperAdmin(anotherSuperAdmin, { from: person }));
+
+      let isSuperAdmin = await cst.superAdmins(anotherSuperAdmin);
+      assert.equal(isSuperAdmin, true, 'super admin was not removed');
+    });
   });
 
   describe("mintTokens()", function() {
