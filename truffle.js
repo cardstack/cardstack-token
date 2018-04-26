@@ -13,7 +13,7 @@ module.exports = {
       network_id: "*"
     },
 
-    // this is for testing migration and mist in testrpc
+    // this is for testing scripts, migration, and mist in testrpc
     testrpc: {
       host: "localhost",
       port: 8545,

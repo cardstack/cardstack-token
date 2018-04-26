@@ -1,4 +1,4 @@
-const { CST_NAME } = require("../lib/constants");
+const { CST_BUY_GAS_LIMIT, CST_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 let RegistryContract = artifacts.require("./Registry.sol");
@@ -46,20 +46,14 @@ module.exports = async function(callback) {
   let cstAddress = await registryContract.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
+  let symbol = await cst.symbol();
 
   let data = cst.contract.releaseVestedTokens.getData();
-  let estimatedGas = web3.eth.estimateGas({
-    to: cst.address,
-    data
-  });
 
-  // the estimated gas calculations for this txn are way off...
-  estimatedGas = 200000;
-
-  console.log(`\nTo release your vested CST send 0 ETH (not including gas) to the following address with the following data:`);
+  console.log(`\nTo release your vested ${symbol} send 0 ETH (not including gas) to the following address with the following data:`);
   console.log(`Address: ${cst.address}`);
   console.log(`Data: ${data}`);
-  console.log(`Estimated gas: ${estimatedGas}`);
+  console.log(`Estimated gas: ${CST_BUY_GAS_LIMIT}`);
 
   callback();
 };

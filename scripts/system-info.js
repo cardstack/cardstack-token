@@ -94,6 +94,7 @@ module.exports = async function(callback) {
 
   let registryAdminCount = await registry.totalAdminsMapping();
   let registrySuperAdminCount = await registry.totalSuperAdminsMapping();
+  let registryCstNamehash = await registry.namehashForHash(web3.sha3(CST_NAME));
 
   let storageAddress = await registry.storageForHash(web3.sha3(CST_STORAGE_NAME));
   let ledgerAddress = await registry.storageForHash(web3.sha3(CST_LEDGER_NAME));
@@ -159,6 +160,8 @@ Registry (${registry.address}):
   ${CST_NAME}: ${prettyAddress(cstAddress)}
   ${CST_STORAGE_NAME}: ${prettyAddress(storageAddress)}
   ${CST_LEDGER_NAME}: ${prettyAddress(ledgerAddress)}
+
+  Namehash for CST Token contract: ${registryCstNamehash}
 
   Registry super admins:`);
   for (let i = 0; i < registrySuperAdminCount; i++) {
@@ -311,26 +314,27 @@ Cardstack Token (${cst.address}):
     }
     console.log(`
   CST Vesting: ${vestingSchedules || '\n'}`);
-    console.log(`  CST Buyers with custom balance limit:`);
+    let customLimitTotal = 0;
     for (let i = 0; i < cstCustomBuyerCount; i++) {
       let address = await cst.customBuyerForIndex(i);
       let limit = await cst.customBuyerLimit(address);
       limit = limit.toNumber();
       if (limit) {
-        console.log(`    ${prettyAddress(address)}: ${limit} ${cstSymbol}`);
+        customLimitTotal++;
       }
     }
-    console.log(`
-  CST Buyers:`);
+    console.log(`  CST Buyers with custom balance limit: ${customLimitTotal} addresses`);
+    let cstBuyersTotal = 0;
     for (let i = 0; i < cstBuyerCount; i++) {
       let address = await cst.approvedBuyerForIndex(i);
       let isBuyer = await cst.approvedBuyer(address);
       if (isBuyer) {
-        console.log(`    ${prettyAddress(address)}`);
+        cstBuyersTotal++;
       }
     }
-
     console.log(`
+  CST Buyers: ${cstBuyersTotal} addresses
+
   Frozen Accounts:`);
     for (let i = 0; i < cstFrozenCount; i++) {
       let address = await cst.frozenAccountForIndex(i);

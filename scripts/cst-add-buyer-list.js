@@ -82,15 +82,23 @@ module.exports = async function(callback) {
 
     if (holdCap && holdCap.trim()) {
       try {
-        await cst.setCustomBuyer(address.trim(), parseInt(holdCap, 10));
+        await cst.setCustomBuyer(address.trim(), holdCap.trim());
       } catch (err) {
-        console.error(`Error encountered adding buyer with custom cap, ${err.message}`);
+        if (err.message.indexOf(/wasn't processed in .* seconds/) > -1) {
+          console.log(`Warning for buyer ${address}: ${err.message}. This is probably ok, but you can confirm transaction in etherscan`);
+        } else {
+          console.error(`Error encountered adding buyer ${address}, ${err.message}`);
+        }
       }
     } else {
       try {
         await cst.addBuyer(address.trim());
       } catch (err) {
-        console.error(`Error encountered adding buyer, ${err.message}`);
+        if (err.message.indexOf(/wasn't processed in .* seconds/) > -1) {
+          console.log(`Warning for buyer ${address}: ${err.message}. This is probably ok, but you can confirm transaction in etherscan`);
+        } else {
+          console.error(`Error encountered adding buyer ${address}, ${err.message}`);
+        }
       }
     }
   }, concurrency);
