@@ -455,6 +455,15 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(recipientBalance), 10, "the balance is correct");
     });
 
+    it("allows setHaltPurchase() in successor contract", async function() {
+      await cst2.upgradedFrom(cst1.address, { from: admin });
+      await cst2.setHaltPurchase(true);
+
+      let isHalted = await cst2.haltPurchase();
+
+      assert.equal(isHalted, true, 'haltPurchase is correct');
+    });
+
     it("allows setCustomBuyer for successor contract", async function() {
       let customBuyerAccount = accounts[29];
 
@@ -731,6 +740,15 @@ contract('CardStackToken', function(accounts) {
       assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
       assert.equal(cstBalance, 0, "The CST balance is correct");
       assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
+    });
+
+    it("does not allow setHaltPurchase() when contract has been upgraded", async function() {
+      await cst1.upgradeTo(cst2.address, 100, { from: admin });
+      await assertRevert(async () => await cst1.setHaltPurchase(true));
+
+      let isHalted = await cst1.haltPurchase();
+
+      assert.equal(isHalted, false, 'haltPurchase is correct');
     });
 
     it("does not allow transfer of CST when the contract has been upgraded", async function() {

@@ -56,7 +56,7 @@ module.exports = async function(callback) {
 
   let cst, cstRegistry, cstFrozen, cstDeprecated, successor, cstStorageName, cstLedgerName, cstName,
     cstSymbol = "", buyPriceWei, circulationCap, foundation, balanceWei, totalSupply, cstFrozenCount,
-    cstAdminCount, cstSuperAdminCount, cstBuyerCount, cstCustomBuyerCount, cstBalanceLimit,
+    cstAdminCount, cstSuperAdminCount, cstHaltPurchase, cstBuyerCount, cstCustomBuyerCount, cstBalanceLimit,
     contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers, vestingCount, cstAvailable;
 
   if (cstAddress === NULL_ADDRESS) {
@@ -82,6 +82,7 @@ module.exports = async function(callback) {
     cstAdminCount = await cst.totalAdminsMapping();
     cstSuperAdminCount = await cst.totalSuperAdminsMapping();
     cstBuyerCount = await cst.totalBuyersMapping();
+    cstHaltPurchase = await cst.haltPurchase();
     cstCustomBuyerCount = await cst.totalCustomBuyersMapping();
     cstWhitelistedTransfererCount = await cst.totalTransferWhitelistMapping();
     cstBalanceLimit = await cst.cstBalanceLimit();
@@ -181,8 +182,8 @@ Registry (${registry.address}):
     console.log(`
 
 Ledger (${ledger.address})
-  totalTokens: ${totalTokens}
-  totalInCirculation: ${totalInCirculation}
+  total tokens: ${totalTokens}
+  total in circulation: ${totalInCirculation}
   number of accounts: ${numAccounts}
 
   Ledger super admins:`);
@@ -265,6 +266,7 @@ Cardstack Token (${cst.address}):
   storage name: ${cstStorageName}
   ledger name: ${cstLedgerName}
   is frozen: ${cstFrozen}
+  purchases halted: ${cstHaltPurchase}
   allow transfers: ${cstAllowTransfers}
   deprecated: ${cstDeprecated}
   successor: ${successor}

@@ -28,6 +28,7 @@ contract CardStackToken is ERC20,
   address public externalStorage;
   address public registry;
   uint256 public decimals = 0;
+  bool public haltPurchase;
 
   // This state is specific to the first version of the CST
   // token contract and the token generation event, and hence
@@ -52,6 +53,8 @@ contract CardStackToken is ERC20,
   event VestedTokenRevocation(address indexed beneficiary);
   event VestedTokenRelease(address indexed beneficiary, uint256 amount);
   event StorageUpdated(address storageAddress, address ledgerAddress);
+  event PurchaseHalted();
+  event PurchaseResumed();
 
   modifier onlyFoundation {
     address foundation = externalStorage.getFoundation();
@@ -121,7 +124,8 @@ contract CardStackToken is ERC20,
   }
 
   function updateStorage(string newStorageName, string newLedgerName) public onlySuperAdmins unlessUpgraded returns (bool) {
-    // TODO we should assert contract is frozen before updating storage
+    require(frozenToken);
+
     storageName = newStorageName;
     ledgerName = newLedgerName;
 
@@ -212,7 +216,19 @@ contract CardStackToken is ERC20,
     return true;
   }
 
+  function setHaltPurchase(bool _haltPurchase) public onlySuperAdmins unlessUpgraded returns (bool) {
+    haltPurchase = _haltPurchase;
+
+    if (_haltPurchase) {
+      emit PurchaseHalted();
+    } else {
+      emit PurchaseResumed();
+    }
+    return true;
+  }
+
   function buy() external payable unlessFrozen unlessUpgraded returns (uint256) {
+    require(!haltPurchase);
     require(externalStorage.getApprovedBuyer(msg.sender));
 
     uint256 _buyPrice = externalStorage.getBuyPrice();
