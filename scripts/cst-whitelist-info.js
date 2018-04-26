@@ -1,8 +1,10 @@
-const { CST_BUY_GAS_LIMIT, CST_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
-let RegistryContract = artifacts.require("./Registry.sol");
+
 let CardStackToken = artifacts.require("./CardStackToken.sol");
+let RegistryContract = artifacts.require("./Registry.sol");
+
+const { CST_NAME } = require("../lib/constants");
 
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
@@ -12,8 +14,8 @@ const optionsDefs = [
 
 const usage = [
   {
-    header: "cst-buy-info",
-    content: "This script display purchase information that instructs how to buy CST."
+    header: "cst-whitelist-info",
+    content: "This script displays the whitelisting info for the CST token contract."
   },{
     header: "Options",
     optionList: [{
@@ -45,15 +47,32 @@ module.exports = async function(callback) {
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
 
   console.log(`Using registry at ${registry.address}`);
+
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
-
   let cst = await CardStackToken.at(cstAddress);
+  let cstSymbol = await cst.symbol();
+  let cstBuyerCount = await cst.totalBuyersMapping();
+  let cstCustomBuyerCount = await cst.totalCustomBuyersMapping();
+  let cstBalanceLimit = await cst.cstBalanceLimit();
 
-  let data = cst.contract.buy.getData();
-  console.log(`\nTo purchase CST send ETH to the following address with the following data:`);
-  console.log(`Address: ${cst.address}`);
-  console.log(`Data: ${data}`);
-  console.log(`Estimated gas: ${CST_BUY_GAS_LIMIT}`);
-
-  callback();
+  console.log(`
+Cardstack Token (${cst.address}):
+  CST Buyers with custom balance limit:`);
+  for (let i = 0; i < cstCustomBuyerCount; i++) {
+    let address = await cst.customBuyerForIndex(i);
+    let limit = await cst.customBuyerLimit(address);
+    limit = limit.toNumber();
+    if (limit) {
+      console.log(`    ${address}: ${limit} ${cstSymbol}`);
+    }
+  }
+  console.log(`
+  CST Buyers (with the default balance limit of ${cstBalanceLimit} ${cstSymbol}):`);
+  for (let i = 0; i < cstBuyerCount; i++) {
+    let address = await cst.approvedBuyerForIndex(i);
+    let isBuyer = await cst.approvedBuyer(address);
+    if (isBuyer) {
+      console.log(`    ${address}`);
+    }
+  }
 };

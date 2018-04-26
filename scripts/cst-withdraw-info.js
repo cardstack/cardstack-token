@@ -1,4 +1,4 @@
-const { NULL_ADDRESS, CST_NAME } = require("../lib/constants");
+const { CST_BUY_GAS_LIMIT, NULL_ADDRESS, CST_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 let RegistryContract = artifacts.require("./Registry.sol");
@@ -61,24 +61,19 @@ module.exports = async function(callback) {
   }
 
   let amount = web3.toWei(options.amount, "ether");
-  let minimumBalance = await cst.minimumBalance();
   let balance = await web3.eth.getBalance(cst.address);
 
-  if (amount > balance - minimumBalance) {
-    console.log(`The CST contract does not have a high enough balance to support this transaction. The maximum withdrawal is currently ${web3.fromWei(balance - minimumBalance, "ether")} ETH.`);
+  if (amount > balance) {
+    console.log(`The CST contract does not have a high enough balance to support this transaction. The maximum withdrawal is currently ${web3.fromWei(balance, "ether")} ETH.`);
     callback();
     return;
   }
 
   let data = cst.contract.foundationWithdraw.getData(amount);
-  let estimatedGas = web3.eth.estimateGas({
-    to: cst.address,
-    data
-  });
   console.log(`\nTo withdraw ETH from the CST contract, send 0 ETH to the following address with the following data from the wallet with the address ${foundation}:`);
   console.log(`Address: ${cst.address}`);
   console.log(`Data: ${data}`);
-  console.log(`Estimated gas: ${estimatedGas}`);
+  console.log(`Estimated gas: ${CST_BUY_GAS_LIMIT}`);
 
   callback();
 };
