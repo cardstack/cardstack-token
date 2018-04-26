@@ -158,6 +158,58 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
     });
 
+    it("can not purchase CST when haltPurchase is `true`", async function() {
+      await ledger.mintTokens(10);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 15, 1000000, NULL_ADDRESS);
+      let buyerAccount = accounts[1];
+      let txnValue = web3.toWei(8, "ether");
+      let startBalance = await web3.eth.getBalance(buyerAccount);
+
+      await cst.addBuyer(buyerAccount);
+      await cst.setHaltPurchase(true);
+
+      startBalance = asInt(startBalance);
+
+      await assertRevert(async () => await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      }));
+
+      let endBalance = await web3.eth.getBalance(buyerAccount);
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+
+      endBalance = asInt(endBalance);
+
+      assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
+      assert.equal(cstBalance, 0, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The CST total in circulation was not updated");
+    });
+
+    it("can purchase CST when haltPurchase is `false` after being `true`", async function() {
+      await ledger.mintTokens(10);
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 15, 1000000, NULL_ADDRESS);
+      let buyerAccount = accounts[1];
+      let txnValue = web3.toWei(8, "ether");
+
+      await cst.addBuyer(buyerAccount);
+      await cst.setHaltPurchase(true);
+      await cst.setHaltPurchase(false);
+
+      await cst.buy({
+        from: buyerAccount,
+        value: txnValue,
+        gasPrice: GAS_PRICE
+      });
+
+      let cstBalance = await cst.balanceOf(buyerAccount);
+      let totalInCirculation = await cst.totalInCirculation();
+
+      assert.equal(cstBalance, 8, "The CST balance is correct");
+      assert.equal(asInt(totalInCirculation), 8, "The CST total in circulation was not updated");
+    });
+
     it("can not purchase more CST than has been minted", async function() {
       await ledger.mintTokens(10);
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(1, "ether"), 15, 1000000, NULL_ADDRESS);

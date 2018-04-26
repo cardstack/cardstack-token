@@ -186,6 +186,48 @@ contract('CardStackToken', function(accounts) {
       assert.equal(asInt(balance), 100, "The balance is correct");
     });
 
+    it("cannot update storage when token is not frozen", async function() {
+      let tokenHolder = accounts[6];
+      let newStorage = await Storage.new();
+      let newLedger = await CstLedger.new();
+
+      await ledger.mintTokens(10000);
+
+      await newStorage.setUIntValue("cstBuyPrice", web3.toWei(0.5, "ether"));
+      await newStorage.setUIntValue("cstCirculationCap", 10);
+      await newStorage.setBytes32Value("cstTokenSymbol", web3.toHex("CST1"));
+      await newStorage.setBytes32Value("cstTokenName", web3.toHex("New CardStack Token"));
+      await newLedger.mintTokens(200);
+      await newLedger.debitAccount(tokenHolder, 100);
+
+      await registry.addStorage("newStorage", newStorage.address);
+      await registry.addStorage("newLedger", newLedger.address);
+      await newStorage.addSuperAdmin(registry.address);
+      await newLedger.addSuperAdmin(registry.address);
+      await newStorage.addAdmin(cst.address);
+      await newLedger.addAdmin(cst.address);
+
+      await cst.freezeToken(false);
+      await assertRevert(async () => await cst.updateStorage("newStorage", "newLedger", { from: superAdmin }));
+
+      let name = await cst.name();
+      let symbol = await cst.symbol();
+      let buyPrice = await cst.buyPrice();
+      let circulationCap = await cst.circulationCap();
+      let totalTokens = await cst.totalSupply();
+      let totalInCirculation = await cst.totalInCirculation();
+      let balance = await cst.balanceOf(tokenHolder);
+
+      assert.equal(name, "CardStack Token", "The name of the token is correct");
+      assert.equal(symbol, "CST", "The symbol of the token is correct");
+      assert.equal(asInt(circulationCap), 100, "The circulationCap is correct");
+      assert.equal(asInt(buyPrice), web3.toWei(0.1, 'ether'), "The buyPrice is correct");
+
+      assert.equal(asInt(totalTokens), 10000, "The totalTokens is correct");
+      assert.equal(asInt(totalInCirculation), 0, "The totalInCirculation is correct");
+      assert.equal(asInt(balance), 0, "The balance is correct");
+    });
+
     it("non-superAdmin cannot not update storage", async function() {
       let nonOwner = accounts[9];
       let tokenHolder = accounts[6];
@@ -300,6 +342,56 @@ contract('CardStackToken', function(accounts) {
 
       let isSuperAdmin = await cst.superAdmins(anotherSuperAdmin);
       assert.equal(isSuperAdmin, true, 'super admin was not removed');
+    });
+  });
+
+  describe("setHaltPurchase()", function() {
+    beforeEach(async function() {
+      ledger = await CstLedger.new();
+      storage = await Storage.new();
+      registry = await Registry.new();
+      await registry.addStorage("cstStorage", storage.address);
+      await registry.addStorage("cstLedger", ledger.address);
+      await storage.addSuperAdmin(registry.address);
+      await ledger.addSuperAdmin(registry.address);
+      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+        gas: CST_DEPLOY_GAS_LIMIT
+      });
+      await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
+      await cst.freezeToken(false);
+      await cst.addSuperAdmin(superAdmin);
+    });
+
+    it("allows a super admin to setHaltPurchase(true)", async function() {
+      let txn = await cst.setHaltPurchase(true, { from: superAdmin });
+      let isHalted = await cst.haltPurchase();
+
+      assert.equal(isHalted, true, 'haltPurchase is correct');
+      assert.ok(txn.logs);
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "PurchaseHalted", "The event type is correct");
+    });
+
+    it("allows a super admin to setHaltPurchase(false)", async function() {
+      await cst.setHaltPurchase(true);
+      let txn = await cst.setHaltPurchase(false, { from: superAdmin });
+      let isHalted = await cst.haltPurchase();
+
+      assert.equal(isHalted, false, 'haltPurchase is correct');
+      assert.ok(txn.logs);
+
+      let event = txn.logs[0];
+      assert.equal(event.event, "PurchaseResumed", "The event type is correct");
+    });
+
+    it("does not allow a non-super admin to setHaltPurchase()", async function() {
+      let person = accounts[32];
+      await assertRevert(async () => await cst.setHaltPurchase(true, { from: person }));
+
+      let isHalted = await cst.haltPurchase();
+
+      assert.equal(isHalted, false, 'haltPurchase is correct');
     });
   });
 
