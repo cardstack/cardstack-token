@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
 import "./administratable.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract freezable is administratable {
   using SafeMath for uint256;
