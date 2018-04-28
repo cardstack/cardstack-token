@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 import "./ExternalStorage.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 library CstLibrary {
   using SafeMath for uint256;

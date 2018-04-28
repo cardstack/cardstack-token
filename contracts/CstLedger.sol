@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
 import "./administratable.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 interface ITokenLedger {
   function totalTokens() external view returns (uint256);
