@@ -1,4 +1,4 @@
-# cardstack-token
+# cardstack-token [![Build Status](https://travis-ci.org/cardstack/cardstack-token.svg?branch=master)](https://travis-ci.org/cardstack/cardstack-token)
 This project contains the smart contracts that govern the [Cardstack](https://cardstack.com) token.
 
 ## Prerequisites
