@@ -1,5 +1,5 @@
 # cardstack-token
-This project contains the smart contracts that govern the CardStack token.
+This project contains the smart contracts that govern the [CardStack](https://cardstack.com) token.
 
 ## Prerequisites
 * node 8+
