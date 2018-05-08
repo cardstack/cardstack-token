@@ -84,7 +84,7 @@ module.exports = async function(callback) {
       try {
         await cst.setCustomBuyer(address.trim(), holdCap.trim());
       } catch (err) {
-        if (err.message.indexOf(/wasn't processed in .* seconds/) > -1) {
+        if (err.message.indexOf("wasn't processed in 240 seconds") > -1) {
           console.log(`Warning for buyer ${address}: ${err.message}. This is probably ok, but you can confirm transaction in etherscan`);
         } else {
           console.error(`Error encountered adding buyer ${address}, ${err.message}`);
