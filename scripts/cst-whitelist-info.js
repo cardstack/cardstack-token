@@ -9,6 +9,7 @@ const { CST_NAME } = require("../lib/constants");
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
+  { name: "address", alias: "a", type: String },
   { name: "registry", alias: "r", type: String }
 ];
 
@@ -25,6 +26,10 @@ const usage = [
     },{
       name: "network",
       description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
+    },{
+      name: "address",
+      alias: "a",
+      description: "(optional) address to get whitelisting info"
     },{
       name: "registry",
       alias: "r",
@@ -43,6 +48,7 @@ module.exports = async function(callback) {
   }
 
   let registryAddress = options.registry;
+  let queryAddress = options.address;
 
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
 
@@ -55,24 +61,45 @@ module.exports = async function(callback) {
   let cstCustomBuyerCount = await cst.totalCustomBuyersMapping();
   let cstBalanceLimit = await cst.cstBalanceLimit();
 
-  console.log(`
+  if (!queryAddress) {
+    console.log(`
 Cardstack Token (${cst.address}):
   CST Buyers with custom balance limit:`);
-  for (let i = 0; i < cstCustomBuyerCount; i++) {
-    let address = await cst.customBuyerForIndex(i);
-    let limit = await cst.customBuyerLimit(address);
-    limit = limit.toNumber();
-    if (limit) {
-      console.log(`    ${address}: ${limit} ${cstSymbol}`);
+    for (let i = 0; i < cstCustomBuyerCount; i++) {
+      let address = await cst.customBuyerForIndex(i);
+      let limit = await cst.customBuyerLimit(address);
+      limit = limit.toNumber();
+      if (limit) {
+        console.log(`    ${address}: ${limit} ${cstSymbol}`);
+      }
     }
-  }
-  console.log(`
+    console.log(`
   CST Buyers (with the default balance limit of ${cstBalanceLimit} ${cstSymbol}):`);
-  for (let i = 0; i < cstBuyerCount; i++) {
-    let address = await cst.approvedBuyerForIndex(i);
-    let isBuyer = await cst.approvedBuyer(address);
+    for (let i = 0; i < cstBuyerCount; i++) {
+      let address = await cst.approvedBuyerForIndex(i);
+      let isBuyer = await cst.approvedBuyer(address);
+      if (isBuyer) {
+        console.log(`    ${address}`);
+      }
+    }
+  } else {
+    console.log(`
+Cardstack Token (${cst.address}):`);
+    let isBuyer = await cst.approvedBuyer(queryAddress);
+    let cstBalanceLimit = await cst.cstBalanceLimit();
+    let limit = await cst.customBuyerLimit(queryAddress);
+    limit = limit.toNumber();
+
     if (isBuyer) {
-      console.log(`    ${address}`);
+      if (limit) {
+        console.log(`    ${queryAddress}: is whitelisted with custom cap of ${limit} ${cstSymbol}`);
+      } else {
+        console.log(`    ${queryAddress}: is whitelisted with default cap of ${cstBalanceLimit} ${cstSymbol}`);
+      }
+    } else {
+      console.log(`  The address ${queryAddress} is not a whitelisted buyer`);
     }
   }
+
+  callback();
 };

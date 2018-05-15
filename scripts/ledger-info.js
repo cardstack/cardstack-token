@@ -8,6 +8,7 @@ let CstLedger = artifacts.require("./CstLedger.sol");
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
+  { name: "address", alias: "a", type: String },
   { name: "registry", alias: "r", type: String }
 ];
 
@@ -24,6 +25,10 @@ const usage = [
     },{
       name: "network",
       description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
+    },{
+      name: "address",
+      alias: "a",
+      description: "(optional) address to get ledger info"
     },{
       name: "registry",
       alias: "r",
@@ -42,6 +47,7 @@ module.exports = async function(callback) {
   }
 
   let registryAddress = options.registry;
+  let queryAddress = options.address;
 
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
 
@@ -49,6 +55,7 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
   let cst = await CardStackToken.at(cstAddress);
   let cstLedgerName = await cst.ledgerName();
+  let cstSymbol = await cst.symbol();
   let ledgerAddress = await registry.storageForHash(web3.sha3(cstLedgerName.toString()));
   let ledger = await CstLedger.at(ledgerAddress);
 
@@ -56,18 +63,24 @@ module.exports = async function(callback) {
   let totalInCirculation = await ledger.totalInCirculation();
   let numAccounts = await ledger.ledgerCount();
 
-  console.log(
+    console.log(
 `Ledger (${ledger.address}
-  totalTokens: ${totalTokens}
-  totalInCirculation: ${totalInCirculation}
-  number of accounts: ${numAccounts}
+  totalTokens: ${totalTokens} ${cstSymbol}
+  totalInCirculation: ${totalInCirculation} ${cstSymbol}
+  number of accounts: ${numAccounts}\n`);
 
-Accounts:`);
+  if (!queryAddress) {
+    console.log(`Accounts:`);
 
-  for (let i = 0; i < numAccounts.toNumber(); i++) {
-    let address = await ledger.accountForIndex(i);
-    let balance = await ledger.balanceOf(address);
-    console.log(`  ${address}: ${balance}`);
+    for (let i = 0; i < numAccounts.toNumber(); i++) {
+      let address = await ledger.accountForIndex(i);
+      let balance = await ledger.balanceOf(address);
+      console.log(`  ${address}: ${balance} ${cstSymbol}`);
+    }
+  } else {
+    console.log(`Individual Account Info:`);
+    let balance = await ledger.balanceOf(queryAddress);
+    console.log(`  ${queryAddress}: ${balance} ${cstSymbol}`);
   }
 
   callback();
