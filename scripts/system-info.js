@@ -313,27 +313,11 @@ Cardstack Token (${cst.address}):
       }
     }
     console.log(`
-  CST Vesting: ${vestingSchedules || '\n'}`);
-    let customLimitTotal = 0;
-    for (let i = 0; i < cstCustomBuyerCount; i++) {
-      let address = await cst.customBuyerForIndex(i);
-      let limit = await cst.customBuyerLimit(address);
-      limit = limit.toNumber();
-      if (limit) {
-        customLimitTotal++;
-      }
-    }
-    console.log(`  CST Buyers with custom balance limit: ${customLimitTotal} addresses`);
-    let cstBuyersTotal = 0;
-    for (let i = 0; i < cstBuyerCount; i++) {
-      let address = await cst.approvedBuyerForIndex(i);
-      let isBuyer = await cst.approvedBuyer(address);
-      if (isBuyer) {
-        cstBuyersTotal++;
-      }
-    }
-    console.log(`
-  CST Buyers: ${cstBuyersTotal} addresses
+  CST Vesting: ${vestingSchedules || '\n'}
+
+  CST Buyers with custom balance limit: ~${cstCustomBuyerCount} addresses
+
+  CST Buyers: ~${cstBuyerCount} addresses
 
   Frozen Accounts:`);
     for (let i = 0; i < cstFrozenCount; i++) {
