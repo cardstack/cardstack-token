@@ -63,8 +63,9 @@ module.exports = async function(callback) {
   let totalInCirculation = await ledger.totalInCirculation();
   let numAccounts = await ledger.ledgerCount();
 
-    console.log(
-`Ledger (${ledger.address}
+    console.log(`
+Cardstack Token (${cst.address})
+Ledger (${ledger.address}):
   totalTokens: ${totalTokens} ${cstSymbol}
   totalInCirculation: ${totalInCirculation} ${cstSymbol}
   number of accounts: ${numAccounts}\n`);
