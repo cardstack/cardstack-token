@@ -10,10 +10,12 @@ const optionsDefs = [
   { name: "tokenName", type: String },
   { name: "tokenSymbol", type: String },
   { name: "buyPriceEth", type: Number },
+  { name: "buyPriceCardPerEth", type: Number },
   { name: "circulationCap", type: Number },
   { name: "maxBalance", type: Number },
   { name: "foundation", type: String },
   { name: "registry", alias: "r", type: String },
+  { name: "force", type: Boolean },
   { name: "data", alias: "d", type: Boolean }
 ];
 
@@ -37,8 +39,14 @@ const usage = [
       name: "tokenSymbol",
       description: "The ERC-20 token symbol."
     },{
+      name: "force",
+      description: "(optional) Specify the `--force` parameter to configure an unfrozen contract. For price changes, the token must be frozen in order to change the price."
+    },{
       name: "buyPriceEth",
       description: "The price to purchase 1 CST from the CST contract in units of ethers."
+    },{
+      name: "buyPriceCardPerEth",
+      description: "The price of CST expressed as the amount of CST that you can purchase for 1 ETH"
     },{
       name: "circulationCap",
       description: "The maximum number of CST that is allowed to be in circluation at any point in time (this includes unvested tokens)"
@@ -64,13 +72,15 @@ module.exports = async function(callback) {
   let { tokenName,
         tokenSymbol,
         buyPriceEth,
+        buyPriceCardPerEth,
         maxBalance,
+        force,
         circulationCap,
         foundation } = options;
 
   if (!tokenName ||
       !tokenSymbol ||
-      !buyPriceEth ||
+      (!buyPriceEth && !buyPriceCardPerEth) ||
       !circulationCap ||
       !options.network ||
       !maxBalance ||
@@ -90,11 +100,28 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
+  let isFrozen = await cst.frozenToken();
 
-  console.log(`Initializing CST token:
+  if (!isFrozen) {
+    if (!force) {
+      console.log("WARNING: Token is not frozen. Token must be frozen in order to make price changes. Use `--force` to configure the token without freezing it.");
+      callback();
+      return;
+    } else {
+      console.log("WARNING: Token is not frozen, force-changing the token configuration. Note that price changes are not allowed when the token is not frozen.\n");
+    }
+  }
+
+  if (buyPriceCardPerEth) {
+    buyPriceEth = 1 / buyPriceCardPerEth;
+  } else {
+    buyPriceCardPerEth = Math.floor(1 / buyPriceEth);
+  }
+
+  console.log(`Configuring CST token:
   token name: ${tokenName}
   token symbol: ${tokenSymbol}
-  buy price (ETH): ${buyPriceEth}
+  buy price (ETH): ${buyPriceEth}, ${tokenSymbol} per ETH: ${buyPriceCardPerEth}
   circulation cap: ${circulationCap}
   maximum balance: ${maxBalance}
   foundation address: ${foundation}`);
