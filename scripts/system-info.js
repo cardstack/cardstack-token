@@ -275,7 +275,7 @@ Cardstack Token (${cst.address}):
   successor: ${successor}
   name: ${cstName}
   symbol: ${cstSymbol}
-  buy price (ETH): ${web3.fromWei(buyPriceWei, "ether")}, ${cstSymbol} per ETH: ${Math.floor(1 / web3.fromWei(buyPriceWei, "ether"))}
+  buy price: ${web3.fromWei(buyPriceWei, "ether")} ETH, ${cstSymbol} per ETH: ${Math.floor(1 / web3.fromWei(buyPriceWei, "ether"))} ${cstSymbol}
   circulation cap: ${circulationCap} ${cstSymbol}
   total tokens available: ${cstAvailable} ${cstSymbol}
   total unvested tokens: ${totalUnvested} ${cstSymbol}
@@ -283,7 +283,7 @@ Cardstack Token (${cst.address}):
   contribution minimum: ${contributionMinimum} ${cstSymbol}
   balance limit: ${cstBalanceLimit} ${cstSymbol}
   total supply: ${totalSupply} ${cstSymbol}
-  balance (ETH): ${web3.fromWei(balanceWei, "ether")}
+  token contract balance: ${web3.fromWei(balanceWei, "ether")} ETH
   foundation address: ${prettyAddress(foundation)}
 
   CST super admins:`);
