@@ -57,7 +57,8 @@ module.exports = async function(callback) {
   let cst, cstRegistry, cstFrozen, cstDeprecated, successor, cstStorageName, cstLedgerName, cstName,
     cstSymbol = "", buyPriceWei, circulationCap, foundation, balanceWei, totalSupply, cstFrozenCount,
     cstAdminCount, cstSuperAdminCount, cstHaltPurchase, cstBuyerCount, cstCustomBuyerCount, cstBalanceLimit,
-    contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers, vestingCount, cstAvailable;
+    contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers, vestingCount, cstAvailable,
+    cstTotalInCirculation;
 
   if (cstAddress === NULL_ADDRESS) {
     console.log(`There is no CST contract resgistered with the Registry at ${registry.address}`);
@@ -75,6 +76,7 @@ module.exports = async function(callback) {
     cstSymbol = await cst.symbol();
     buyPriceWei = await cst.buyPrice();
     circulationCap = await cst.circulationCap();
+    cstTotalInCirculation = await cst.totalInCirculation();
     foundation = await cst.foundation();
     balanceWei = await web3.eth.getBalance(cst.address);
     totalSupply = await cst.totalSupply();
@@ -186,8 +188,9 @@ Registry (${registry.address}):
 
 Ledger (${ledger.address})
   total tokens: ${totalTokens}
-  total in circulation: ${totalInCirculation}
   number of accounts: ${numAccounts}
+  total in circulation: ${totalInCirculation}*
+    * not counting unvested & vested-unreleased tokens
 
   Ledger super admins:`);
     for (let i = 0; i < ledgerSuperAdminCount; i++) {
@@ -276,8 +279,10 @@ Cardstack Token (${cst.address}):
   name: ${cstName}
   symbol: ${cstSymbol}
   buy price: ${web3.fromWei(buyPriceWei, "ether")} ETH, ${cstSymbol} per ETH: ${Math.floor(1 / web3.fromWei(buyPriceWei, "ether"))} ${cstSymbol}
-  circulation cap: ${circulationCap} ${cstSymbol}
   total tokens available: ${cstAvailable} ${cstSymbol}
+  circulation cap: ${circulationCap} ${cstSymbol}
+  tokens in circulation (includes unvested tokens): ${cstTotalInCirculation} ${cstSymbol}
+  total tokens available for purchase: ${circulationCap - cstTotalInCirculation} ${cstSymbol}
   total unvested tokens: ${totalUnvested} ${cstSymbol}
   total vested and unreleased tokens: ${totalVestedUnreleased} ${cstSymbol}
   contribution minimum: ${contributionMinimum} ${cstSymbol}
