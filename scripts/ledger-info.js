@@ -62,13 +62,17 @@ module.exports = async function(callback) {
   let totalTokens = await ledger.totalTokens();
   let totalInCirculation = await ledger.totalInCirculation();
   let numAccounts = await ledger.ledgerCount();
+  let buyPriceWei = await cst.buyPrice();
+  let sigDigits = 6;
 
     console.log(`
 Cardstack Token (${cst.address})
 Ledger (${ledger.address}):
   totalTokens: ${totalTokens} ${cstSymbol}
   totalInCirculation: ${totalInCirculation} ${cstSymbol}
-  number of accounts: ${numAccounts}\n`);
+  number of accounts: ${numAccounts}
+
+  * Note that ETH amounts expressed below are based on the token contract's buy price\n`);
 
   if (!queryAddress) {
     console.log(`Accounts:`);
@@ -76,12 +80,14 @@ Ledger (${ledger.address}):
     for (let i = 0; i < numAccounts.toNumber(); i++) {
       let address = await ledger.accountForIndex(i);
       let balance = await ledger.balanceOf(address);
-      console.log(`  ${address}: ${balance} ${cstSymbol}`);
+      let balanceEth = Math.round(web3.fromWei(buyPriceWei, "ether") * balance * 10 ** sigDigits) / 10 ** sigDigits;
+      console.log(`  ${address}: ${balance} ${cstSymbol} (${balanceEth} ETH)`);
     }
   } else {
     console.log(`Individual Account Info:`);
     let balance = await ledger.balanceOf(queryAddress);
-    console.log(`  ${queryAddress}: ${balance} ${cstSymbol}`);
+    let balanceEth = Math.round(web3.fromWei(buyPriceWei, "ether") * balance * 10 ** sigDigits) / 10 ** sigDigits;
+    console.log(`  ${queryAddress}: ${balance} ${cstSymbol} (${balanceEth} ETH)`);
   }
 
   callback();
