@@ -60,6 +60,9 @@ module.exports = async function(callback) {
   let cstBuyerCount = await cst.totalBuyersMapping();
   let cstCustomBuyerCount = await cst.totalCustomBuyersMapping();
   let cstBalanceLimit = await cst.cstBalanceLimit();
+  let buyPriceWei = await cst.buyPrice();
+  let sigDigits = 6;
+  let defaultLimitEth = Math.round(web3.fromWei(buyPriceWei, "ether") * cstBalanceLimit * 10 ** sigDigits) / 10 ** sigDigits;
 
   if (!queryAddress) {
     console.log(`
@@ -69,12 +72,13 @@ Cardstack Token (${cst.address}):
       let address = await cst.customBuyerForIndex(i);
       let limit = await cst.customBuyerLimit(address);
       limit = limit.toNumber();
+      let limitEth = Math.round(web3.fromWei(buyPriceWei, "ether") * limit * 10 ** sigDigits) / 10 ** sigDigits;
       if (limit) {
-        console.log(`    ${address}: ${limit} ${cstSymbol}`);
+        console.log(`    ${address}: ${limitEth} ETH (${limit} ${cstSymbol})`);
       }
     }
     console.log(`
-  CST Buyers (with the default balance limit of ${cstBalanceLimit} ${cstSymbol}):`);
+  CST Buyers with the default balance limit of ${defaultLimitEth} ETH (${cstBalanceLimit} ${cstSymbol}):`);
     for (let i = 0; i < cstBuyerCount; i++) {
       let address = await cst.approvedBuyerForIndex(i);
       let isBuyer = await cst.approvedBuyer(address);
@@ -86,15 +90,15 @@ Cardstack Token (${cst.address}):
     console.log(`
 Cardstack Token (${cst.address}):`);
     let isBuyer = await cst.approvedBuyer(queryAddress);
-    let cstBalanceLimit = await cst.cstBalanceLimit();
     let limit = await cst.customBuyerLimit(queryAddress);
     limit = limit.toNumber();
+    let limitEth = Math.round(web3.fromWei(buyPriceWei, "ether") * limit * 10 ** sigDigits) / 10 ** sigDigits;
 
     if (isBuyer) {
       if (limit) {
-        console.log(`    ${queryAddress}: is whitelisted with custom cap of ${limit} ${cstSymbol}`);
+        console.log(`    ${queryAddress}: is whitelisted with custom cap of ${limitEth} ETH (${limit} ${cstSymbol})`);
       } else {
-        console.log(`    ${queryAddress}: is whitelisted with default cap of ${cstBalanceLimit} ${cstSymbol}`);
+        console.log(`    ${queryAddress}: is whitelisted with default cap of ${defaultLimitEth} ETH (${cstBalanceLimit} ${cstSymbol})`);
       }
     } else {
       console.log(`  The address ${queryAddress} is not a whitelisted buyer`);

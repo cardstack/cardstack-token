@@ -61,6 +61,7 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
+  let buyPriceWei = await cst.buyPrice();
 
   let { csv, concurrency } = options;
 
@@ -78,11 +79,13 @@ module.exports = async function(callback) {
       console.log(`Processing ${count} of ${rows.length}, ${Math.round((count / rows.length) * 100)}% complete...`);
     }
 
-    let [ address, holdCap ] = row.replace(/"/g, "").split(",");
+    let [ address, holdCapEth ] = row.replace(/"/g, "").split(",");
 
-    if (holdCap && holdCap.trim()) {
+    if (holdCapEth && holdCapEth.trim()) {
+        let holdCapWei = web3.toWei(parseInt(holdCapEth.trim()), 'ether');
+        let holdCap = Math.floor(holdCapWei / buyPriceWei.toNumber()); // we floor fractional tokens in buy function, so floor them here too
       try {
-        await cst.setCustomBuyer(address.trim(), holdCap.trim());
+        await cst.setCustomBuyer(address.trim(), holdCap);
       } catch (err) {
         if (err.message.indexOf("wasn't processed in 240 seconds") > -1) {
           console.log(`Warning for buyer ${address}: ${err.message}. This is probably ok, but you can confirm transaction in etherscan`);

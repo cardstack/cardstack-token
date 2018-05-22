@@ -9,6 +9,7 @@ const optionsDefs = [
   { name: "network", type: String },
   { name: "address", alias: "a", type: String },
   { name: "maxBalance", type: Number },
+  { name: "maxBalanceEth", type: Number },
   { name: "registry", alias: "r", type: String },
   { name: "data", alias: "d", type: Boolean }
 ];
@@ -32,7 +33,10 @@ const usage = [
       description: "The address of the buyer to add"
     },{
       name: "maxBalance",
-      description: "(OPTIONAL) this is the maximum amount of CST that an account is allowed to posses expressed as number of CST"
+      description: "(OPTIONAL) this is the maximum amount of tokens that an account is allowed to posses expressed as number of CST"
+    },{
+      name: "maxBalanceEth",
+      description: "(OPTIONAL) this is the maximum amount of tokens that an account is allowed to posses expressed as ETH"
     },{
       name: "registry",
       alias: "r",
@@ -62,17 +66,28 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
+  let symbol = await cst.symbol();
 
-  let { address, maxBalance } = options;
+  let { address, maxBalance, maxBalanceEth } = options;
 
   if (options.data) {
-    if (maxBalance !== undefined && maxBalance !== null) {
+    if ((maxBalance !== undefined && maxBalance !== null) ||
+        (maxBalanceEth !== undefined && maxBalanceEth !== null)) {
+      let buyPriceWei = await cst.buyPrice();
+      if (!maxBalance) {
+        let maxBalanceWei = web3.toWei(maxBalanceEth, 'ether');
+        maxBalance = Math.floor(maxBalanceWei / buyPriceWei.toNumber()); // we floor fractional tokens in buy function, so floor them here too
+      } else {
+        let sigDigits = 6;
+        maxBalanceEth = Math.round(web3.fromWei(buyPriceWei, "ether") * maxBalance * 10 ** sigDigits) / 10 ** sigDigits;
+      }
+
       let data = cst.contract.setCustomBuyer.getData(address, maxBalance);
       let estimatedGas = web3.eth.estimateGas({
         to: cst.address,
         data
       });
-      console.log(`Data for adding buyer "${address}" with maximum balance ${maxBalance} CST  for CST ${cst.address}:`);
+      console.log(`Data for adding buyer "${address}" with maximum balance ${maxBalanceEth} ETH (${maxBalance} ${symbol}) for CST ${cst.address}:`);
       console.log(`\nAddress: ${cst.address}`);
       console.log(`Data: ${data}`);
       console.log(`Estimated gas: ${estimatedGas}`);
@@ -82,7 +97,7 @@ module.exports = async function(callback) {
         to: cst.address,
         data
       });
-      console.log(`Data for adding buyer "${address}" for CST ${cst.address}:`);
+      console.log(`Data for adding buyer "${address}" for ${symbol} ${cst.address}:`);
       console.log(`\nAddress: ${cst.address}`);
       console.log(`Data: ${data}`);
       console.log(`Estimated gas: ${estimatedGas}`);
@@ -94,7 +109,7 @@ module.exports = async function(callback) {
 
   try {
     if (maxBalance !== undefined && maxBalance !== null) {
-      console.log(`Adding buyer "${address}" with maximum balance ${maxBalance} CST for CST ${cst.address}...`);
+      console.log(`Adding buyer "${address}" with maximum balance ${maxBalanceEth} ETH (${maxBalance} ${symbol}) for CST ${cst.address}...`);
       await cst.setCustomBuyer(address, maxBalance);
     } else {
       console.log(`Adding buyer "${address}" for CST ${cst.address}...`);

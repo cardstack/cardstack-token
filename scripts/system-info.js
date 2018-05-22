@@ -58,7 +58,7 @@ module.exports = async function(callback) {
     cstSymbol = "", buyPriceWei, circulationCap, foundation, balanceWei, totalSupply, cstFrozenCount,
     cstAdminCount, cstSuperAdminCount, cstHaltPurchase, cstBuyerCount, cstCustomBuyerCount, cstBalanceLimit,
     contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers, vestingCount, cstAvailable,
-    cstTotalInCirculation;
+    cstTotalInCirculation, defaultLimitEth;
 
   if (cstAddress === NULL_ADDRESS) {
     console.log(`There is no CST contract resgistered with the Registry at ${registry.address}`);
@@ -92,6 +92,9 @@ module.exports = async function(callback) {
     contributionMinimum = await cst.contributionMinimum();
     vestingCount = await cst.vestingMappingSize();
     cstAvailable = await cst.tokensAvailable();
+
+    let sigDigits = 6;
+    defaultLimitEth = Math.round(web3.fromWei(buyPriceWei, "ether") * cstBalanceLimit * 10 ** sigDigits) / 10 ** sigDigits;
   }
 
   let registryAdminCount = await registry.totalAdminsMapping();
@@ -286,7 +289,7 @@ Cardstack Token (${cst.address}):
   total unvested tokens: ${totalUnvested} ${cstSymbol}
   total vested and unreleased tokens: ${totalVestedUnreleased} ${cstSymbol}
   contribution minimum: ${contributionMinimum} ${cstSymbol}
-  balance limit: ${cstBalanceLimit} ${cstSymbol}
+  balance limit (purchase cap): ${defaultLimitEth} ETH (${cstBalanceLimit} ${cstSymbol})
   total supply: ${totalSupply} ${cstSymbol}
   token contract balance: ${web3.fromWei(balanceWei, "ether")} ETH
   foundation address: ${prettyAddress(foundation)}
