@@ -18,8 +18,8 @@ const optionsDefs = [
 
 const usage = [
   {
-    header: "cst-add-buyer-list",
-    content: "This script adds buyers from a list of ethereum addresses to the CST buyers whitelist."
+    header: "cst-grant-tokens-list",
+    content: "This script grants tokens to a list of ethereum addresses and their grant amounts (expressed in ETH--we do the math to figure out the corresponding amount of CARD)"
   },{
     header: "Options",
     optionList: [{
@@ -70,7 +70,7 @@ module.exports = async function(callback) {
   let fileStr = fs.readFileSync(csv);
   let rows = _.compact(fileStr.toString().split("\n"));
 
-  console.log(`Scheduling ${rows.length} buyers to be added to the CST contract ${cst.address}.`);
+  console.log(`Scheduling ${rows.length} addresses to be granted tokens for the CST contract ${cst.address}.`);
 
   let counter = 0;
   await Parallel.each(rows, async row => {
@@ -79,25 +79,15 @@ module.exports = async function(callback) {
       console.log(`Processing ${count} of ${rows.length}, ${Math.round((count / rows.length) * 100)}% complete...`);
     }
 
-    let [ address, holdCapEth ] = row.replace(/"/g, "").split(",");
+    let [ address, amountEth ] = row.replace(/"/g, "").split(",");
 
-    if (holdCapEth && holdCapEth.trim()) {
-        let holdCapWei = web3.toWei(parseInt(holdCapEth.trim()), 'ether');
-        let holdCap = Math.floor(holdCapWei / buyPriceWei.toNumber()); // we floor fractional tokens in buy function, so floor them here too
+    if (address && amountEth && amountEth.trim()) {
+        let amountWei = web3.toWei(parseInt(amountEth.trim()), 'ether');
+        let amountCard = Math.floor(amountWei / buyPriceWei.toNumber()); // we floor fractional tokens in buy function, so floor them here too
       try {
-        await cst.setCustomBuyer(address.trim(), holdCap);
+        await cst.grantTokens(address, amountCard);
       } catch (err) {
-        if (err.message.indexOf("wasn't processed in 240 seconds") > -1) {
-          console.log(`Warning for buyer ${address}: ${err.message}. This is probably ok, but you can confirm transaction in etherscan`);
-        } else {
-          console.error(`Error encountered adding buyer ${address}, ${err.message}`);
-        }
-      }
-    } else {
-      try {
-        await cst.addBuyer(address.trim());
-      } catch (err) {
-        console.error(`Error encountered adding buyer ${address}, ${err.message}`);
+        console.error(`Error encountered granting tokens ${address}, ${err.message}`);
       }
     }
   }, concurrency);

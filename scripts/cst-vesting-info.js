@@ -70,7 +70,7 @@ module.exports = async function(callback) {
     releasedAmount,
     revokeDate,
     isRevocable ] = await cst.vestingSchedule(address);
-  let releasableAmount = cst.releasableAmount(address);
+  let releasableAmount = await cst.releasableAmount(address);
   let cstSymbol = await cst.symbol();
   cstSymbol = cstSymbol || '';
   console.log(`
