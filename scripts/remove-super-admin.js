@@ -72,7 +72,7 @@ module.exports = async function(callback) {
     console.log(`Data: ${data}`);
     console.log(`Estimated gas: ${estimatedGas}`);
 
-    data = registry.contract.removeSuperAdmin(address);
+    data = registry.contract.removeSuperAdmin.getData(address);
     estimatedGas = web3.eth.estimateGas({
       to: registry.address,
       data
