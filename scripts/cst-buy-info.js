@@ -48,9 +48,10 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
+  let symbol = await cst.symbol();
 
   let data = cst.contract.buy.getData();
-  console.log(`\nTo purchase CST send ETH to the following address with the following data:`);
+  console.log(`\nTo purchase ${symbol} send ETH to the following address with the following data:`);
   console.log(`Address: ${cst.address}`);
   console.log(`Data: ${data}`);
   console.log(`Estimated gas: ${CST_BUY_GAS_LIMIT}`);
