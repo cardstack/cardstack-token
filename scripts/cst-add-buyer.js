@@ -78,15 +78,16 @@ module.exports = async function(callback) {
     useTokenMaxBalance = true;
   }
 
+  if (maxBalance === null || maxBalance === undefined) {
+    let maxBalanceWei = web3.toWei(maxBalanceEth, 'ether');
+    maxBalance = Math.floor(maxBalanceWei / buyPriceWei.toNumber()); // we floor fractional tokens in buy function, so floor them here too
+  } else {
+    maxBalanceEth = Math.round(web3.fromWei(buyPriceWei, "ether") * maxBalance * 10 ** sigDigits) / 10 ** sigDigits;
+  }
+
   if (options.data) {
     if ((maxBalance !== undefined && maxBalance !== null) ||
-        (maxBalanceEth !== undefined && maxBalanceEth !== null)) {
-      if (maxBalance === null || maxBalance === undefined) {
-        let maxBalanceWei = web3.toWei(maxBalanceEth, 'ether');
-        maxBalance = Math.floor(maxBalanceWei / buyPriceWei.toNumber()); // we floor fractional tokens in buy function, so floor them here too
-      } else {
-        maxBalanceEth = Math.round(web3.fromWei(buyPriceWei, "ether") * maxBalance * 10 ** sigDigits) / 10 ** sigDigits;
-      }
+      (maxBalanceEth !== undefined && maxBalanceEth !== null)) {
 
       let data = cst.contract.setCustomBuyer.getData(address, maxBalance);
       let estimatedGas = web3.eth.estimateGas({
