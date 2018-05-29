@@ -86,9 +86,7 @@ module.exports = async function(callback) {
   }
 
   if (options.data) {
-    if ((maxBalance !== undefined && maxBalance !== null) ||
-      (maxBalanceEth !== undefined && maxBalanceEth !== null)) {
-
+    if (maxBalance) {
       let data = cst.contract.setCustomBuyer.getData(address, maxBalance);
       let estimatedGas = web3.eth.estimateGas({
         to: cst.address,
@@ -115,7 +113,7 @@ module.exports = async function(callback) {
   }
 
   try {
-    if (maxBalance !== undefined && maxBalance !== null) {
+    if (maxBalance) {
       console.log(`Adding buyer "${address}" with ${useTokenMaxBalance ? 'token default ' : ''}maximum balance ${useTokenMaxBalance ? tokenMaxBalanceEth : maxBalanceEth} ETH (${useTokenMaxBalance ? tokenMaxBalance : maxBalance} ${symbol}) for CST ${cst.address}...`);
       await cst.setCustomBuyer(address, maxBalance);
     } else {
