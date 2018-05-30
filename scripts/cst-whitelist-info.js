@@ -70,6 +70,9 @@ Cardstack Token (${cst.address}):
   CST Buyers with custom balance limit:`);
     for (let i = 0; i < cstCustomBuyerCount; i++) {
       let address = await cst.customBuyerForIndex(i);
+      let isBuyer = await cst.approvedBuyer(address);
+      if (!isBuyer) { continue; }
+
       let limit = await cst.customBuyerLimit(address);
       limit = limit.toNumber();
       let limitEth = Math.round(web3.fromWei(buyPriceWei, "ether") * limit * 10 ** sigDigits) / 10 ** sigDigits;
