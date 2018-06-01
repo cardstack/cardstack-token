@@ -72,7 +72,7 @@ module.exports = async function(callback) {
 
   if (csvFile) {
     console.log(`Writing file ${csvFile}...`);
-    fs.writeFileSync(csvFile, `"address","has custom cap","cap ETH","cap CARD"\n`, 'ascii');
+    fs.writeFileSync(csvFile, `"address","custom cap","cap ETH","cap CARD"\n`, 'ascii');
     for (let i = 0; i < cstBuyerCount; i++) {
       let address = await cst.approvedBuyerForIndex(i);
       let isBuyer = await cst.approvedBuyer(address);
