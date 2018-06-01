@@ -29,7 +29,7 @@ const usage = [
       description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
     },{
       name: "csv",
-      description: "The CSV file to write to"
+      description: "(optional) The CSV file to write the ledger report"
     },{
       name: "address",
       alias: "a",
@@ -51,9 +51,9 @@ module.exports = async function(callback) {
     return;
   }
 
-  let registryAddress = options.registry;
-  let queryAddress = options.address;
-  let { csv:csvFile } = options;
+  let { registry:registryAddress,
+        address:queryAddress,
+        csv:csvFile } = options;
 
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
 
