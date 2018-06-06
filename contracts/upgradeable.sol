@@ -1,17 +1,20 @@
 pragma solidity ^0.4.23;
 
 import "./administratable.sol";
+import "./ERC20.sol";
 
 contract upgradeable is administratable {
   address public predecessor;
   address public successor;
+  bool public isTokenContract;
+  string public version;
 
   event Upgraded(address indexed successor);
   event UpgradedFrom(address indexed predecessor);
   event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
   modifier unlessUpgraded() {
-    if (successor != address(0)) revert();
+    if (msg.sender != successor && successor != address(0)) revert();
     _;
   }
 
@@ -46,6 +49,16 @@ contract upgradeable is administratable {
     predecessor = _predecessor;
 
     emit UpgradedFrom(_predecessor);
+
+    // TODO refactor this into registry contract when ready for registry upgrade
+    if (upgradeable(_predecessor).predecessor() != address(0)) {
+      if (upgradeable(_predecessor).isTokenContract()) {
+        emit Transfer(_predecessor, this, ERC20(_predecessor).balanceOf(_predecessor));
+      }
+    } else {
+      emit Transfer(this, this, 0); // make etherscan see this as an ERC-20. lets remove in v3
+    }
+
     return true;
   }
 }

@@ -8,6 +8,11 @@ const dateFormat = "YYYY-MM-DD HH:mm Z";
 let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
+function adjustForDecimals(value, decimals) {
+  let decimalsFactor = new web3.BigNumber('1'.padEnd(decimals.toNumber() + 1, '0'));
+  return (new web3.BigNumber(value)).div(decimalsFactor);
+}
+
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
@@ -72,17 +77,18 @@ module.exports = async function(callback) {
     isRevocable ] = await cst.vestingSchedule(address);
   let releasableAmount = await cst.releasableAmount(address);
   let cstSymbol = await cst.symbol();
-  cstSymbol = cstSymbol || '';
+  let decimals = await cst.decimals();
+
   console.log(`
   Vesting information for beneficiary: ${address} ${revokeDate.toNumber() > 0 ? "Revoked on " + moment.unix(revokeDate.toNumber()).format(dateFormat) : ""}
       start date: ${moment.unix(startDate.toNumber()).format(dateFormat)}
       cliff date: ${moment.unix(cliffDate.toNumber()).format(dateFormat)}
       fully vested date: ${moment.unix(startDate.toNumber() + durationSec.toNumber()).format(dateFormat)}
-      fully vested amount: ${fullyVestedAmount} ${cstSymbol}
-      vested amount as of now (${moment().format(dateFormat)}): ${vestedAmount} ${cstSymbol}
-      vested amount available as of now (${moment().format(dateFormat)}): ${vestedAvailableAmount} ${cstSymbol}
-      vested amount already released: ${releasedAmount} ${cstSymbol}
-      vested amount not yet released ${releasableAmount} ${cstSymbol}
+      fully vested amount: ${adjustForDecimals(fullyVestedAmount, decimals)} ${cstSymbol}
+      vested amount as of now (${moment().format(dateFormat)}): ${adjustForDecimals(vestedAmount, decimals).toFixed(0)} ${cstSymbol}
+      vested amount available as of now (${moment().format(dateFormat)}): ${adjustForDecimals(vestedAvailableAmount, decimals)} ${cstSymbol}
+      vested amount already released: ${adjustForDecimals(releasedAmount, decimals)} ${cstSymbol}
+      vested amount not yet released ${adjustForDecimals(releasableAmount, decimals)} ${cstSymbol}
       is revocable: ${isRevocable}
   `);
 

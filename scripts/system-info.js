@@ -11,9 +11,16 @@ let CstLedger = artifacts.require("./CstLedger.sol");
 
 const { NULL_ADDRESS, CST_NAME, CST_LEDGER_NAME, CST_STORAGE_NAME } = require("../lib/constants");
 
+function adjustForDecimals(value, decimals) {
+  let decimalsFactor = new web3.BigNumber('1'.padEnd(decimals.toNumber() + 1, '0'));
+  return (new web3.BigNumber(value)).div(decimalsFactor);
+}
+
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
+  { name: "ledgerName", type: String },
+  { name: "storageName", type: String },
   { name: "registry", alias: "r", type: String }
 ];
 
@@ -27,6 +34,12 @@ const usage = [
       name: "help",
       alias: "h",
       description: "Print this usage guide."
+    },{
+      name: "ledgerName",
+      description: "(optional) The name of the ledger to use"
+    },{
+      name: "storageName",
+      description: "(optional) The name of the storage to use"
     },{
       name: "network",
       description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
@@ -47,6 +60,10 @@ module.exports = async function(callback) {
     return;
   }
 
+  let { ledgerName, storageName } = options;
+  ledgerName = ledgerName || CST_LEDGER_NAME;
+  storageName = storageName || CST_STORAGE_NAME;
+
   let registryAddress = options.registry;
 
   let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
@@ -55,10 +72,10 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst, cstRegistry, cstFrozen, cstDeprecated, successor, cstStorageName, cstLedgerName, cstName,
-    cstSymbol = "", buyPriceWei, circulationCap, foundation, balanceWei, totalSupply, cstFrozenCount,
+    cstSymbol = "", buyPriceTokensPerWei, circulationCap, foundation, balanceWei, totalSupply, cstFrozenCount,
     cstAdminCount, cstSuperAdminCount, cstHaltPurchase, cstBuyerCount, cstCustomBuyerCount, cstBalanceLimit,
     contributionMinimum, cstWhitelistedTransfererCount, cstAllowTransfers, vestingCount, cstAvailable,
-    cstTotalInCirculation, defaultLimitEth;
+    cstTotalInCirculation, decimals, cstVersion, defaultLimitEth;
 
   if (cstAddress === NULL_ADDRESS) {
     console.log(`There is no CST contract resgistered with the Registry at ${registry.address}`);
@@ -74,7 +91,7 @@ module.exports = async function(callback) {
     cstLedgerName = await cst.ledgerName();
     cstName = await cst.name();
     cstSymbol = await cst.symbol();
-    buyPriceWei = await cst.buyPrice();
+    buyPriceTokensPerWei = await cst.buyPrice();
     circulationCap = await cst.circulationCap();
     cstTotalInCirculation = await cst.totalInCirculation();
     foundation = await cst.foundation();
@@ -93,22 +110,30 @@ module.exports = async function(callback) {
     vestingCount = await cst.vestingMappingSize();
     cstAvailable = await cst.tokensAvailable();
 
+    decimals = await cst.decimals();
+
     let sigDigits = 6;
-    defaultLimitEth = Math.round(web3.fromWei(buyPriceWei, "ether") * cstBalanceLimit * 10 ** sigDigits) / 10 ** sigDigits;
+    defaultLimitEth = !cstBalanceLimit.toNumber() ? 0 :  Math.round(cstBalanceLimit.div(new web3.BigNumber(('1'.padEnd(decimals.toNumber() + 1, '0')))).div(buyPriceTokensPerWei).toNumber() * 10 ** sigDigits) / 10 ** sigDigits;
+
+    try {
+      cstVersion = await cst.version();
+    } catch (err) {
+      cstVersion = "1"; // this property wasnt introduced in the initial contracts
+    }
   }
 
   let registryAdminCount = await registry.totalAdminsMapping();
   let registrySuperAdminCount = await registry.totalSuperAdminsMapping();
   let registryCstNamehash = await registry.namehashForHash(web3.sha3(CST_NAME));
 
-  let storageAddress = await registry.storageForHash(web3.sha3(CST_STORAGE_NAME));
-  let ledgerAddress = await registry.storageForHash(web3.sha3(CST_LEDGER_NAME));
+  let storageAddress = await registry.storageForHash(web3.sha3(storageName));
+  let ledgerAddress = await registry.storageForHash(web3.sha3(ledgerName));
 
   let storage, storageAdminCount, storageSuperAdminCount, ledger, totalTokens, totalInCirculation,
     numAccounts, ledgerAdminCount, ledgerSuperAdminCount;
 
   if (storageAddress === NULL_ADDRESS) {
-    console.log(`There is no storage contract registered with the Registry at ${registry.address}`);
+    console.log(`There is no storage contract registered with the Registry at ${registry.address} with name of '${storageName}'`);
   } else {
     storage = await ExternalStorage.at(storageAddress);
     storageAdminCount = await storage.totalAdminsMapping();
@@ -116,7 +141,7 @@ module.exports = async function(callback) {
   }
 
   if (ledgerAddress === NULL_ADDRESS) {
-    console.log(`There is no ledger contract registered with the Registry at ${registryAddress}`);
+    console.log(`There is no ledger contract registered with the Registry at ${registryAddress} with name of '${ledgerName}'`);
   } else {
     ledger = await CstLedger.at(ledgerAddress);
     totalTokens = await ledger.totalTokens();
@@ -163,8 +188,8 @@ console.log(`
 
 Registry (${registry.address}):
   ${CST_NAME}: ${prettyAddress(cstAddress)}
-  ${CST_STORAGE_NAME}: ${prettyAddress(storageAddress)}
-  ${CST_LEDGER_NAME}: ${prettyAddress(ledgerAddress)}
+  ${storageName}: ${prettyAddress(storageAddress)}
+  ${ledgerName}: ${prettyAddress(ledgerAddress)}
 
   Namehash for CST Token contract: ${registryCstNamehash}
 
@@ -189,10 +214,10 @@ Registry (${registry.address}):
   if (ledger) {
     console.log(`
 
-Ledger (${ledger.address})
-  total tokens: ${totalTokens}
+Ledger - ${ledgerName} (${ledger.address})
+  total tokens: ${adjustForDecimals(totalTokens, decimals)}
   number of accounts: ${numAccounts}
-  total in circulation: ${totalInCirculation}*
+  total in circulation: ${adjustForDecimals(totalInCirculation, decimals)}*
     * not counting unvested & vested-unreleased tokens
 
   Ledger super admins:`);
@@ -217,7 +242,7 @@ Ledger (${ledger.address})
   if (storage) {
     console.log(`
 
-Storage (${storage.address})
+Storage - ${storageName} (${storage.address})
   Storage super admins:`);
     for (let i = 0; i < storageSuperAdminCount; i++) {
       let address = await storage.superAdminsForIndex(i);
@@ -239,12 +264,12 @@ Storage (${storage.address})
 
   if (cst) {
     let vestingSchedules = "";
-    let totalUnvested = 0;
-    let totalVestedUnreleased = 0;
+    let totalUnvested = new web3.BigNumber(0);
+    let totalVestedUnreleased = new web3.BigNumber(0);
     for (let i = 0; i < vestingCount; i++) {
       let beneficiary = await cst.vestingBeneficiaryForIndex(i);
       let releasableAmount = await cst.releasableAmount(beneficiary);
-      totalVestedUnreleased += releasableAmount.toNumber();
+      totalVestedUnreleased = totalVestedUnreleased.add(releasableAmount);
       let [ startDate,
             cliffDate,
             durationSec,
@@ -254,17 +279,17 @@ Storage (${storage.address})
             releasedAmount,
             revokeDate,
             isRevocable ] = await cst.vestingSchedule(beneficiary);
-      totalUnvested += (fullyVestedAmount.toNumber() - vestedAmount.toNumber());
+      totalUnvested = totalUnvested.add(fullyVestedAmount.sub(vestedAmount));
       vestingSchedules = `${vestingSchedules}
     beneficiary: ${beneficiary} ${revokeDate.toNumber() > 0 ? "Revoked on " + moment.unix(revokeDate.toNumber()).format(dateFormat) : ""}
       start date: ${moment.unix(startDate.toNumber()).format(dateFormat)}
       cliff date: ${moment.unix(cliffDate.toNumber()).format(dateFormat)}
       fully vested date: ${moment.unix(startDate.toNumber() + durationSec.toNumber()).format(dateFormat)}
-      fully vested amount: ${fullyVestedAmount} ${cstSymbol}
-      vested amount as of now (${moment().format(dateFormat)}): ${vestedAmount} ${cstSymbol}
-      vested amount available as of now (${moment().format(dateFormat)}): ${vestedAvailableAmount} ${cstSymbol}
-      vested amount already released: ${releasedAmount} ${cstSymbol}
-      vested amount not yet released ${releasableAmount} ${cstSymbol}
+      fully vested amount: ${adjustForDecimals(fullyVestedAmount, decimals)} ${cstSymbol}
+      vested amount as of now (${moment().format(dateFormat)}): ${adjustForDecimals(vestedAmount, decimals).toFixed(0)} ${cstSymbol}
+      vested amount available as of now (${moment().format(dateFormat)}): ${adjustForDecimals(vestedAvailableAmount, decimals)} ${cstSymbol}
+      vested amount already released: ${adjustForDecimals(releasedAmount, decimals)} ${cstSymbol}
+      vested amount not yet released ${adjustForDecimals(releasableAmount, decimals)} ${cstSymbol}
       is revocable: ${isRevocable}\n`;
     }
 
@@ -272,6 +297,8 @@ Storage (${storage.address})
 
 Cardstack Token (${cst.address}):
   registry: ${prettyAddress(cstRegistry)}
+  version: ${cstVersion}
+  decimals: ${decimals}
   storage name: ${cstStorageName}
   ledger name: ${cstLedgerName}
   is frozen: ${cstFrozen}
@@ -281,16 +308,16 @@ Cardstack Token (${cst.address}):
   successor: ${successor}
   name: ${cstName}
   symbol: ${cstSymbol}
-  buy price: ${web3.fromWei(buyPriceWei, "ether")} ETH, ${cstSymbol} per ETH: ${Math.floor(1 / web3.fromWei(buyPriceWei, "ether"))} ${cstSymbol}
-  total tokens available: ${cstAvailable} ${cstSymbol}
-  circulation cap: ${circulationCap} ${cstSymbol}
-  tokens in circulation (includes unvested tokens): ${cstTotalInCirculation} ${cstSymbol}
-  total tokens available for purchase: ${circulationCap - cstTotalInCirculation} ${cstSymbol}
-  total unvested tokens: ${totalUnvested} ${cstSymbol}
-  total vested and unreleased tokens: ${totalVestedUnreleased} ${cstSymbol}
-  contribution minimum: ${contributionMinimum} ${cstSymbol}
-  balance limit (purchase cap): ${defaultLimitEth} ETH (${cstBalanceLimit} ${cstSymbol})
-  total supply: ${totalSupply} ${cstSymbol}
+  buy price: ${cstSymbol} per ETH: ${buyPriceTokensPerWei} ${cstSymbol}
+  total tokens available: ${adjustForDecimals(cstAvailable, decimals)} ${cstSymbol}
+  circulation cap: ${adjustForDecimals(circulationCap, decimals)} ${cstSymbol}
+  tokens in circulation (includes unvested tokens): ${adjustForDecimals(cstTotalInCirculation, decimals)} ${cstSymbol}
+  total tokens available for purchase: ${adjustForDecimals(circulationCap.sub(cstTotalInCirculation), decimals)} ${cstSymbol}
+  total unvested tokens: ${adjustForDecimals(totalUnvested, decimals).toFixed(0)} ${cstSymbol}
+  total vested and unreleased tokens: ${adjustForDecimals(totalVestedUnreleased, decimals)} ${cstSymbol}
+  contribution minimum: ${adjustForDecimals(contributionMinimum, decimals)} ${cstSymbol}
+  balance limit (purchase cap): ${defaultLimitEth} ETH (${adjustForDecimals(cstBalanceLimit, decimals)} ${cstSymbol})
+  total supply: ${adjustForDecimals(totalSupply, decimals)} ${cstSymbol}
   token contract balance: ${web3.fromWei(balanceWei, "ether")} ETH
   foundation address: ${prettyAddress(foundation)}
 

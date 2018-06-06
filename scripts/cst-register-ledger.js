@@ -1,0 +1,81 @@
+const { CST_NAME, CST_STORAGE_NAME } = require("../lib/constants.js");
+const commandLineArgs = require('command-line-args');
+const getUsage = require('command-line-usage');
+let RegistryContract = artifacts.require("./Registry.sol");
+let CardStackToken = artifacts.require("./CardStackToken.sol");
+let CstLedger = artifacts.require("./CstLedger.sol");
+
+const optionsDefs = [
+  { name: "help", alias: "h", type: Boolean },
+  { name: "network", type: String },
+  { name: "registry", type: String, alias: "r" },
+  { name: "ledgerName", type: String },
+  { name: "data", alias: "d", type: Boolean }
+];
+
+const usage = [
+  {
+    header: "cst-register-ledger",
+    content: "This script creates a new ledger and attaches it to token"
+  },{
+    header: "Options",
+    optionList: [{
+      name: "help",
+      alias: "h",
+      description: "Print this usage guide."
+    },{
+      name: "ledgerName",
+      description: "The name of the new ledger to register"
+    },{
+      name: "network",
+      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
+    },{
+      name: "registry",
+      alias: "r",
+      description: "The address of the registry."
+    }]
+  }
+];
+
+module.exports = async function(callback) {
+  const options = commandLineArgs(optionsDefs);
+
+  if (!options.network || !options.ledgerName || options.help || !options.registry) {
+    console.log(getUsage(usage));
+    callback();
+    return;
+  }
+
+  let { registry:registryAddress, ledgerName } = options;
+
+  let registry = await RegistryContract.at(registryAddress);
+  console.log(`Using registry at ${registry.address}`);
+  let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
+  let cst = await CardStackToken.at(cstAddress);
+
+  try {
+    console.log(`\nDeploying Ledger...`);
+
+    let ledger = await CstLedger.new();
+    console.log(`\nDeployed ledger to ${ledger.address}`);
+
+    console.log(`\nGranting registry permissions to manage ledger...`);
+    await ledger.addSuperAdmin(registry.address);
+
+    console.log(`Adding ledger storage to registry with name '${ledgerName}'...`);
+    await registry.addStorage(ledgerName, ledger.address);
+
+    console.log(`Granting token permissions to use ledger...`);
+    await ledger.addAdmin(cst.address);
+
+    console.log(`Updating token...`);
+    await cst.updateStorage(CST_STORAGE_NAME, ledgerName);
+
+    console.log(`\nCompleted registering ledger with token.`);
+
+  } catch(err) {
+    console.error("Error encountered registering ledger with contract", err);
+  }
+
+  callback();
+};

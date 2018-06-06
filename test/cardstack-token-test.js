@@ -557,15 +557,15 @@ contract('CardStackToken', function(accounts) {
       await ledger.addSuperAdmin(registry.address);
       await storage.setBytes32Value("cstTokenName", web3.toHex("CardStack Token"));
       await storage.setBytes32Value("cstTokenSymbol", web3.toHex("CST"));
-      await storage.setUIntValue("cstBuyPrice", web3.toWei(0.1, "ether"));
-      await storage.setUIntValue("cstCirculationCap", 1000);
+      await storage.setUIntValue("cstBuyPrice", 10);
+      await storage.setUIntValue("cstCirculationCap", web3.toWei(1000));
       cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.freezeToken(false);
       await cst.addSuperAdmin(superAdmin);
-      await cst.mintTokens(1000);
+      await cst.mintTokens(web3.toWei(1000, 'ether'));
     });
 
     // be kind and return ethers to the root account
@@ -580,7 +580,7 @@ contract('CardStackToken', function(accounts) {
     it("allows foundation to withdraw ether from foundationWithdraw()", async function() {
       let buyer = accounts[20];
       await checkBalance(buyer, 1);
-      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, foundation, { from: superAdmin });
+      await cst.configure(0x0, 0x0, 10, web3.toWei(1000, 'ether'), web3.toWei(1000000, 'ether'), foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
       await cst.addBuyer(buyer);
@@ -621,7 +621,7 @@ contract('CardStackToken', function(accounts) {
       let buyer = accounts[20];
       let nonFoundation = accounts[21];
       await checkBalance(buyer, 1);
-      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, foundation, { from: superAdmin });
+      await cst.configure(0x0, 0x0, 10, web3.toWei(1000, 'ether'), web3.toWei(1000000, 'ether'), foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
       await cst.addBuyer(buyer);
@@ -649,7 +649,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("allows foundation to deposit ether in foundationDeposit", async function() {
-      await cst.configure(0x0, 0x0, web3.toWei(0.1, "ether"), 1000, 1000000, foundation, { from: superAdmin });
+      await cst.configure(0x0, 0x0, 10, web3.toWei(1000, 'ether'), web3.toWei(1000000, 'ether'), foundation, { from: superAdmin });
 
       let txnValue = web3.toWei(1, "ether");
       let startFoundationBalance = await web3.eth.getBalance(foundation);

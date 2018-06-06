@@ -8,6 +8,13 @@ const Parallel = require("async-parallel");
 let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
+function displayBigNumber(number) {
+  let precision = 50;
+  let numberAsString = number.toPrecision(precision).toString();
+  let [ result ] = numberAsString.split('.');
+  return result;
+}
+
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
@@ -61,6 +68,8 @@ module.exports = async function(callback) {
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
+  let decimals = await cst.decimals();
+  let decimalsFactor = new web3.BigNumber('1'.padEnd(decimals.toNumber() + 1, '0'));
 
   let { csv, concurrency } = options;
 
@@ -69,7 +78,7 @@ module.exports = async function(callback) {
   let fileStr = fs.readFileSync(csv);
   let rows = _.compact(fileStr.toString().split("\n"));
 
-  console.log(`Scheduling ${rows.length} addresses to be granted tokens for the CST contract ${cst.address}.`);
+  console.log(`Scheduling ${rows.length} addresses to be granted tokens for the CST contract ${cst.address}`);
 
   let counter = 0;
   await Parallel.each(rows, async row => {
@@ -80,9 +89,12 @@ module.exports = async function(callback) {
 
     let [ address, amount ] = row.replace(/"/g, "").split(",");
 
-    if (address && amount.trim()) {
+    if (address && amount && amount.trim()) {
+      amount = new web3.BigNumber(amount);
+      amount = amount.mul(new web3.BigNumber(decimalsFactor));
+      console.log(`Granting ${address} raw token amount ${displayBigNumber(amount)}`);
       try {
-        await cst.grantTokens(address, amount);
+        await cst.grantTokens(address, displayBigNumber(amount));
       } catch (err) {
         console.error(`Error encountered granting tokens ${address}, ${err.message}`);
       }

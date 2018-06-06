@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ERC20.sol";
@@ -27,7 +27,8 @@ contract CardStackToken is ERC20,
   string public ledgerName;
   address public externalStorage;
   address public registry;
-  uint256 public decimals = 0;
+  uint8 public constant decimals = 18;
+  bool public isTokenContract = true;
   bool public haltPurchase;
 
   // This state is specific to the first version of the CST
@@ -73,6 +74,8 @@ contract CardStackToken is ERC20,
   }
 
   constructor(address _registry, string _storageName, string _ledgerName) public payable {
+    isTokenContract = true;
+    version = "2";
     require(_registry != address(0));
     storageName = _storageName;
     ledgerName = _ledgerName;
@@ -87,11 +90,11 @@ contract CardStackToken is ERC20,
   }
 
   function getLedgerNameHash() external view returns (bytes32) {
-    return keccak256(ledgerName);
+    return keccak256(abi.encodePacked(ledgerName));
   }
 
   function getStorageNameHash() external view returns (bytes32) {
-    return keccak256(storageName);
+    return keccak256(abi.encodePacked(storageName));
   }
 
   function configure(bytes32 _tokenName,
@@ -99,10 +102,10 @@ contract CardStackToken is ERC20,
                      uint256 _buyPrice,
                      uint256 _circulationCap,
                      uint256 _balanceLimit,
-                     address _foundation) public onlySuperAdmins unlessUpgraded initStorage returns (bool) {
+                     address _foundation) public onlySuperAdmins initStorage returns (bool) {
 
-    uint256 __buyPrice = externalStorage.getBuyPrice();
-    if (__buyPrice > 0 && __buyPrice != _buyPrice) {
+    uint256 __buyPrice= externalStorage.getBuyPrice();
+    if (__buyPrice> 0 && __buyPrice!= _buyPrice) {
       require(frozenToken);
     }
 
@@ -231,13 +234,13 @@ contract CardStackToken is ERC20,
     require(!haltPurchase);
     require(externalStorage.getApprovedBuyer(msg.sender));
 
-    uint256 _buyPrice = externalStorage.getBuyPrice();
+    uint256 _buyPriceTokensPerWei = externalStorage.getBuyPrice();
     uint256 _circulationCap = externalStorage.getCirculationCap();
-    require(msg.value >= _buyPrice);
-    require(_buyPrice > 0);
+    require(msg.value > 0);
+    require(_buyPriceTokensPerWei > 0);
     require(_circulationCap > 0);
 
-    uint256 amount = msg.value.div(_buyPrice);
+    uint256 amount = msg.value.mul(_buyPriceTokensPerWei);
     require(totalInCirculation().add(amount) <= _circulationCap);
     require(amount <= tokensAvailable());
 
