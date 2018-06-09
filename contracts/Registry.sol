@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./upgradeable.sol";
@@ -43,7 +43,7 @@ contract Registry is administratable, upgradeable {
   }
 
   function getContractHash(string name) public view unlessUpgraded returns (bytes32) {
-    return keccak256(name);
+    return keccak256(abi.encodePacked(name));
   }
 
   function numContracts() public view returns(uint256) {
@@ -53,7 +53,7 @@ contract Registry is administratable, upgradeable {
   function setNamehash(string contractName, bytes32 namehash) external onlySuperAdmins unlessUpgraded returns (bool) {
     require(namehash != 0x0);
 
-    bytes32 hash = keccak256(contractName);
+    bytes32 hash = keccak256(abi.encodePacked(contractName));
     address contractAddress = contractForHash[hash];
 
     require(contractAddress != 0x0);
@@ -66,7 +66,7 @@ contract Registry is administratable, upgradeable {
   }
 
   function register(string name, address contractAddress, bytes32 namehash) external onlySuperAdmins unlessUpgraded returns (bool) {
-    bytes32 hash = keccak256(name);
+    bytes32 hash = keccak256(abi.encodePacked(name));
     require(bytes(name).length > 0);
     require(contractAddress != 0x0);
     require(contractForHash[hash] == 0x0);
@@ -102,7 +102,7 @@ contract Registry is administratable, upgradeable {
   }
 
   function upgradeContract(string name, address successor) external onlySuperAdmins unlessUpgraded returns (bytes32) {
-    bytes32 hash = keccak256(name);
+    bytes32 hash = keccak256(abi.encodePacked(name));
     require(successor != 0x0);
     require(contractForHash[hash] != 0x0);
 
@@ -156,19 +156,19 @@ contract Registry is administratable, upgradeable {
 
   function addStorage(string name, address storageAddress) external onlySuperAdmins unlessUpgraded {
     require(storageAddress != address(0));
-    bytes32 hash = keccak256(name);
+    bytes32 hash = keccak256(abi.encodePacked(name));
     storageForHash[hash] = storageAddress;
 
     emit StorageAdded(storageAddress, name);
   }
 
   function getStorage(string name) public view unlessUpgraded returns (address) {
-    return storageForHash[keccak256(name)];
+    return storageForHash[keccak256(abi.encodePacked(name))];
   }
 
   function removeStorage(string name) public onlySuperAdmins unlessUpgraded {
-    address storageAddress = storageForHash[keccak256(name)];
-    delete storageForHash[keccak256(name)];
+    address storageAddress = storageForHash[keccak256(abi.encodePacked(name))];
+    delete storageForHash[keccak256(abi.encodePacked(name))];
 
     emit StorageRemoved(storageAddress, name);
   }

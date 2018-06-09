@@ -1,13 +1,11 @@
-const { CST_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
-let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
-  { name: "registry", alias: "r", type: String }
+  { name: "cst", alias: "cst", type: String }
 ];
 
 const usage = [
@@ -24,9 +22,8 @@ const usage = [
       name: "network",
       description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
     },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
+      name: "cst",
+      description: "The token contract address (note we do not use the registry for this)"
     }]
   }
 ];
@@ -34,19 +31,15 @@ const usage = [
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
 
-  if (!options.network || options.help || !options.registry) {
+  if (!options.network || options.help || !options.cst) {
     console.log(getUsage(usage));
     callback();
     return;
   }
 
-  let registryAddress = options.registry;
+  let { cst:cstAddress } = options;
 
-  let registry = registryAddress ? await RegistryContract.at(registryAddress) : await RegistryContract.deployed();
-
-  console.log(`Using registry at ${registry.address}`);
-  let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
-
+  console.log(`Using token contract at ${cstAddress}`);
   let cst = await CardStackToken.at(cstAddress);
 
   let data = cst.contract.foundationDeposit.getData();

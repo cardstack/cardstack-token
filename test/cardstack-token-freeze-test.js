@@ -41,8 +41,8 @@ contract('CardStackToken', function(accounts) {
       await cst.freezeToken(false);
       await cst.addSuperAdmin(superAdmin);
 
-      await ledger.mintTokens(100);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
+      await ledger.mintTokens(web3.toWei(100));
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 10, web3.toWei(100, 'ether'), web3.toWei(1000000, 'ether'), NULL_ADDRESS);
 
       await checkBalance(frozenAccount, 1);
       await cst.addBuyer(frozenAccount);
@@ -85,8 +85,8 @@ contract('CardStackToken', function(accounts) {
       endBalance = asInt(endBalance);
 
       assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
-      assert.equal(asInt(cstBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation was not updated");
+      assert.equal(cstBalance, web3.toWei(10), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation was not updated");
     });
 
     it("cannot send a transfer when frozen", async function() {
@@ -103,9 +103,9 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await cst.balanceOf(recipientAccount);
       let totalInCirculation = await cst.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(recipientBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
     });
 
     it("cannot receive a transfer when frozen", async function() {
@@ -132,9 +132,9 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await cst.balanceOf(recipientAccount);
       let totalInCirculation = await cst.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 20, "The CST total in circulation has not changed");
+      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(recipientBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(20, 'ether'), "The CST total in circulation has not changed");
     });
 
     it("can unfreeze an account", async function() {
@@ -158,7 +158,7 @@ contract('CardStackToken', function(accounts) {
 
       let senderAccount = frozenAccount;
       let recipientAccount = accounts[6];
-      let transferAmount = 10;
+      let transferAmount = web3.toWei(10, 'ether');
 
       let txn = await cst.transfer(recipientAccount, transferAmount, {
         from: senderAccount,
@@ -173,9 +173,9 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await cst.balanceOf(recipientAccount);
       let totalInCirculation = await cst.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+      assert.equal(senderBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(recipientBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
 
       assert.equal(unfreezeEvent.logs[0].event, 'FrozenFunds', 'the account freeze event is correct');
       assert.equal(unfreezeEvent.logs[0].args.target, frozenAccount, 'the target value is correct');
@@ -188,7 +188,7 @@ contract('CardStackToken', function(accounts) {
 
       await cst.freezeAccount(spender, true);
 
-      await assertRevert(async () => await cst.increaseApproval(spender, 10, { from: grantor }));
+      await assertRevert(async () => await cst.increaseApproval(spender, web3.toWei('10'), { from: grantor }));
     });
 
     it("does not allow increasing allowance when grantor account has been frozen", async function() {
@@ -197,27 +197,27 @@ contract('CardStackToken', function(accounts) {
 
       await cst.freezeAccount(grantor, true);
 
-      await assertRevert(async () => await cst.increaseApproval(spender, 10, { from: grantor }));
+      await assertRevert(async () => await cst.increaseApproval(spender, web3.toWei(10, 'ether'), { from: grantor }));
     });
 
     it("does not allow decreasing allowance when spender account has been frozen", async function() {
       let grantor = accounts[3];
       let spender = accounts[4];
 
-      await cst.approve(spender, 10, { from: grantor });
+      await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor });
       await cst.freezeAccount(spender, true);
 
-      await assertRevert(async () => await cst.decreaseApproval(spender, 10, { from: grantor }));
+      await assertRevert(async () => await cst.decreaseApproval(spender, web3.toWei(10, 'ether'), { from: grantor }));
     });
 
     it("does not allow decreasing allowance when grantor account has been frozen", async function() {
       let grantor = accounts[3];
       let spender = accounts[4];
 
-      await cst.approve(spender, 10, { from: grantor });
+      await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor });
       await cst.freezeAccount(grantor, true);
 
-      await assertRevert(async () => await cst.decreaseApproval(spender, 10, { from: grantor }));
+      await assertRevert(async () => await cst.decreaseApproval(spender, web3.toWei(10, 'ether'), { from: grantor }));
     });
 
     it("does not allow approving allowance when spender account has been frozen", async function() {
@@ -226,7 +226,7 @@ contract('CardStackToken', function(accounts) {
 
       await cst.freezeAccount(spender, true);
 
-      await assertRevert(async () => await cst.approve(spender, 10, { from: grantor }));
+      await assertRevert(async () => await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor }));
     });
 
     it("does not allow approving allowance when grantor account has been frozen", async function() {
@@ -235,7 +235,7 @@ contract('CardStackToken', function(accounts) {
 
       await cst.freezeAccount(grantor, true);
 
-      await assertRevert(async () => await cst.approve(spender, 10, { from: grantor }));
+      await assertRevert(async () => await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor }));
     });
 
     it("does not allow transferFrom when sender account has been frozen", async function() {
@@ -243,10 +243,10 @@ contract('CardStackToken', function(accounts) {
       let spender = accounts[4];
       let recipient = accounts[7];
 
-      await cst.approve(spender, 10, { from: grantor });
+      await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor });
       await cst.freezeAccount(spender, true);
 
-      await assertRevert(async () => await cst.transferFrom(grantor, recipient, 10, { from: spender }));
+      await assertRevert(async () => await cst.transferFrom(grantor, recipient, web3.toWei(10, 'ether'), { from: spender }));
     });
 
     it("does not allow transferFrom when 'from' account has been frozen", async function() {
@@ -254,10 +254,10 @@ contract('CardStackToken', function(accounts) {
       let spender = accounts[4];
       let recipient = accounts[7];
 
-      await cst.approve(spender, 10, { from: grantor });
+      await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor });
       await cst.freezeAccount(grantor, true);
 
-      await assertRevert(async () => await cst.transferFrom(grantor, recipient, 10, { from: spender }));
+      await assertRevert(async () => await cst.transferFrom(grantor, recipient, web3.toWei(10, 'ether'), { from: spender }));
     });
 
     it("does not allow transferFrom when 'to' account has been frozen", async function() {
@@ -265,16 +265,16 @@ contract('CardStackToken', function(accounts) {
       let spender = accounts[4];
       let recipient = accounts[7];
 
-      await cst.approve(spender, 10, { from: grantor });
+      await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor });
       await cst.freezeAccount(recipient, true);
 
-      await assertRevert(async () => await cst.transferFrom(grantor, recipient, 10, { from: spender }));
+      await assertRevert(async () => await cst.transferFrom(grantor, recipient, web3.toWei(10, 'ether'), { from: spender }));
     });
 
     it("does not allow token grant to frozen account", async function() {
       let recipientAccount = accounts[9];
       await cst.freezeAccount(recipientAccount, true);
-      await assertRevert(async () => await cst.grantTokens(recipientAccount, 10));
+      await assertRevert(async () => await cst.grantTokens(recipientAccount, web3.toWei(10, 'ether')));
     });
 
     it("does not allow vested token grant to frozen account", async function() {
@@ -376,8 +376,8 @@ contract('CardStackToken', function(accounts) {
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.freezeToken(false);
       await cst.addSuperAdmin(superAdmin);
-      await ledger.mintTokens(100);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
+      await ledger.mintTokens(web3.toWei(100, 'ether'));
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 10, web3.toWei(100, 'ether'), web3.toWei(1000000, 'ether'), NULL_ADDRESS);
 
       await cst.setAllowTransfers(true);
       await checkBalance(frozenAccount, 1);
@@ -403,25 +403,25 @@ contract('CardStackToken', function(accounts) {
     it("should be able to mint tokens when token is frozen", async function() {
       await cst.freezeToken(true, { from: superAdmin });
 
-      await cst.mintTokens(100);
+      await cst.mintTokens(web3.toWei(100, 'ether'));
 
       let totalTokens = await ledger.totalTokens();
 
-      assert.equal(asInt(totalTokens), 200, "The totalTokens is correct");
+      assert.equal(totalTokens, web3.toWei(200, 'ether'), "The totalTokens is correct");
     });
 
     it("should be able to grant tokens when token is frozen", async function() {
       let account = accounts[7];
       await cst.freezeToken(true, { from: superAdmin });
-      await cst.grantTokens(account, 10);
+      await cst.grantTokens(account, web3.toWei(10, 'ether'));
 
       let totalTokens = await ledger.totalTokens();
       let totalInCirculation = await ledger.totalInCirculation();
       let recipientBalance = await ledger.balanceOf(account);
 
-      assert.equal(asInt(totalTokens), 100, "The totalTokens is correct");
-      assert.equal(asInt(totalInCirculation), 20, "The totalInCirculation is correct");
-      assert.equal(asInt(recipientBalance), 10, "The balance is correct");
+      assert.equal(totalTokens, web3.toWei(100, 'ether'), "The totalTokens is correct");
+      assert.equal(totalInCirculation, web3.toWei(20, 'ether'), "The totalInCirculation is correct");
+      assert.equal(recipientBalance, web3.toWei(10, 'ether'), "The balance is correct");
     });
 
     it("cannot buy CST when frozen", async function() {
@@ -447,15 +447,15 @@ contract('CardStackToken', function(accounts) {
       endBalance = asInt(endBalance);
 
       assert.ok(startBalance - endBalance < MAX_FAILED_TXN_GAS * GAS_PRICE, "The buyer's account was just charged for gas");
-      assert.equal(asInt(cstBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation was not updated");
+      assert.equal(cstBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation was not updated");
     });
 
     it("cannot send a transfer when frozen", async function() {
       await cst.freezeToken(true, { from: superAdmin });
       let senderAccount = frozenAccount;
       let recipientAccount = accounts[6];
-      let transferAmount = 1;
+      let transferAmount = web3.toWei(1, 'ether');
 
       await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
         from: senderAccount,
@@ -466,15 +466,15 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await ledger.balanceOf(recipientAccount);
       let totalInCirculation = await ledger.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(recipientBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
     });
 
     it("cannot receive a transfer when frozen", async function() {
       let recipientAccount = accounts[5];
       let senderAccount = accounts[6];
-      let transferAmount = 1;
+      let transferAmount = web3.toWei(1, 'ether');
 
       await checkBalance(senderAccount, 1);
 
@@ -497,9 +497,9 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await ledger.balanceOf(recipientAccount);
       let totalInCirculation = await ledger.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 20, "The CST total in circulation has not changed");
+      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(recipientBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(20, 'ether'), "The CST total in circulation has not changed");
     });
 
     it("should be able to unfreeze entire token", async function() {
@@ -507,7 +507,7 @@ contract('CardStackToken', function(accounts) {
       let unfreezeEvent = await cst.freezeToken(false);
       let recipientAccount = accounts[5];
       let senderAccount = accounts[6];
-      let transferAmount = 1;
+      let transferAmount = web3.toWei(1, 'ether');
 
       await checkBalance(senderAccount, 1);
 
@@ -527,9 +527,9 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await ledger.balanceOf(recipientAccount);
       let totalInCirculation = await ledger.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 9, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 11, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 20, "The CST total in circulation has not changed");
+      assert.equal(senderBalance, web3.toWei(9, 'ether'), "The CST balance is correct");
+      assert.equal(recipientBalance, web3.toWei(11, 'ether'), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(20, 'ether'), "The CST total in circulation has not changed");
 
       assert.equal(unfreezeEvent.logs[0].event, 'FrozenToken', 'the account freeze event is correct');
       assert.equal(unfreezeEvent.logs[0].args.frozen, false, 'the frozen value is correct');
@@ -548,10 +548,10 @@ contract('CardStackToken', function(accounts) {
       let grantor = accounts[3];
       let spender = accounts[4];
 
-      await cst.approve(spender, 10, { from: grantor });
+      await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor });
       await cst.freezeToken(true, { from: superAdmin });
 
-      await assertRevert(async () => await cst.decreaseApproval(spender, 10, { from: grantor }));
+      await assertRevert(async () => await cst.decreaseApproval(spender, web3.toWei(10, 'ether'), { from: grantor }));
     });
 
     it("does not allow approving allowance when token frozen", async function() {
@@ -560,7 +560,7 @@ contract('CardStackToken', function(accounts) {
 
       await cst.freezeToken(true, { from: superAdmin });
 
-      await assertRevert(async () => await cst.approve(spender, 10, { from: grantor }));
+      await assertRevert(async () => await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor }));
     });
 
     it("does not allow transferFrom when token frozen", async function() {
@@ -568,10 +568,10 @@ contract('CardStackToken', function(accounts) {
       let spender = accounts[4];
       let recipient = accounts[7];
 
-      await cst.approve(spender, 10, { from: grantor });
+      await cst.approve(spender, web3.toWei(10, 'ether'), { from: grantor });
       await cst.freezeToken(true, { from: superAdmin });
 
-      await assertRevert(async () => await cst.transferFrom(grantor, recipient, 10, { from: spender }));
+      await assertRevert(async () => await cst.transferFrom(grantor, recipient, web3.toWei(10, 'ether'), { from: spender }));
     });
 
     it("does allow vested token grant when token is frozen", async function() {

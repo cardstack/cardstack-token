@@ -3,6 +3,11 @@ const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 const moment = require('moment');
 
+function adjustForDecimals(value, decimals) {
+  let decimalsFactor = new web3.BigNumber('1'.padEnd(decimals.toNumber() + 1, '0'));
+  return (new web3.BigNumber(value)).mul(decimalsFactor);
+}
+
 const dateFormat = "YYYY-MM-DD";
 let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
@@ -38,7 +43,7 @@ const usage = [
       description: "The address of the beneficiary of the vested token grant."
     },{
       name: "fullyVestedTokenAmount",
-      description: "The amount of CST tokens that will be made available when 100% vested."
+      description: "The amount of tokens that will be made available when 100% vested."
     },{
       name: "startDay",
       description: "[Optional] The day, in YYYY-MM-DD format of the local timezone in which to begin the vesting. Note that the date must be in the future. If no date is supplied, then vesting will begin at the time that this transaction is mined."
@@ -107,6 +112,8 @@ module.exports = async function(callback) {
   let cstAddress = await registryContract.contractForHash(web3.sha3(CST_NAME));
 
   let cst = await CardStackToken.at(cstAddress);
+  let symbol = await cst.symbol();
+  let decimals = await cst.decimals();
 
   let revocable = !nonRevocable;
 
@@ -121,7 +128,7 @@ module.exports = async function(callback) {
 
   if (data) {
     let data = cst.contract.grantVestedTokens.getData(address,
-                                                      fullyVestedTokenAmount,
+                                                      adjustForDecimals(fullyVestedTokenAmount, decimals),
                                                       startSec,
                                                       vestingCliffSec,
                                                       vestingDurationSec,
@@ -130,7 +137,7 @@ module.exports = async function(callback) {
       to: cst.address,
       data
     });
-    console.log(`Data for vested token grant with a fully vested amount of ${fullyVestedTokenAmount} CST to ${address}, that starts ${startDay ? startDay : "now" } with a vesting duration of ${vestingDurationDays} days and a cliff that occurs ${daysUntilCliff} days after the start day that is ${revocable ? "revocable" : "NOT revocable"} for CST (${cst.address}):`);
+    console.log(`Data for vested token grant with a fully vested amount of ${fullyVestedTokenAmount} ${symbol} to ${address}, that starts ${startDay ? startDay : "now" } with a vesting duration of ${vestingDurationDays} days and a cliff that occurs ${daysUntilCliff} days after the start day that is ${revocable ? "revocable" : "NOT revocable"} for CST (${cst.address}):`);
     console.log(`\nAddress: ${cst.address}`);
     console.log(`Data: ${data}`);
     console.log(`Estimated gas: ${estimatedGas}`);
@@ -139,9 +146,9 @@ module.exports = async function(callback) {
   }
 
   try {
-    console.log(`Granting vested tokens with a fully vested amount of ${fullyVestedTokenAmount} CST to ${address}, that starts ${startDay ? startDay : "now" } with a vesting duration of ${vestingDurationDays} days and a cliff that occurs ${daysUntilCliff} days after the start day that is ${revocable ? "revocable" : "NOT revocable"} for CST (${cst.address}):`);
+    console.log(`Granting vested tokens with a fully vested amount of ${fullyVestedTokenAmount} ${symbol} to ${address}, that starts ${startDay ? startDay : "now" } with a vesting duration of ${vestingDurationDays} days and a cliff that occurs ${daysUntilCliff} days after the start day that is ${revocable ? "revocable" : "NOT revocable"} for CST (${cst.address}):`);
     await cst.grantVestedTokens(address,
-                                fullyVestedTokenAmount,
+                                adjustForDecimals(fullyVestedTokenAmount, decimals),
                                 startSec,
                                 vestingCliffSec,
                                 vestingDurationSec,

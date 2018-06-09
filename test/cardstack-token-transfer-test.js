@@ -8,7 +8,6 @@ const {
   CST_DEPLOY_GAS_LIMIT,
   CARDSTACK_NAMEHASH,
   assertRevert,
-  asInt,
   checkBalance
 } = require("../lib/utils");
 
@@ -35,8 +34,8 @@ contract('CardStackToken', function(accounts) {
       });
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.freezeToken(false);
-      await ledger.mintTokens(100);
-      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), web3.toWei(0.1, "ether"), 100, 1000000, NULL_ADDRESS);
+      await ledger.mintTokens(web3.toWei(100, 'ether'));
+      await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 10, web3.toWei(100, 'ether'), web3.toWei(1000000, 'ether'), NULL_ADDRESS);
 
       await cst.setAllowTransfers(true);
       await checkBalance(senderAccount, 1);
@@ -58,7 +57,7 @@ contract('CardStackToken', function(accounts) {
     });
 
     it("should be able to transfer CST to another account", async function() {
-      let transferAmount = 10;
+      let transferAmount = web3.toWei(10, 'ether');
 
       let txn = await cst.transfer(recipientAccount, transferAmount, {
         from: senderAccount
@@ -72,21 +71,21 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await cst.balanceOf(recipientAccount);
       let totalInCirculation = await cst.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+      assert.equal(senderBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(recipientBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
 
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
 
       let event = txn.logs[0];
       assert.equal(event.event, "Transfer", "The event type is correct");
-      assert.equal(event.args._value.toString(), "10", "The CST amount is correct");
+      assert.equal(event.args._value, web3.toWei(10, 'ether'), "The CST amount is correct");
       assert.equal(event.args._from, senderAccount, "The sender is correct");
       assert.equal(event.args._to, recipientAccount, "The recipient is correct");
     });
 
     it("should not be able to transfer more CST than is in the sender's account", async function() {
-      let transferAmount = 11;
+      let transferAmount = web3.toWei(11, 'ether');
 
       await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
         from: senderAccount
@@ -96,9 +95,9 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await cst.balanceOf(recipientAccount);
       let totalInCirculation = await cst.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(recipientBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
     });
 
     it("should not be able to transfer 0 CST ", async function() {
@@ -112,14 +111,14 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await cst.balanceOf(recipientAccount);
       let totalInCirculation = await cst.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(recipientBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
     });
 
     it("should not be able to transfer when allowTransfers is false", async function() {
       await cst.setAllowTransfers(false);
-      let transferAmount = 10;
+      let transferAmount = web3.toWei(10, 'ether');
 
       await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
         from: senderAccount
@@ -129,16 +128,16 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await cst.balanceOf(recipientAccount);
       let totalInCirculation = await cst.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(recipientBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
     });
 
     it("should be able to transfer when allowTransfers is false but the transfer initiator is in the transfer whitelist", async function() {
       await cst.setAllowTransfers(false);
       await cst.setWhitelistedTransferer(senderAccount, true);
 
-      let transferAmount = 10;
+      let transferAmount = web3.toWei(10, 'ether');
 
       let txn = await cst.transfer(recipientAccount, transferAmount, {
         from: senderAccount
@@ -152,15 +151,15 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await cst.balanceOf(recipientAccount);
       let totalInCirculation = await cst.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+      assert.equal(senderBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(recipientBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
 
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
 
       let event = txn.logs[0];
       assert.equal(event.event, "Transfer", "The event type is correct");
-      assert.equal(event.args._value.toString(), "10", "The CST amount is correct");
+      assert.equal(event.args._value, web3.toWei(10, 'ether'), "The CST amount is correct");
       assert.equal(event.args._from, senderAccount, "The sender is correct");
       assert.equal(event.args._to, recipientAccount, "The recipient is correct");
     });
@@ -170,7 +169,7 @@ contract('CardStackToken', function(accounts) {
       await cst.setWhitelistedTransferer(senderAccount, true);
       await cst.setWhitelistedTransferer(senderAccount, false);
 
-      let transferAmount = 10;
+      let transferAmount = web3.toWei(10, 'ether');
 
       await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
         from: senderAccount
@@ -180,9 +179,9 @@ contract('CardStackToken', function(accounts) {
       let recipientBalance = await cst.balanceOf(recipientAccount);
       let totalInCirculation = await cst.totalInCirculation();
 
-      assert.equal(asInt(senderBalance), 10, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 10, "The CST total in circulation has not changed");
+      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
+      assert.equal(recipientBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
     });
   });
 });

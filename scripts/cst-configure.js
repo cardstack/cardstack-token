@@ -4,12 +4,16 @@ const getUsage = require('command-line-usage');
 let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
+function adjustForDecimals(value, decimals) {
+  let decimalsFactor = new web3.BigNumber('1'.padEnd(decimals.toNumber() + 1, '0'));
+  return (new web3.BigNumber(value)).mul(decimalsFactor);
+}
+
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
   { name: "tokenName", type: String },
   { name: "tokenSymbol", type: String },
-  { name: "buyPriceEth", type: Number },
   { name: "buyPriceCardPerEth", type: Number },
   { name: "circulationCap", type: Number },
   { name: "maxBalance", type: Number },
@@ -42,9 +46,6 @@ const usage = [
       name: "force",
       description: "(optional) Specify the `--force` parameter to configure an unfrozen contract. For price changes, the token must be frozen in order to change the price."
     },{
-      name: "buyPriceEth",
-      description: "The price to purchase 1 CST from the CST contract in units of ethers."
-    },{
       name: "buyPriceCardPerEth",
       description: "The price of CST expressed as the amount of CST that you can purchase for 1 ETH"
     },{
@@ -71,7 +72,6 @@ module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
   let { tokenName,
         tokenSymbol,
-        buyPriceEth,
         buyPriceCardPerEth,
         maxBalance,
         force,
@@ -80,7 +80,7 @@ module.exports = async function(callback) {
 
   if (!tokenName ||
       !tokenSymbol ||
-      (!buyPriceEth && !buyPriceCardPerEth) ||
+      !buyPriceCardPerEth ||
       !circulationCap ||
       !options.network ||
       !maxBalance ||
@@ -101,6 +101,7 @@ module.exports = async function(callback) {
 
   let cst = await CardStackToken.at(cstAddress);
   let isFrozen = await cst.frozenToken();
+  let decimals = await cst.decimals();
 
   if (!isFrozen) {
     if (!force) {
@@ -112,16 +113,10 @@ module.exports = async function(callback) {
     }
   }
 
-  if (buyPriceCardPerEth) {
-    buyPriceEth = 1 / buyPriceCardPerEth;
-  } else {
-    buyPriceCardPerEth = Math.floor(1 / buyPriceEth);
-  }
-
   console.log(`Configuring CST token:
   token name: ${tokenName}
   token symbol: ${tokenSymbol}
-  buy price (ETH): ${buyPriceEth}, ${tokenSymbol} per ETH: ${buyPriceCardPerEth}
+  buy price: ${tokenSymbol} per ETH: ${buyPriceCardPerEth}
   circulation cap: ${circulationCap}
   maximum balance: ${maxBalance}
   foundation address: ${foundation}`);
@@ -129,9 +124,9 @@ module.exports = async function(callback) {
   if (options.data) {
     let data = cst.contract.configure.getData(web3.toHex(tokenName),
                                               web3.toHex(tokenSymbol),
-                                              web3.toWei(parseFloat(buyPriceEth), "ether"),
-                                              circulationCap,
-                                              maxBalance,
+                                              buyPriceCardPerEth, // since decimals is 18, this eactly matches cardPerWei when decimals is taken into account
+                                              adjustForDecimals(circulationCap, decimals),
+                                              adjustForDecimals(maxBalance, decimals),
                                               foundation);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
@@ -149,9 +144,9 @@ module.exports = async function(callback) {
   try {
     await cst.configure(web3.toHex(tokenName),
                         web3.toHex(tokenSymbol),
-                        web3.toWei(parseFloat(buyPriceEth), "ether"),
-                        circulationCap,
-                        maxBalance,
+                        buyPriceCardPerEth, // since decimals is 18, this eactly matches cardPerWei when decimals is taken into account
+                        adjustForDecimals(circulationCap, decimals),
+                        adjustForDecimals(maxBalance, decimals),
                         foundation);
     console.log("done");
   } catch (err) {

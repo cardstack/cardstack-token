@@ -36,8 +36,8 @@ contract('Registry', function(accounts) {
 
       await storage.setBytes32Value("cstTokenName", web3.toHex("cst"));
       await storage.setBytes32Value("cstTokenSymbol", web3.toHex("CST"));
-      await storage.setUIntValue("cstBuyPrice", web3.toWei(0.1, "ether"));
-      await storage.setUIntValue("cstCirculationCap", 100);
+      await storage.setUIntValue("cstBuyPrice", 10);
+      await storage.setUIntValue("cstCirculationCap", web3.toWei(100, 'ether'));
       await storage.setAddressValue("cstFoundation", foundation);
 
       cst1 = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
@@ -48,7 +48,7 @@ contract('Registry', function(accounts) {
       });
       await cst1.setAllowTransfers(true);
       await cst2.setAllowTransfers(true);
-      await ledger.mintTokens(100);
+      await ledger.mintTokens(web3.toWei(100, 'ether'));
     });
 
     it("allows the registry super admin to set a new namehash for a registered contract", async function() {
@@ -339,7 +339,7 @@ contract('Registry', function(accounts) {
 
       event = txn.logs.find(event => event.event === "Transfer");
       assert.equal(event.event, "Transfer", "The event type is correct");
-      assert.equal(asInt(event.args._value), 100, "The amount minted is correct");
+      assert.equal(asInt(event.args._value), web3.toWei(100, 'ether'), "The amount minted is correct");
       assert.equal(event.args._from, cst1.address, "The from address is correct");
       assert.equal(event.args._to, cst2.address, "The to address is correct");
 
@@ -392,7 +392,7 @@ contract('Registry', function(accounts) {
 
       event = txn.logs.find(event => event.event === "Transfer");
       assert.equal(event.event, "Transfer", "The event type is correct");
-      assert.equal(asInt(event.args._value), 100, "The amount minted is correct");
+      assert.equal(asInt(event.args._value), web3.toWei(100, 'ether'), "The amount minted is correct");
       assert.equal(event.args._from, cst1.address, "The from address is correct");
       assert.equal(event.args._to, cst2.address, "The to address is correct");
 
@@ -448,7 +448,7 @@ contract('Registry', function(accounts) {
 
       event = txn.logs.find(event => event.event === "Transfer");
       assert.equal(event.event, "Transfer", "The event type is correct");
-      assert.equal(asInt(event.args._value), 100, "The amount minted is correct");
+      assert.equal(asInt(event.args._value), web3.toWei(100, 'ether'), "The amount minted is correct");
       assert.equal(event.args._from, cst1.address, "The from address is correct");
       assert.equal(event.args._to, cst2.address, "The to address is correct");
 
@@ -575,9 +575,9 @@ contract('Registry', function(accounts) {
       await cst1.freezeToken(false);
       await cst1.configure(web3.toHex("cst"),
                            web3.toHex("CST"),
-                           web3.toWei(0.1, "ether"),
-                           100,
-                           1000000,
+                           10,
+                           web3.toWei(100, 'ether'),
+                           web3.toWei(1000000, 'ether'),
                            foundation);
 
       let buyerAccount = accounts[8];
@@ -592,7 +592,7 @@ contract('Registry', function(accounts) {
       });
 
       let cstBalance = await cst1.balanceOf(buyerAccount);
-      assert.equal(asInt(cstBalance), 2, "The CST balance is correct");
+      assert.equal(cstBalance, web3.toWei(2, 'ether'), "The CST balance is correct");
 
       await cst1.freezeToken(true);
       await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
@@ -602,10 +602,10 @@ contract('Registry', function(accounts) {
       let totalInCirculation = await cst2.totalInCirculation();
       cstBalance = await cst2.balanceOf(buyerAccount);
 
-      assert.equal(asInt(cstBalance), 2, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 2, "The CST total in circulation was updated correctly");
+      assert.equal(cstBalance, web3.toWei(2, 'ether'), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(2, 'ether'), "The CST total in circulation was updated correctly");
 
-      let transferAmount = 2;
+      let transferAmount = web3.toWei(2, 'ether');
 
       await cst2.transfer(recipientAccount, transferAmount, {
         from: buyerAccount,
@@ -621,14 +621,14 @@ contract('Registry', function(accounts) {
       let circulationCap = await cst2.circulationCap();
       let foundationAddress = await cst2.foundation();
 
-      assert.equal(asInt(senderBalance), 0, "The CST balance is correct");
-      assert.equal(asInt(recipientBalance), 2, "The CST balance is correct");
-      assert.equal(asInt(totalInCirculation), 2, "The CST total in circulation has not changed");
+      assert.equal(senderBalance.toNumber(), 0, "The CST balance is correct");
+      assert.equal(recipientBalance, web3.toWei(2, 'ether'), "The CST balance is correct");
+      assert.equal(totalInCirculation, web3.toWei(2, 'ether'), "The CST total in circulation has not changed");
 
       assert.equal(name, "cst", "the name is correct");
       assert.equal(symbol, "CST", "the symbol is correct");
-      assert.equal(buyPrice.toNumber(), web3.toWei(0.1, "ether"), "the buyPrice is correct");
-      assert.equal(circulationCap.toNumber(), 100, "the circulationCap is correct");
+      assert.equal(buyPrice.toNumber(), 10, "the buyPrice is correct");
+      assert.equal(circulationCap, web3.toWei(100, 'ether'), "the circulationCap is correct");
       assert.equal(foundationAddress, foundation, "the foundation address is correct");
     });
 
@@ -637,20 +637,20 @@ contract('Registry', function(accounts) {
       let spender = accounts[31];
       let recipient = accounts[37];
 
-      await ledger.debitAccount(grantor, 50);
+      await ledger.debitAccount(grantor, web3.toWei(50, 'ether'));
       await registry.register("cst", cst1.address, CARDSTACK_NAMEHASH, { from: superAdmin });
       await cst1.freezeToken(false);
-      await cst1.approve(spender, 10, { from: grantor });
+      await cst1.approve(spender, web3.toWei(10, 'ether'), { from: grantor });
 
       let allowance = await cst1.allowance(grantor, spender);
       let grantorBalance = await cst1.balanceOf(grantor);
       let spenderBalance = await cst1.balanceOf(spender);
       let recipientBalance = await cst1.balanceOf(recipient);
 
-      assert.equal(asInt(allowance), 10, "the allowance is correct");
-      assert.equal(asInt(grantorBalance), 50, "the balance is correct");
-      assert.equal(asInt(spenderBalance), 0, "the balance is correct");
-      assert.equal(asInt(recipientBalance), 0, "the balance is correct");
+      assert.equal(allowance, web3.toWei(10, 'ether'), "the allowance is correct");
+      assert.equal(grantorBalance, web3.toWei(50, 'ether'), "the balance is correct");
+      assert.equal(spenderBalance.toNumber(), 0, "the balance is correct");
+      assert.equal(recipientBalance.toNumber(), 0, "the balance is correct");
 
       await cst1.freezeToken(true);
       await registry.upgradeContract("cst", cst2.address, { from: superAdmin });
@@ -662,22 +662,22 @@ contract('Registry', function(accounts) {
       spenderBalance = await cst2.balanceOf(spender);
       recipientBalance = await cst2.balanceOf(recipient);
 
-      assert.equal(asInt(allowance), 10, "the allowance is correct");
-      assert.equal(asInt(grantorBalance), 50, "the balance is correct");
-      assert.equal(asInt(spenderBalance), 0, "the balance is correct");
-      assert.equal(asInt(recipientBalance), 0, "the balance is correct");
+      assert.equal(allowance, web3.toWei(10, 'ether'), "the allowance is correct");
+      assert.equal(grantorBalance, web3.toWei(50, 'ether'), "the balance is correct");
+      assert.equal(spenderBalance, 0, "the balance is correct");
+      assert.equal(recipientBalance, 0, "the balance is correct");
 
-      await cst2.transferFrom(grantor, recipient, 10, { from: spender });
+      await cst2.transferFrom(grantor, recipient, web3.toWei(10, 'ether'), { from: spender });
 
       allowance = await cst2.allowance(grantor, spender);
       grantorBalance = await cst2.balanceOf(grantor);
       spenderBalance = await cst2.balanceOf(spender);
       recipientBalance = await cst2.balanceOf(recipient);
 
-      assert.equal(asInt(allowance), 0, "the allowance is correct");
-      assert.equal(asInt(grantorBalance), 40, "the balance is correct");
-      assert.equal(asInt(spenderBalance), 0, "the balance is correct");
-      assert.equal(asInt(recipientBalance), 10, "the balance is correct");
+      assert.equal(allowance.toNumber(), 0, "the allowance is correct");
+      assert.equal(grantorBalance, web3.toWei(40, 'ether'), "the balance is correct");
+      assert.equal(spenderBalance, 0, "the balance is correct");
+      assert.equal(recipientBalance, web3.toWei(10, 'ether'), "the balance is correct");
     });
 
     it("allows superAdmin to delete storage", async function() {
@@ -755,7 +755,7 @@ contract('Registry', function(accounts) {
       assert.equal(newRegistrySuccessor, NULL_ADDRESS, 'the contract address is correct');
 
       assert.equal(upgradeToTxn.logs.length, 1, 'the correct number of events were fired');
-      assert.equal(upgradedFromTxn.logs.length, 1, 'the correct number of events were fired');
+      assert.equal(upgradedFromTxn.logs.length, 2, 'the correct number of events were fired'); // the extra event is to satisfy CST contract upgrade
       assert.equal(upgradeToTxn.logs[0].event, "Upgraded", "the event type is correct");
       assert.equal(upgradeToTxn.logs[0].args.successor, newRegistry.address);
       assert.equal(upgradedFromTxn.logs[0].event, "UpgradedFrom", "the event type is correct");
