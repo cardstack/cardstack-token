@@ -15,4 +15,5 @@ testem.log
 .node-*
 accounts.txt
 *.csv
+*.numbers
 *.log
