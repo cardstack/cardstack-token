@@ -1,6 +1,8 @@
 # cardstack-token [![Build Status](https://travis-ci.org/cardstack/cardstack-token.svg?branch=master)](https://travis-ci.org/cardstack/cardstack-token)
 This project contains the smart contracts that govern the [Cardstack](https://cardstack.com) token.
 
+The official Cardstack token, with the ERC-20 symbol `CARD` is located on mainnet at the ENS resolved name [cardstack.eth](https://etherscan.io/address/cardstack.eth). Which is currently `0xB07ec2c28834B889b1CE527Ca0F19364cD38935c`.
+
 ## Prerequisites
 * node 8+
 
