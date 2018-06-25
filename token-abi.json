@@ -62,7 +62,7 @@
     "outputs": [
       {
         "name": "",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
     "payable": false,
@@ -150,6 +150,34 @@
     "type": "function"
   },
   {
+    "constant": true,
+    "inputs": [],
+    "name": "isTokenContract",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "constant": false,
     "inputs": [
       {
@@ -205,6 +233,15 @@
       }
     ],
     "name": "addAdmin",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "renounceOwnership",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -519,7 +556,7 @@
     "constant": false,
     "inputs": [
       {
-        "name": "newOwner",
+        "name": "_newOwner",
         "type": "address"
       }
     ],
@@ -875,6 +912,18 @@
       }
     ],
     "name": "RemoveSuperAdmin",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "previousOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipRenounced",
     "type": "event"
   },
   {
