@@ -7,7 +7,9 @@ let RegistryContract = artifacts.require("./Registry.sol");
 
 function adjustForDecimals(value, decimals) {
   let decimalsFactor = new web3.BigNumber('1'.padEnd(decimals.toNumber() + 1, '0'));
-  return (new web3.BigNumber(value)).mul(decimalsFactor);
+  let resultBN = (new web3.BigNumber(value)).mul(decimalsFactor);
+  let [ result ]  = resultBN.toPrecision(40).toString().split('.');
+  return result;
 }
 
 const optionsDefs = [

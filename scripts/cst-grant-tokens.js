@@ -7,7 +7,9 @@ let CardStackToken = artifacts.require("./CardStackToken.sol");
 
 function adjustForDecimals(value, decimals) {
   let decimalsFactor = new web3.BigNumber('1'.padEnd(decimals.toNumber() + 1, '0'));
-  return (new web3.BigNumber(value)).mul(decimalsFactor);
+  let resultBN = (new web3.BigNumber(value)).mul(decimalsFactor);
+  let [ result ]  = resultBN.toPrecision(40).toString().split('.');
+  return result;
 }
 
 const optionsDefs = [
@@ -77,8 +79,8 @@ module.exports = async function(callback) {
   let { address, amount, rawAmount } = options;
 
   if (options.data) {
-    let data = rawAmount ? cst.contract.grantTokens.getData(address, adjustForDecimals(amount, decimals)) :
-                           cst.contract.grantTokens.getData(address, rawAmount);
+    let data = !rawAmount ? cst.contract.grantTokens.getData(address, adjustForDecimals(amount, decimals)) :
+                            cst.contract.grantTokens.getData(address, rawAmount);
     let estimatedGas = web3.eth.estimateGas({
       to: cst.address,
       data
