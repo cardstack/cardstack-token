@@ -80,7 +80,6 @@ module.exports = async function(callback) {
       if (gasPriceGwei) {
         options.gasPrice = web3.toWei(gasPriceGwei, 'gwei');
       }
-      console.log(JSON.stringify(options, null, 2));
       console.log(`Sending ${address} wei ${wei}`);
       try {
         await web3.eth.sendTransaction(options);
