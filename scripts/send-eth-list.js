@@ -8,6 +8,7 @@ const optionsDefs = [
   { name: "help", alias: "h", type: Boolean },
   { name: "network", type: String },
   { name: "csv", type: String },
+  { name: "gasPriceGwei", type: Number },
   { name: "concurrency", alias: "c", type: Number },
 ];
 
@@ -27,6 +28,9 @@ const usage = [
     },{
       name: "csv",
       description: "The file containing ethereum addresses (each on a separate line) and amounts un inits of ETH to send"
+    },{
+      name: "gasPriceGwei",
+      description: "The gas price in units of gwei"
     },{
       name: "concurrency",
       alias: "c",
@@ -48,7 +52,7 @@ module.exports = async function(callback) {
     callback();
     return;
   }
-  let { csv, concurrency } = options;
+  let { csv, concurrency, gasPriceGwei } = options;
 
   concurrency = concurrency || 100;
 
@@ -68,13 +72,18 @@ module.exports = async function(callback) {
 
     if (address && amount && amount.trim()) {
       let wei = web3.toWei(amount, "ether");
+      let options = {
+        from: process.env.WALLET,
+        to: address,
+        value: wei
+      };
+      if (gasPriceGwei) {
+        options.gasPrice = web3.toWei(gasPriceGwei, 'gwei');
+      }
+      console.log(JSON.stringify(options, null, 2));
       console.log(`Sending ${address} wei ${wei}`);
       try {
-        await web3.eth.sendTransaction({
-          from: process.env.WALLET,
-          to: address,
-          value: wei
-        });
+        await web3.eth.sendTransaction(options);
       } catch (err) {
         console.error(`Error sending ETH ${address}, ${err.message}`);
       }
