@@ -13,12 +13,12 @@ function adjustForDecimals(value, decimals) {
 }
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "amount", type: String },
-  { name: "rawAmount", type: String },
-  { name: "registry", alias: "r", type: String },
-  { name: "data", alias: "d", type: Boolean }
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "address", alias: "a", type: String, description: "The address to grant admin permissions"},
+  { name: "rawAmount", type: String, description: "The amount of tokens to mint without factoring token decimals" },
+  { name: "registry", alias: "r", type: String, description: "The address of the registry." },
+  { name: "data", alias: "d", type: Boolean, description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction" }
 ];
 
 const usage = [
@@ -27,28 +27,7 @@ const usage = [
     content: "This script mints the specified number of CST tokens."
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "amount",
-      description: "The amount of tokens to mint."
-    },{
-      name: "rawAmount",
-      description: "The amount of tokens to mint without factoring token decimals"
-    },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
-    },{
-      name: "data",
-      alias: "d",
-      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
-    }]
+    optionList: optionsDefs
   }
 ];
 

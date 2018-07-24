@@ -12,13 +12,13 @@ function adjustForDecimals(value, decimals) {
 }
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "address", alias: "a", type: String },
-  { name: "csv", type: String },
-  { name: "raw", type: Boolean },
-  { name: "importable", type: Boolean },
-  { name: "registry", alias: "r", type: String }
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "address", alias: "a", type: String, description: "The address to grant admin permissions"},
+  { name: "registry", alias: "r", type: String, description: "The address of the registry." },
+  { name: "csv", type: String, description: "(optional) The CSV file to write the ledger report" },
+  { name: "raw", type: Boolean, description: "(optional) output raw token balances without regard to token decimal formatting" },
+  { name: "importable", type: Boolean, description: "(optional) output csv format in a manner that can be used in grant token script" }
 ];
 
 const usage = [
@@ -27,31 +27,7 @@ const usage = [
     content: "This script dispays information about the ledger used for CST."
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "csv",
-      description: "(optional) The CSV file to write the ledger report"
-    },{
-      name: "raw",
-      description: "(optional) output raw token balances without regard to token decimal formatting"
-    },{
-      name: "importable",
-      description: "(optional) output csv format in a manner that can be used in grant token script"
-    },{
-      name: "address",
-      alias: "a",
-      description: "(optional) address to get ledger info"
-    },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
-    }]
+    optionList: optionsDefs
   }
 ];
 

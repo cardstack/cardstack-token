@@ -10,17 +10,17 @@ function adjustForDecimals(value, decimals) {
 }
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "tokenName", type: String },
-  { name: "tokenSymbol", type: String },
-  { name: "buyPriceCardPerEth", type: Number },
-  { name: "circulationCap", type: Number },
-  { name: "maxBalance", type: Number },
-  { name: "foundation", type: String },
-  { name: "registry", alias: "r", type: String },
-  { name: "force", type: Boolean },
-  { name: "data", alias: "d", type: Boolean }
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "tokenName", type: String, description: "The ERC-20 token full name." },
+  { name: "tokenSymbol", type: String, description: "The ERC-20 token symbol." },
+  { name: "buyPriceCardPerEth", type: Number, description: "The price of CST expressed as the amount of CST that you can purchase for 1 ETH"},
+  { name: "circulationCap", type: Number, description: "The maximum number of CST that is allowed to be in circluation at any point in time (this includes unvested tokens)" },
+  { name: "maxBalance", type: Number, description: "this is the maximum amount of CST that an account is allowed to posses expressed as number of CST" },
+  { name: "foundation", type: String, description: "(optional) The address of the CST Foundation, which has the ability to deposit and withdraw ETH against the CST contract." },
+  { name: "registry", alias: "r", type: String, description: "The address of the registry." },
+  { name: "force", type: Boolean, description: "(optional) Specify the `--force` parameter to configure an unfrozen contract. For price changes, the token must be frozen in order to change the price." },
+  { name: "data", alias: "d", type: Boolean, description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction" }
 ];
 
 const usage = [
@@ -29,43 +29,7 @@ const usage = [
     content: "This script configures the CST token and makes it available for purchase."
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "tokenName",
-      description: "The ERC-20 token full name."
-    },{
-      name: "tokenSymbol",
-      description: "The ERC-20 token symbol."
-    },{
-      name: "force",
-      description: "(optional) Specify the `--force` parameter to configure an unfrozen contract. For price changes, the token must be frozen in order to change the price."
-    },{
-      name: "buyPriceCardPerEth",
-      description: "The price of CST expressed as the amount of CST that you can purchase for 1 ETH"
-    },{
-      name: "circulationCap",
-      description: "The maximum number of CST that is allowed to be in circluation at any point in time (this includes unvested tokens)"
-    },{
-      name: "maxBalance",
-      description: "this is the maximum amount of CST that an account is allowed to posses expressed as number of CST"
-    },{
-      name: "foundation",
-      description: "(optional) The address of the CST Foundation, which has the ability to deposit and withdraw ETH against the CST contract."
-    },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
-    },{
-      name: "data",
-      alias: "d",
-      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
-    }]
+    optionList: optionsDefs
   }
 ];
 module.exports = async function(callback) {

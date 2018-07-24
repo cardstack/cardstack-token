@@ -5,11 +5,11 @@ const _ = require("lodash");
 const Parallel = require("async-parallel");
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "csv", type: String },
-  { name: "gasPriceGwei", type: Number },
-  { name: "concurrency", alias: "c", type: Number },
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "csv", type: String, description: "(optional) The CSV file to write the ledger report" },
+  { name: "gasPriceGwei", type: Number, description: "The gas price in units of gwei" },
+  { name: "concurrency", alias: "c", type: Number, description: "(Optional) The number of concurrent transactions to submit to the network at any one time. The default concurrency is 100 simultaneous transactions at a time." },
 ];
 
 const usage = [
@@ -18,24 +18,7 @@ const usage = [
     content: "This script send ETH to recipients from a CSV of addresses and amounts"
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "csv",
-      description: "The file containing ethereum addresses (each on a separate line) and amounts un inits of ETH to send"
-    },{
-      name: "gasPriceGwei",
-      description: "The gas price in units of gwei"
-    },{
-      name: "concurrency",
-      alias: "c",
-      description: "(Optional) The number of concurrent transactions to submit to the network at any one time. The default concurrency is 100 simultaneous transactions at a time."
-    }]
+    optionList: optionsDefs
   }
 ];
 
