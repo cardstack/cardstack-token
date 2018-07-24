@@ -17,11 +17,11 @@ function adjustForDecimals(value, decimals) {
 }
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "ledgerName", type: String },
-  { name: "storageName", type: String },
-  { name: "registry", alias: "r", type: String }
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "ledgerName", type: String, description: "(optional) The name of the ledger to use" },
+  { name: "storageName", type: String, description: "(optional) The name of the storage to use" },
+  { name: "registry", alias: "r", type: String, description: "The address of the registry." },
 ];
 
 const usage = [
@@ -30,24 +30,7 @@ const usage = [
     content: "This script displays an overview of the Cardstack smart contracts."
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "ledgerName",
-      description: "(optional) The name of the ledger to use"
-    },{
-      name: "storageName",
-      description: "(optional) The name of the storage to use"
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
-    }]
+    optionList: optionsDefs
   }
 ];
 

@@ -4,11 +4,11 @@ const getUsage = require('command-line-usage');
 let RegistryContract = artifacts.require("./Registry.sol");
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "registry", type: String, alias: "r" },
-  { name: "cst", type: String, alias: "c" },
-  { name: "data", alias: "d", type: Boolean }
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "registry", alias: "r", type: String, description: "The address of the registry." },
+  { name: "cst", alias: "c",type: String, description: "(optional) The address of the deployed Cardstack token if you dont intend to deploy a new token contract." },
+  { name: "data", alias: "d", type: Boolean, description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction" }
 ];
 
 const usage = [
@@ -17,32 +17,13 @@ const usage = [
     content: "This script registers a CST contract with the registry."
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "cst",
-      alias: "c",
-      description: "The address of the CST contract that you wish to register"
-    },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
-    },{
-      name: "data",
-      alias: "d",
-      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
-    }]
+    optionList: optionsDefs
   }
 ];
 
 module.exports = async function(callback) {
   const options = commandLineArgs(optionsDefs);
-
+  console.log(options);
   if (!options.cst || !options.network || options.help || !options.registry) {
     console.log(getUsage(usage));
     callback();
@@ -70,13 +51,13 @@ module.exports = async function(callback) {
     return;
   }
 
-  console.log(`Registering contract ${cstAddress}...`);
+  console.log(`Registering contract ${cstAddress} ...`);
 
   try {
     await registry.register(CST_NAME, cstAddress, CARDSTACK_NAMEHASH);
     console.log(`\nRegistered CST (${cstAddress}) as contract "${CST_NAME}" with registry (${registry.address})`);
   } catch (err) {
-    console.error(`\nError registering CST contract with registry (${registry.address}, ${err.message}`);
+    console.error(`\nError registering CST contract with registry ${registry.address}, ${err.message}`);
   }
 
   callback();

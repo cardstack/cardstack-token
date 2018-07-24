@@ -3,9 +3,9 @@ const getUsage = require('command-line-usage');
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "cst", alias: "cst", type: String }
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "cst", alias: "c", type: String, description: "The token contract address (note we do not use the registry for this)" }
 ];
 
 const usage = [
@@ -14,17 +14,7 @@ const usage = [
     content: "This script displays ETH deposit information that instructs how the Cardstack Foundation can deposit ETH into the CST contract for the purposes of buying back CST."
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "cst",
-      description: "The token contract address (note we do not use the registry for this)"
-    }]
+    optionList: optionsDefs
   }
 ];
 
