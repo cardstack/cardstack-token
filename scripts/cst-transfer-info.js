@@ -5,11 +5,11 @@ let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "address", type: String },
-  { name: "amount", type: String },
-  { name: "registry", alias: "r", type: String }
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "address", alias: "a", type: String, description: "The address to grant admin permissions"},
+  { name: "amount", type: String, description: "The amount of tokens to transfer" }, 
+  { name: "registry", alias: "r", type: String, description: "The address of the registry." },
 ];
 
 const usage = [
@@ -18,24 +18,7 @@ const usage = [
     content: "This script display transfer information that instructs how to transfer CST."
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "address",
-      description: "The token recipient's address"
-    },{
-      name: "amount",
-      description: "The amount of tokens to transfer"
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
-    }]
+    optionList: optionsDefs
   }
 ];
 

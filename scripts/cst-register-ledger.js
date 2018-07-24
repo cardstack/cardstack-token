@@ -6,11 +6,10 @@ let CardStackToken = artifacts.require("./CardStackToken.sol");
 let CstLedger = artifacts.require("./CstLedger.sol");
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "registry", type: String, alias: "r" },
-  { name: "ledgerName", type: String },
-  { name: "data", alias: "d", type: Boolean }
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "ledgerName", type: String, description: "The name of the new ledger to register" },
+  { name: "registry", alias: "r", type: String, description: "The address of the registry." },
 ];
 
 const usage = [
@@ -19,21 +18,7 @@ const usage = [
     content: "This script creates a new ledger and attaches it to token"
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "ledgerName",
-      description: "The name of the new ledger to register"
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
-    }]
+    optionList: optionsDefs
   }
 ];
 

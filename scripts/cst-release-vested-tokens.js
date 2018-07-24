@@ -6,11 +6,11 @@ let RegistryContract = artifacts.require("./Registry.sol");
 let CardStackToken = artifacts.require("./CardStackToken.sol");
 
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "address", type: String },
-  { name: "registry", alias: "r", type: String },
-  { name: "data", alias: "d", type: Boolean }
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "address", alias: "a", type: String, description: "The address to grant admin permissions"},
+  { name: "registry", alias: "r", type: String, description: "The address of the registry." },
+  { name: "data", alias: "d", type: Boolean, description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction" }
 ];
 
 const usage = [
@@ -19,25 +19,7 @@ const usage = [
     content: "This script releases vested tokens for the specified beneficiary. Any vested tokens that have not yet been placed into the benefieicary's account will be transfered to the beneficary's account aafter this script is run."
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "address",
-      description: "The address of the beneficiary for whom the vested tokens are relased."
-    },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
-    },{
-      name: "data",
-      alias: "d",
-      description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction"
-    }]
+    optionList: optionsDefs
   }
 ];
 

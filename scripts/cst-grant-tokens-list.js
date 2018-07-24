@@ -14,13 +14,12 @@ function displayBigNumber(number) {
   let [ result ] = numberAsString.split('.');
   return result;
 }
-
 const optionsDefs = [
-  { name: "help", alias: "h", type: Boolean },
-  { name: "network", type: String },
-  { name: "csv", type: String },
-  { name: "concurrency", alias: "c", type: Number },
-  { name: "registry", alias: "r", type: String },
+  { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
+  { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
+  { name: "csv", type: String, description: "The file containing ethereum addresses (each on a separate line)" },
+  { name: "concurrency", alias: "c", type: Number, description: "(Optional) The number of concurrent transactions to submit to the network at any one time. The default concurrency is 100 simultaneous transactions at a time." },
+  { name: "registry", alias: "r", type: String, description: "The address of the registry." },
 ];
 
 const usage = [
@@ -29,25 +28,7 @@ const usage = [
     content: "This script grants tokens to a list of ethereum addresses and their grant amounts (expressed in ETH--we do the math to figure out the corresponding amount of CARD)"
   },{
     header: "Options",
-    optionList: [{
-      name: "help",
-      alias: "h",
-      description: "Print this usage guide."
-    },{
-      name: "network",
-      description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`."
-    },{
-      name: "csv",
-      description: "The file containing ethereum addresses (each on a separate line)"
-    },{
-      name: "concurrency",
-      alias: "c",
-      description: "(Optional) The number of concurrent transactions to submit to the network at any one time. The default concurrency is 100 simultaneous transactions at a time."
-    },{
-      name: "registry",
-      alias: "r",
-      description: "The address of the registry."
-    }]
+    optionList: optionsDefs
   }
 ];
 
