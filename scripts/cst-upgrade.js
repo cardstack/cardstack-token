@@ -11,7 +11,7 @@ const optionsDefs = [
   { name: "address", alias: "a", type: String, description: "The address to grant admin permissions"},
   { name: "registry", alias: "r", type: String, description: "The address of the registry." },
   { name: "library", type: String, description: "(optional) The address of the deployed CST Library if you dont intent to deploy a new library." },
-  { name: "cst", type: String, description: "(optional) The address of the deployed Cardstack token if you dont intend to deploy a new token contract." },
+  { name: "cst", alias: "c", type: String, description: "(optional) The address of the deployed Cardstack token if you dont intend to deploy a new token contract." },
 ];
 
 const usage = [

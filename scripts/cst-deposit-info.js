@@ -5,7 +5,7 @@ let CardStackToken = artifacts.require("./CardStackToken.sol");
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
   { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
-  { name: "cst", alias: "cst", type: String, description: "The token contract address (note we do not use the registry for this)" }
+  { name: "cst", alias: "c", type: String, description: "The token contract address (note we do not use the registry for this)" }
 ];
 
 const usage = [

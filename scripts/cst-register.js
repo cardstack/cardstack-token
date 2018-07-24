@@ -7,7 +7,7 @@ const optionsDefs = [
   { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
   { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
   { name: "registry", alias: "r", type: String, description: "The address of the registry." },
-  { name: "cst", type: String, description: "(optional) The address of the deployed Cardstack token if you dont intend to deploy a new token contract." },
+  { name: "cst", alias: "c",type: String, description: "(optional) The address of the deployed Cardstack token if you dont intend to deploy a new token contract." },
   { name: "data", alias: "d", type: Boolean, description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction" }
 ];
 

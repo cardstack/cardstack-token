@@ -7,7 +7,7 @@ const optionsDefs = [
   { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
   { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
   { name: "amount", type: String, description: "The amount of CST tokens to grant." },
-  { name: "cst", type: String, description: "(optional) The address of the deployed Cardstack token if you dont intend to deploy a new token contract." }
+  { name: "cst", alias: "c", type: String, description: "(optional) The address of the deployed Cardstack token if you dont intend to deploy a new token contract." }
 ];
 
 const usage = [
