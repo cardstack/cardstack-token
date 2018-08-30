@@ -17,3 +17,6 @@ accounts.txt
 *.csv
 *.numbers
 *.log
+
+.zos.session
+zos.*.json

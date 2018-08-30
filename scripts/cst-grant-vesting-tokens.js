@@ -12,7 +12,7 @@ function adjustForDecimals(value, decimals) {
 
 const dateFormat = "YYYY-MM-DD";
 let RegistryContract = artifacts.require("./Registry.sol");
-let CardStackToken = artifacts.require("./CardStackToken.sol");
+let CardstackToken = artifacts.require("./CardstackToken.sol");
 
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
@@ -80,7 +80,7 @@ module.exports = async function(callback) {
   console.log(`Using registry at ${registryContract.address}`);
   let cstAddress = await registryContract.contractForHash(web3.sha3(CST_NAME));
 
-  let cst = await CardStackToken.at(cstAddress);
+  let cst = await CardstackToken.at(cstAddress);
   let symbol = await cst.symbol();
   let decimals = await cst.decimals();
 

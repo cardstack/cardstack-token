@@ -1,16 +1,29 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./administratable.sol";
+import "./Administratable.sol";
 
-contract ExternalStorage is administratable {
+contract ExternalStorage is Administratable {
   using SafeMath for uint256;
 
   mapping(bytes32 => address[]) public primaryLedgerEntryForIndex;
   mapping(bytes32 => mapping(address => address[])) public secondaryLedgerEntryForIndex;
+  mapping(bytes32 => address[]) public ledgerEntryForIndex;
+  mapping(bytes32 => address[]) public booleanMapEntryForIndex;
+
   mapping(bytes32 => mapping(address => mapping(address => uint256))) private MultiLedgerStorage;
   mapping(bytes32 => mapping(address => bool)) private ledgerPrimaryEntries;
   mapping(bytes32 => mapping(address => mapping(address => bool))) private ledgerSecondaryEntries;
+  mapping(bytes32 => mapping(address => uint256)) private LedgerStorage;
+  mapping(bytes32 => mapping(address => bool)) private ledgerAccounts;
+  mapping(bytes32 => mapping(address => bool)) private BooleanMapStorage;
+  mapping(bytes32 => mapping(address => bool)) private booleanMapAccounts;
+  mapping(bytes32 => uint256) private UIntStorage;
+  mapping(bytes32 => bytes32) private Bytes32Storage;
+  mapping(bytes32 => address) private AddressStorage;
+  mapping(bytes32 => bytes) private BytesStorage;
+  mapping(bytes32 => bool) private BooleanStorage;
+  mapping(bytes32 => int256) private IntStorage;
 
   function getMultiLedgerValue(string record, address primaryAddress, address secondaryAddress) external view returns (uint256) {
     return MultiLedgerStorage[keccak256(abi.encodePacked(record))][primaryAddress][secondaryAddress];
@@ -39,10 +52,6 @@ contract ExternalStorage is administratable {
     MultiLedgerStorage[hash][primaryAddress][secondaryAddress] = value;
   }
 
-  mapping(bytes32 => address[]) public ledgerEntryForIndex;
-  mapping(bytes32 => mapping(address => uint256)) private LedgerStorage;
-  mapping(bytes32 => mapping(address => bool)) private ledgerAccounts;
-
   function getLedgerValue(string record, address _address) external view returns (uint256) {
     return LedgerStorage[keccak256(abi.encodePacked(record))][_address];
   }
@@ -60,10 +69,6 @@ contract ExternalStorage is administratable {
 
     LedgerStorage[hash][_address] = value;
   }
-
-  mapping(bytes32 => address[]) public booleanMapEntryForIndex;
-  mapping(bytes32 => mapping(address => bool)) private BooleanMapStorage;
-  mapping(bytes32 => mapping(address => bool)) private booleanMapAccounts;
 
   function getBooleanMapValue(string record, address _address) external view returns (bool) {
     return BooleanMapStorage[keccak256(abi.encodePacked(record))][_address];
@@ -83,8 +88,6 @@ contract ExternalStorage is administratable {
     BooleanMapStorage[hash][_address] = value;
   }
 
-  mapping(bytes32 => uint256) private UIntStorage;
-
   function getUIntValue(string record) external view returns (uint256) {
     return UIntStorage[keccak256(abi.encodePacked(record))];
   }
@@ -92,8 +95,6 @@ contract ExternalStorage is administratable {
   function setUIntValue(string record, uint256 value) external onlyAdmins {
     UIntStorage[keccak256(abi.encodePacked(record))] = value;
   }
-
-  mapping(bytes32 => bytes32) private Bytes32Storage;
 
   function getBytes32Value(string record) external view returns (bytes32) {
     return Bytes32Storage[keccak256(abi.encodePacked(record))];
@@ -103,8 +104,6 @@ contract ExternalStorage is administratable {
     Bytes32Storage[keccak256(abi.encodePacked(record))] = value;
   }
 
-  mapping(bytes32 => address) private AddressStorage;
-
   function getAddressValue(string record) external view returns (address) {
     return AddressStorage[keccak256(abi.encodePacked(record))];
   }
@@ -112,8 +111,6 @@ contract ExternalStorage is administratable {
   function setAddressValue(string record, address value) external onlyAdmins {
     AddressStorage[keccak256(abi.encodePacked(record))] = value;
   }
-
-  mapping(bytes32 => bytes) private BytesStorage;
 
   function getBytesValue(string record) external view returns (bytes) {
     return BytesStorage[keccak256(abi.encodePacked(record))];
@@ -123,8 +120,6 @@ contract ExternalStorage is administratable {
     BytesStorage[keccak256(abi.encodePacked(record))] = value;
   }
 
-  mapping(bytes32 => bool) private BooleanStorage;
-
   function getBooleanValue(string record) external view returns (bool) {
     return BooleanStorage[keccak256(abi.encodePacked(record))];
   }
@@ -132,8 +127,6 @@ contract ExternalStorage is administratable {
   function setBooleanValue(string record, bool value) external onlyAdmins {
     BooleanStorage[keccak256(abi.encodePacked(record))] = value;
   }
-
-  mapping(bytes32 => int256) private IntStorage;
 
   function getIntValue(string record) external view returns (int256) {
     return IntStorage[keccak256(abi.encodePacked(record))];

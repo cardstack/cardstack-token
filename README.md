@@ -50,14 +50,14 @@ yarn ganache
 
 Then execute:
 ```
-WALLET=<wallet address> truffle migrate --reset --network=testrpc
+truffle migrate --reset --network=testrpc
 ```
 
-Make a note of the address of the `Registry` and of the `CardStackToken` contract. Make sure not to lose the address of the Registry, the registry address is specified as a parameter for all contract ops commands.
+Make a note of the address of the `Registry` and of the `CardstackToken` contract. Make sure not to lose the address of the Registry, the registry address is specified as a parameter for all contract ops commands.
 
-Register the `CardStackToken` contract with the `Registry`:
+Register the `CardstackToken` contract with the `Registry`:
 ```
-WALLET=<wallet address> truffle exec ./scripts/cst-register.js --cst=<CardStackToken's address> --registry=<Registry's address> --network=testrpc
+truffle exec ./scripts/cst-register.js --cst=<CardstackToken's address> --registry=<Registry's address> --network=testrpc
 ```
 
 You can view the CST system info by executing:
@@ -67,17 +67,17 @@ truffle exec ./scripts/system-info.js --network=testrpc -r <Registry's address>
 
 You can configure the price and details around CST by executing:
 ```
-WALLET=<wallet address> truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --circulationCap=50000000 --maxBalance=1000 --foundation="<foundation address>" -r "<registry address>" --network=testrpc
+truffle exec ./scripts/cst-configure.js --tokenName="Cardstack Token" --tokenSymbol="CST" --buyPriceEth=0.005 --circulationCap=50000000 --maxBalance=1000 --foundation="<foundation address>" -r "<registry address>" --network=testrpc
 ```
 
 You can mint new CST's (which must exist in order for people to buy) by executing:
 ```
-WALLET=<wallet address> truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry address> --network=testrpc
+truffle exec ./scripts/cst-mint-tokens.js --amount=1000000000 -r <registry address> --network=testrpc
 ```
 
 You will need to whitelist buyers of CST by executing:
 ```
-WALLET=<wallet address> truffle exec ./scripts/cst-add-buyer.js --address=<buyer's address> -r <registry address> --network=testrpc
+truffle exec ./scripts/cst-add-buyer.js --address=<buyer's address> -r <registry address> --network=testrpc
 ```
 
 You can execute this script to get the purchase information for CST:
@@ -92,7 +92,7 @@ truffle exec ./scripts/cst-release-info.js --network=testrpc -r <Registry's addr
 
 The token contract is initialized in a frozen state (same for upgraded tokens). You must unfreeze the token before people can buy tokens:
 ```
-WALLET=<wallet address> truffle exec ./scripts/cst-unfreeze-token.js -r "<registry address>" --network=testrpc
+truffle exec ./scripts/cst-unfreeze-token.js -r "<registry address>" --network=testrpc
 ```
 
 ### Rinkeby
@@ -106,14 +106,14 @@ Enter the password for your wallet when prompted, and then wait for the latest b
 
 Then execute:
 ```
-WALLET=<wallet address> truffle migrate --reset --network=rinkeby
+truffle migrate --reset --network=rinkeby
 ```
 The deploy will make many minutes to run depending on Rinkeby network stats and gas price.
 
-Make a note of the address of the Registry and of the CardStackToken contract. Make sure not to lose the address of the Registry, the registry address is specified as a parameter for all contract ops commands.
-Register the `CardStackToken` contract with the `Registry`:
+Make a note of the address of the Registry and of the CardstackToken contract. Make sure not to lose the address of the Registry, the registry address is specified as a parameter for all contract ops commands.
+Register the `CardstackToken` contract with the `Registry`:
 ```
-WALLET=<wallet address> truffle exec ./scripts/cst-register.js --cst=<CardStackToken's address> --registry=<Registry's address> --network=rinkeby
+truffle exec ./scripts/cst-register.js --cst=<CardstackToken's address> --registry=<Registry's address> --network=rinkeby
 ```
 
 You can view the CST system info by executing:

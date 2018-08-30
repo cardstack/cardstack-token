@@ -11,7 +11,8 @@
     "web3": true,
     "contract": true,
     "artifacts": true,
-    "assert": true
+    "assert": true,
+    "Promise": true
   },
   "rules": {
     "no-console": "warn",

@@ -1,7 +1,7 @@
 const { CST_BUY_GAS_LIMIT, NULL_ADDRESS } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
-let CardStackToken = artifacts.require("./CardStackToken.sol");
+let CardstackToken = artifacts.require("./CardstackToken.sol");
 
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
@@ -33,7 +33,7 @@ module.exports = async function(callback) {
 
   console.log(`Using token contract at ${cstAddress}`);
 
-  let cst = await CardStackToken.at(cstAddress);
+  let cst = await CardstackToken.at(cstAddress);
 
   let foundation = await cst.foundation();
   if (foundation === NULL_ADDRESS) {

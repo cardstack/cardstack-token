@@ -1,3 +1,4 @@
+const { proxyContract } = require('./utils');
 const {
   GAS_PRICE,
   ROUNDING_ERROR_WEI,
@@ -11,29 +12,30 @@ const {
   checkBalance
 } = require("../lib/utils");
 
-const CardStackToken = artifacts.require("./CardStackToken.sol");
-const CstLedger = artifacts.require("./CstLedger.sol");
+const TestingCardstackToken = artifacts.require("./TestingCardstackToken.sol");
+const TestingCstLedger = artifacts.require("./TestingCstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
-const Registry = artifacts.require("./Registry.sol");
+const TestingRegistry = artifacts.require("./TestingRegistry.sol");
 
-contract('CardStackToken', function(accounts) {
+contract('CardstackToken', function(accounts) {
   let ledger;
   let storage;
   let cst;
   let registry;
+  let proxyAdmin = accounts[41];
 
   describe("buy()", function() {
     beforeEach(async function() {
-      ledger = await CstLedger.new();
+      ledger = (await proxyContract(TestingCstLedger, proxyAdmin)).contract;
       storage = await Storage.new();
-      registry = await Registry.new();
+      registry = (await proxyContract(TestingRegistry, proxyAdmin)).contract;
       await registry.addStorage("cstStorage", storage.address);
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+      cst = (await proxyContract(TestingCardstackToken, proxyAdmin, registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
-      });
+      })).contract;
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.freezeToken(false);
 
@@ -70,7 +72,6 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
-      // console.log("TXN", JSON.stringify(txn, null, 2));
       assert.ok(txn.receipt);
       assert.ok(txn.logs);
 
@@ -336,7 +337,6 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
-      // console.log("TXN", JSON.stringify(txn, null, 2));
       assert.ok(txn.receipt);
       assert.ok(txn.logs);
 
@@ -444,7 +444,6 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
-      // console.log("TXN", JSON.stringify(txn, null, 2));
       assert.ok(txn.receipt);
       assert.ok(txn.logs);
 
@@ -524,7 +523,6 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
-      // console.log("TXN", JSON.stringify(txn, null, 2));
       assert.ok(txn.receipt);
       assert.ok(txn.logs);
 
@@ -587,7 +585,9 @@ contract('CardStackToken', function(accounts) {
 
       await cst.addBuyer(buyerAccount);
       await cst.setContributionMinimum(web3.toWei(5, 'ether'));
+      await cst.setHaltPurchase(true);
       await cst.grantTokens(buyerAccount, web3.toWei(5, 'ether'));
+      await cst.setHaltPurchase(false);
 
       let txn = await cst.buy({
         from: buyerAccount,
@@ -595,7 +595,6 @@ contract('CardStackToken', function(accounts) {
         gasPrice: GAS_PRICE
       });
 
-      // console.log("TXN", JSON.stringify(txn, null, 2));
       assert.ok(txn.receipt);
       assert.ok(txn.logs);
 

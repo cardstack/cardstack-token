@@ -6,7 +6,7 @@ const moment = require('moment');
 const dateFormat = "YYYY-MM-DD HH:mm Z";
 
 let RegistryContract = artifacts.require("./Registry.sol");
-let CardStackToken = artifacts.require("./CardStackToken.sol");
+let CardstackToken = artifacts.require("./CardstackToken.sol");
 
 function adjustForDecimals(value, decimals) {
   let decimalsFactor = new web3.BigNumber('1'.padEnd(decimals.toNumber() + 1, '0'));
@@ -50,7 +50,7 @@ module.exports = async function(callback) {
   console.log(`Using registry at ${registryContract.address}`);
   let cstAddress = await registryContract.contractForHash(web3.sha3(CST_NAME));
 
-  let cst = await CardStackToken.at(cstAddress);
+  let cst = await CardstackToken.at(cstAddress);
 
   let [ startDate,
     cliffDate,

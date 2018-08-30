@@ -2,7 +2,7 @@ const { CST_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 
-let CardStackToken = artifacts.require("./CardStackToken.sol");
+let CardstackToken = artifacts.require("./CardstackToken.sol");
 let RegistryContract = artifacts.require("./Registry.sol");
 
 function adjustForDecimals(value, decimals) {
@@ -15,8 +15,8 @@ function adjustForDecimals(value, decimals) {
 const optionsDefs = [
   { name: "help", alias: "h", type: Boolean, description: "Print this usage guide." },
   { name: "network", type: String, description: "The blockchain that you wish to use. Valid options are `testrpc`, `rinkeby`, `mainnet`." },
-  { name: "address", alias: "a", type: String, description: "The address to grant admin permissions"},
   { name: "rawAmount", type: String, description: "The amount of tokens to mint without factoring token decimals" },
+  { name: "amount", type: String, description: "The amount of tokens to mint with factoring token decimals" },
   { name: "registry", alias: "r", type: String, description: "The address of the registry." },
   { name: "data", alias: "d", type: Boolean, description: "Display the data necessary to invoke the transaction instead of actually invoking the transaction" }
 ];
@@ -50,7 +50,7 @@ module.exports = async function(callback) {
   console.log(`Using registry at ${registry.address}`);
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
 
-  let cst = await CardStackToken.at(cstAddress);
+  let cst = await CardstackToken.at(cstAddress);
   let symbol = await cst.symbol();
   let decimals = await cst.decimals();
 
