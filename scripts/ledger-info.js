@@ -69,6 +69,7 @@ module.exports = async function(callback) {
       fs.writeFileSync(csvFile, `"address","ETH","${raw ? 'raw token amount' : cstSymbol}"\n`, 'ascii');
     }
     let counter = 0, batch = 100;
+    let sum = new web3.BigNumber(0);
     for (let i = 0; i < numAccounts.toNumber(); i++) {
       let count = ++counter;
       if (count % batch === 0) {
@@ -78,6 +79,7 @@ module.exports = async function(callback) {
       let balance = await ledger.balanceOf(address);
       let balanceEth = !buyPriceTokensPerWei.toNumber() ? '' : Math.round(balance.div(new web3.BigNumber(('1'.padEnd(decimals.toNumber() + 1, '0')))).div(buyPriceTokensPerWei).toNumber() * 10 ** sigDigits) / 10 ** sigDigits;
 
+      sum = sum.add(balance);
       if (importable) {
         if (balance.isZero()) { continue; }
 
@@ -87,6 +89,12 @@ module.exports = async function(callback) {
         fs.appendFileSync(csvFile, `"${address}","${balanceEth}","${raw ? balance : adjustForDecimals(balance, decimals)}"\n`);
       }
     }
+
+    if (importable) {
+      console.log(`ledger total:                `, adjustForDecimals(totalInCirculation, decimals).toString());
+      console.log(`exported ledger total tokens:`, adjustForDecimals(sum, decimals).toString());
+    }
+
     console.log("Done");
     callback();
     return;
