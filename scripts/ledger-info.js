@@ -2,9 +2,9 @@ const { CST_NAME } = require("../lib/constants");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 const fs = require('fs');
-let CardStackToken = artifacts.require("./CardStackToken.sol");
-let RegistryContract = artifacts.require("./Registry.sol");
-let CstLedger = artifacts.require("./CstLedger.sol");
+const CardStackToken = artifacts.require("./CardStackToken.sol");
+const RegistryContract = artifacts.require("./Registry.sol");
+const CstLedger = artifacts.require("./CstLedger.sol");
 
 function adjustForDecimals(value, decimals) {
   let decimalsFactor = new web3.BigNumber('1'.padEnd(decimals.toNumber() + 1, '0'));
@@ -68,13 +68,21 @@ module.exports = async function(callback) {
     if (!importable) {
       fs.writeFileSync(csvFile, `"address","ETH","${raw ? 'raw token amount' : cstSymbol}"\n`, 'ascii');
     }
+    let counter = 0, batch = 100;
     for (let i = 0; i < numAccounts.toNumber(); i++) {
+      let count = ++counter;
+      if (count % batch === 0) {
+        console.log(`Processing ${count} of ${numAccounts.toNumber()}, ${Math.round((count / numAccounts.toNumber()) * 100)}% complete...`);
+      }
       let address = await ledger.accountForIndex(i);
       let balance = await ledger.balanceOf(address);
       let balanceEth = !buyPriceTokensPerWei.toNumber() ? '' : Math.round(balance.div(new web3.BigNumber(('1'.padEnd(decimals.toNumber() + 1, '0')))).div(buyPriceTokensPerWei).toNumber() * 10 ** sigDigits) / 10 ** sigDigits;
 
       if (importable) {
-        fs.appendFileSync(csvFile, `"${address}","${adjustForDecimals(balance, decimals)}"\n`);
+        if (balance.isZero()) { continue; }
+
+        let [ formattedBalance ] = balance.toPrecision(50).toString().split('.');
+        fs.appendFileSync(csvFile, `"${address}","${formattedBalance}"\n`);
       } else {
         fs.appendFileSync(csvFile, `"${address}","${balanceEth}","${raw ? balance : adjustForDecimals(balance, decimals)}"\n`);
       }
