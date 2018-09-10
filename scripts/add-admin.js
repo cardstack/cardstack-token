@@ -3,7 +3,7 @@ const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 
 let RegistryContract = artifacts.require("./Registry.sol");
-let CardStackToken = artifacts.require("./CardStackToken.sol");
+let CardstackToken = artifacts.require("./CardstackToken.sol");
 let ExternalStorage = artifacts.require("./ExternalStorage.sol");
 let CstLedger = artifacts.require("./CstLedger.sol");
 
@@ -43,7 +43,7 @@ module.exports = async function(callback) {
 
   let { address, name } = options;
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
-  let cst = await CardStackToken.at(cstAddress);
+  let cst = await CardstackToken.at(cstAddress);
   let storageAddress = await registry.storageForHash(web3.sha3(CST_STORAGE_NAME));
   let ledgerAddress = await registry.storageForHash(web3.sha3(CST_LEDGER_NAME));
   let storage = await ExternalStorage.at(storageAddress);

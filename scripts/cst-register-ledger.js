@@ -2,7 +2,7 @@ const { CST_NAME, CST_STORAGE_NAME } = require("../lib/constants.js");
 const commandLineArgs = require('command-line-args');
 const getUsage = require('command-line-usage');
 let RegistryContract = artifacts.require("./Registry.sol");
-let CardStackToken = artifacts.require("./CardStackToken.sol");
+let CardstackToken = artifacts.require("./CardstackToken.sol");
 let CstLedger = artifacts.require("./CstLedger.sol");
 
 const optionsDefs = [
@@ -36,7 +36,7 @@ module.exports = async function(callback) {
   let registry = await RegistryContract.at(registryAddress);
   console.log(`Using registry at ${registry.address}`);
   let cstAddress = await registry.contractForHash(web3.sha3(CST_NAME));
-  let cst = await CardStackToken.at(cstAddress);
+  let cst = await CardstackToken.at(cstAddress);
 
   try {
     console.log(`\nDeploying Ledger...`);

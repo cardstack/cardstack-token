@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
 contract ERC20 {
   function allowance(address owner, address spender) public view returns (uint256);

@@ -1,7 +1,8 @@
-const CardStackToken = artifacts.require("./CardStackToken.sol");
-const CstLedger = artifacts.require("./CstLedger.sol");
+const TestingCardstackToken = artifacts.require("./TestingCardstackToken.sol");
+const TestingCstLedger = artifacts.require("./TestingCstLedger.sol");
 const Storage = artifacts.require("./ExternalStorage.sol");
-const Registry = artifacts.require("./Registry.sol");
+const TestingRegistry = artifacts.require("./TestingRegistry.sol");
+const { proxyContract } = require('./utils');
 const {
   GAS_PRICE,
   NULL_ADDRESS,
@@ -11,7 +12,10 @@ const {
   checkBalance
 } = require("../lib/utils");
 
-contract('CardStackToken', function(accounts) {
+const MAX_TRANSFER_GAS = 50000;
+
+contract('CardstackToken', function(accounts) {
+  let proxyAdmin = accounts[41];
 
   describe("transfer()", function() {
     let cst;
@@ -22,22 +26,21 @@ contract('CardStackToken', function(accounts) {
     let recipientAccount = accounts[4];
 
     beforeEach(async function() {
-      ledger = await CstLedger.new();
+      ledger = (await proxyContract(TestingCstLedger, proxyAdmin)).contract;
       storage = await Storage.new();
-      registry = await Registry.new();
+      registry = (await proxyContract(TestingRegistry, proxyAdmin)).contract;
       await registry.addStorage("cstStorage", storage.address);
       await registry.addStorage("cstLedger", ledger.address);
       await storage.addSuperAdmin(registry.address);
       await ledger.addSuperAdmin(registry.address);
-      cst = await CardStackToken.new(registry.address, "cstStorage", "cstLedger", {
+      cst = (await proxyContract(TestingCardstackToken, proxyAdmin, registry.address, "cstStorage", "cstLedger", {
         gas: CST_DEPLOY_GAS_LIMIT
-      });
+      })).contract;
       await registry.register("CST", cst.address, CARDSTACK_NAMEHASH);
       await cst.freezeToken(false);
       await ledger.mintTokens(web3.toWei(100, 'ether'));
       await cst.configure(web3.toHex("CardStack Token"), web3.toHex("CST"), 10, web3.toWei(100, 'ether'), web3.toWei(1000000, 'ether'), NULL_ADDRESS);
 
-      await cst.setAllowTransfers(true);
       await checkBalance(senderAccount, 1);
       await cst.addBuyer(senderAccount);
       await cst.buy({
@@ -63,7 +66,6 @@ contract('CardStackToken', function(accounts) {
         from: senderAccount
       });
 
-      // console.log("TXN", JSON.stringify(txn, null, 2));
       assert.ok(txn.receipt);
       assert.ok(txn.logs);
 
@@ -78,6 +80,7 @@ contract('CardStackToken', function(accounts) {
       assert.equal(txn.logs.length, 1, "The correct number of events were fired");
 
       let event = txn.logs[0];
+      assert.equal(txn.receipt.gasUsed < MAX_TRANSFER_GAS, true, `The transfer txn uses less than ${MAX_TRANSFER_GAS} gas`);
       assert.equal(event.event, "Transfer", "The event type is correct");
       assert.equal(event.args._value, web3.toWei(10, 'ether'), "The CST amount is correct");
       assert.equal(event.args._from, senderAccount, "The sender is correct");
@@ -100,80 +103,12 @@ contract('CardStackToken', function(accounts) {
       assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
     });
 
-    it("should not be able to transfer 0 CST ", async function() {
+    it("should be able to transfer 0 CST ", async function() {
       let transferAmount = 0;
 
-      await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
-        from: senderAccount
-      }));
-
-      let senderBalance = await cst.balanceOf(senderAccount);
-      let recipientBalance = await cst.balanceOf(recipientAccount);
-      let totalInCirculation = await cst.totalInCirculation();
-
-      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
-      assert.equal(recipientBalance.toNumber(), 0, "The CST balance is correct");
-      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
-    });
-
-    it("should not be able to transfer when allowTransfers is false", async function() {
-      await cst.setAllowTransfers(false);
-      let transferAmount = web3.toWei(10, 'ether');
-
-      await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
-        from: senderAccount
-      }));
-
-      let senderBalance = await cst.balanceOf(senderAccount);
-      let recipientBalance = await cst.balanceOf(recipientAccount);
-      let totalInCirculation = await cst.totalInCirculation();
-
-      assert.equal(senderBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
-      assert.equal(recipientBalance.toNumber(), 0, "The CST balance is correct");
-      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
-    });
-
-    it("should be able to transfer when allowTransfers is false but the transfer initiator is in the transfer whitelist", async function() {
-      await cst.setAllowTransfers(false);
-      await cst.setWhitelistedTransferer(senderAccount, true);
-
-      let transferAmount = web3.toWei(10, 'ether');
-
-      let txn = await cst.transfer(recipientAccount, transferAmount, {
+      await cst.transfer(recipientAccount, transferAmount, {
         from: senderAccount
       });
-
-      // console.log("TXN", JSON.stringify(txn, null, 2));
-      assert.ok(txn.receipt);
-      assert.ok(txn.logs);
-
-      let senderBalance = await cst.balanceOf(senderAccount);
-      let recipientBalance = await cst.balanceOf(recipientAccount);
-      let totalInCirculation = await cst.totalInCirculation();
-
-      assert.equal(senderBalance.toNumber(), 0, "The CST balance is correct");
-      assert.equal(recipientBalance, web3.toWei(10, 'ether'), "The CST balance is correct");
-      assert.equal(totalInCirculation, web3.toWei(10, 'ether'), "The CST total in circulation has not changed");
-
-      assert.equal(txn.logs.length, 1, "The correct number of events were fired");
-
-      let event = txn.logs[0];
-      assert.equal(event.event, "Transfer", "The event type is correct");
-      assert.equal(event.args._value, web3.toWei(10, 'ether'), "The CST amount is correct");
-      assert.equal(event.args._from, senderAccount, "The sender is correct");
-      assert.equal(event.args._to, recipientAccount, "The recipient is correct");
-    });
-
-    it("should not be able to transfer when allowTransfers is false and a previously whitelisted transferer has been removed from the transfer whitelist", async function() {
-      await cst.setAllowTransfers(false);
-      await cst.setWhitelistedTransferer(senderAccount, true);
-      await cst.setWhitelistedTransferer(senderAccount, false);
-
-      let transferAmount = web3.toWei(10, 'ether');
-
-      await assertRevert(async () => await cst.transfer(recipientAccount, transferAmount, {
-        from: senderAccount
-      }));
 
       let senderBalance = await cst.balanceOf(senderAccount);
       let recipientBalance = await cst.balanceOf(recipientAccount);

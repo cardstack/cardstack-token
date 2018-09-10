@@ -1,6 +1,6 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
-contract displayable {
+contract Displayable {
   function bytes32ToString(bytes32 x) public pure returns (string) {
     bytes memory bytesString = new bytes(32);
     uint256 charCount = 0;

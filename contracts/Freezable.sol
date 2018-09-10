@@ -1,11 +1,13 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
-import "./administratable.sol";
+import "./Administratable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract freezable is administratable {
+contract Freezable is Administratable {
   using SafeMath for uint256;
 
+  // zOS requires that the variables are never removed nor order changed
+  // Since this is a parent contract, no new variables can be added here
   bool public frozenToken;
   // TODO move this into external storage
   address[] public frozenAccountForIndex;
@@ -21,10 +23,6 @@ contract freezable is administratable {
     _;
   }
 
-  function totalFrozenAccountsMapping() public view returns(uint256) {
-    return frozenAccountForIndex.length;
-  }
-
   function freezeAccount(address target, bool freeze) public onlySuperAdmins {
     frozenAccount[target] = freeze;
     if (!processedAccount[target]) {
@@ -37,6 +35,10 @@ contract freezable is administratable {
   function freezeToken(bool freeze) public onlySuperAdmins {
     frozenToken = freeze;
     emit FrozenToken(frozenToken);
+  }
+
+  function totalFrozenAccountsMapping() public view returns(uint256) {
+    return frozenAccountForIndex.length;
   }
 
 }
