@@ -55,7 +55,7 @@ module.exports = async function(callback) {
     }
 
     console.log(`\nCompleted deploying Ledger.
-  Ledger implementation address ${ledger.contract.address}
+  Ledger implementation address ${ledger.implementation.address}
   Ledger address ${ledger.proxy.address} (proxy)`);
 
   } catch(err) {

@@ -78,7 +78,7 @@ module.exports = async function(callback) {
     }
 
     console.log(`\nCompleted deploying Cardstack token.
-  Cardstack token implementation address ${cardstackToken.contract.address}
+  Cardstack token implementation address ${cardstackToken.implementation.address}
   Cardstack token address ${cardstackToken.proxy.address} (proxy)`);
 
   } catch(err) {

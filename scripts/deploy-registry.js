@@ -55,7 +55,7 @@ module.exports = async function(callback) {
     }
 
     console.log(`\nCompleted deploying Registry.
-  Registry implementation address ${registry.contract.address}
+  Registry implementation address ${registry.implementation.address}
   Registry address ${registry.proxy.address} (proxy)`);
 
   } catch(err) {
