@@ -327,8 +327,8 @@ Cardstack Token (${cst.address}):
   buy price: ${cstSymbol} per ETH: ${buyPriceTokensPerWei} ${cstSymbol}
   total tokens available: ${adjustForDecimals(cstAvailable, decimals)} ${cstSymbol}
   circulation cap: ${adjustForDecimals(circulationCap, decimals)} ${cstSymbol}
-  tokens in circulation (includes unvested tokens): ${adjustForDecimals(cstTotalInCirculation, decimals)} ${cstSymbol}
-  total tokens available for purchase: ${adjustForDecimals(circulationCap.sub(cstTotalInCirculation), decimals)} ${cstSymbol}
+  tokens in circulation (includes unvested & unreleased tokens): ${adjustForDecimals(cstTotalInCirculation, decimals)} ${cstSymbol}
+  total tokens available to be air dropped: ${adjustForDecimals(circulationCap.sub(cstTotalInCirculation), decimals)} ${cstSymbol}
   total unvested tokens: ${adjustForDecimals(totalUnvested, decimals).toFixed(0)} ${cstSymbol}
   total vested and unreleased tokens: ${adjustForDecimals(totalVestedUnreleased, decimals)} ${cstSymbol}
   contribution minimum: ${adjustForDecimals(contributionMinimum, decimals)} ${cstSymbol}
